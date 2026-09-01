@@ -15,18 +15,18 @@ class RecitationsController {
   Future<void> play(Reciter reciter, RecitationSurah surah) async {
     final download = findDownload(reciter.id, surah.id);
     if (download != null) return service.playFile(download.path);
-    if (surah.url == null || surah.url!.isEmpty) {
+    if (surah.streamUrls.isEmpty) {
       throw Exception('لا يوجد رابط متاح لهذه التلاوة');
     }
-    return service.playUrl(surah.url!);
+    return service.playUrls(surah.streamUrls);
   }
 
   Future<void> download(Reciter reciter, RecitationSurah surah) async {
-    if (surah.url == null || surah.url!.isEmpty) {
+    if (surah.streamUrls.isEmpty) {
       throw Exception('لا يوجد رابط متاح للتحميل');
     }
     final path = await service.download(
-      url: surah.url!,
+      urls: surah.streamUrls,
       fileName: '${reciter.id}_${surah.id}',
     );
     await repository.saveDownload(

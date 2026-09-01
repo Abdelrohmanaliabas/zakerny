@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/adhkar/application/adhkar_controller.dart';
+import '../../features/adhkar/data/adhkar_repository.dart';
+import '../../features/adhkar/presentation/adhkar_screen.dart';
 import '../../features/hadith/application/hadith_controller.dart';
 import '../../features/hadith/data/hadith_repository.dart';
 import '../../features/hadith/presentation/hadith_screen.dart';
@@ -8,6 +11,9 @@ import '../../features/home/presentation/home_screen.dart';
 import '../../features/prayer_times/application/prayer_controller.dart';
 import '../../features/prayer_times/data/prayer_repository.dart';
 import '../../features/prayer_times/presentation/prayer_times_screen.dart';
+import '../../features/qibla/application/qibla_controller.dart';
+import '../../features/qibla/data/qibla_repository.dart';
+import '../../features/qibla/presentation/qibla_screen.dart';
 import '../../features/quran/application/quran_controller.dart';
 import '../../features/quran/data/quran_repository.dart';
 import '../../features/quran/presentation/quran_bookmark_screen.dart';
@@ -30,6 +36,8 @@ List<AppFeature> buildFeatureRegistry({
   final prayer = PrayerController(PrayerRepository(store), notifications);
   final quran = QuranController(QuranRepository(store));
   final hadith = HadithController(HadithRepository(store));
+  final adhkar = AdhkarController(AdhkarRepository(store));
+  final qibla = QiblaController(QiblaRepository(store));
   final recitations = RecitationsController(
     RecitationRepository(store),
     RecitationService(),
@@ -53,6 +61,14 @@ List<AppFeature> buildFeatureRegistry({
             hadith: hadith,
             recitations: recitations,
           ),
+        ),
+        GoRoute(
+          path: '/qibla',
+          builder: (context, state) => QiblaScreen(controller: qibla),
+        ),
+        GoRoute(
+          path: '/adhkar',
+          builder: (context, state) => AdhkarScreen(controller: adhkar),
         ),
       ],
     ),

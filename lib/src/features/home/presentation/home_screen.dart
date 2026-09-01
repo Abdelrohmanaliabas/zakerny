@@ -69,12 +69,12 @@ class HomeScreen extends StatelessWidget {
                       _QuickAction(
                         icon: Icons.explore,
                         label: 'القبلة',
-                        onTap: () {},
+                        onTap: () => context.push('/qibla'),
                       ),
                       _QuickAction(
-                        icon: Icons.article,
-                        label: 'أحاديث',
-                        onTap: () => context.go('/hadith'),
+                        icon: Icons.favorite,
+                        label: 'الأذكار',
+                        onTap: () => context.push('/adhkar'),
                       ),
                       _QuickAction(
                         icon: Icons.menu_book,

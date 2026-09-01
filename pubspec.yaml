@@ -73,6 +73,7 @@ flutter:
   assets:
     - assets/branding/app_icon.png
     - assets/audio/adhan.mp3
+    - assets/adhkar/adhkar.json
     - assets/quran/quran.json
     - assets/hadith/hadith.json
     - assets/recitations/reciters.json

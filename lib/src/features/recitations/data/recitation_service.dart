@@ -12,9 +12,18 @@ class RecitationService {
   final Dio _dio;
   final AudioPlayer _player;
 
-  Future<void> playUrl(String url) async {
-    await _player.setUrl(url);
-    await _player.play();
+  Future<void> playUrls(List<String> urls) async {
+    Object? lastError;
+    for (final url in urls) {
+      try {
+        await _player.setUrl(url);
+        await _player.play();
+        return;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError ?? Exception('No recitation URL is available');
   }
 
   Future<void> playFile(String path) async {
@@ -23,7 +32,7 @@ class RecitationService {
   }
 
   Future<String> download({
-    required String url,
+    required List<String> urls,
     required String fileName,
   }) async {
     final dir = await getApplicationDocumentsDirectory();
@@ -32,8 +41,18 @@ class RecitationService {
       await recitationsDir.create(recursive: true);
     }
     final path = '${recitationsDir.path}/$fileName.mp3';
-    await _dio.download(url, path);
-    return path;
+    Object? lastError;
+    for (final url in urls) {
+      try {
+        await _dio.download(url, path);
+        return path;
+      } catch (error) {
+        lastError = error;
+        final file = File(path);
+        if (await file.exists()) await file.delete();
+      }
+    }
+    throw lastError ?? Exception('No recitation URL is available');
   }
 
   Future<void> deleteFile(String path) async {

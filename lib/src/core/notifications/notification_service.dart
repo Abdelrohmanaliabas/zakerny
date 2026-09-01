@@ -17,7 +17,7 @@ class NotificationService extends ChangeNotifier {
   }
 
   Future<void> initialize() async {
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('@drawable/ic_stat_zekrni');
     const ios = DarwinInitializationSettings();
     await _plugin.initialize(
       settings: const InitializationSettings(android: android, iOS: ios),
@@ -73,6 +73,7 @@ class NotificationService extends ChangeNotifier {
           channelDescription: 'تنبيهات مواقيت الصلاة بصوت الأذان',
           importance: Importance.high,
           priority: Priority.high,
+          icon: 'ic_stat_zekrni',
           sound: RawResourceAndroidNotificationSound('adhan'),
           playSound: true,
         ),

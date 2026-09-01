@@ -14,17 +14,34 @@ class Reciter {
 }
 
 class RecitationSurah {
-  const RecitationSurah({required this.id, required this.name, this.url});
+  const RecitationSurah({
+    required this.id,
+    required this.name,
+    this.url,
+    this.urls = const [],
+  });
   final int id;
   final String name;
   final String? url;
+  final List<String> urls;
 
-  factory RecitationSurah.fromJson(Map<String, dynamic> json) =>
-      RecitationSurah(
-        id: json['id'] as int,
-        name: json['name'] as String,
-        url: json['url'] as String?,
-      );
+  List<String> get streamUrls {
+    final ordered = <String>[
+      if (url != null && url!.isNotEmpty) url!,
+      ...urls.where((item) => item.isNotEmpty),
+    ];
+    return ordered.toSet().toList();
+  }
+
+  factory RecitationSurah.fromJson(Map<String, dynamic> json) {
+    final rawUrls = json['urls'];
+    return RecitationSurah(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      url: json['url'] as String?,
+      urls: rawUrls is List ? rawUrls.whereType<String>().toList() : const [],
+    );
+  }
 }
 
 class DownloadedRecitation {
