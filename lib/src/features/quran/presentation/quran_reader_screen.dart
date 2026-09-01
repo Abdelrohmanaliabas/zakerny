@@ -59,13 +59,16 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         return Scaffold(
           appBar: AppBar(title: Text(surah.name)),
           body: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+            padding: const EdgeInsets.fromLTRB(14, 6, 14, 88),
             children: [
               _SurahHeader(surah: surah),
               const SizedBox(height: 14),
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(18),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   child: Column(
                     children: surah.ayahs.map((ayah) {
                       final key = _ayahKeys.putIfAbsent(
@@ -90,8 +93,8 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                               widget.controller.saveLastRead(surah, ayah),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                              vertical: 10,
-                              horizontal: 6,
+                              vertical: 3,
+                              horizontal: 4,
                             ),
                             child: Text.rich(
                               TextSpan(
@@ -103,9 +106,9 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                                   ),
                                 ],
                               ),
-                              style: Theme.of(context).textTheme.headlineSmall
+                              style: Theme.of(context).textTheme.titleLarge
                                   ?.copyWith(
-                                    height: 2,
+                                    height: 1.72,
                                     fontWeight: FontWeight.w500,
                                   ),
                               textAlign: TextAlign.justify,
@@ -236,8 +239,8 @@ class _AyahBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      margin: const EdgeInsets.symmetric(horizontal: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.secondary,
         borderRadius: BorderRadius.circular(18),

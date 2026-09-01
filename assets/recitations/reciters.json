@@ -3,7 +3,7 @@
   "reciters": [
     {
       "id": "alafasy",
-      "name": "????? ???????",
+      "name": "مشاري العفاسي",
       "server": "https://server8.mp3quran.net/afs/",
       "surahs": [
         {
@@ -580,7 +580,7 @@
     },
     {
       "id": "abdulbasit",
-      "name": "??? ?????? ??? ?????",
+      "name": "عبد الباسط عبد الصمد",
       "server": "https://server7.mp3quran.net/basit/",
       "surahs": [
         {
@@ -1157,7 +1157,7 @@
     },
     {
       "id": "husary",
-      "name": "??????",
+      "name": "محمود خليل الحصري",
       "server": "https://server13.mp3quran.net/husr/",
       "surahs": [
         {
@@ -1734,7 +1734,7 @@
     },
     {
       "id": "minshawi",
-      "name": "????????",
+      "name": "محمد صديق المنشاوي",
       "server": "https://server10.mp3quran.net/minsh/",
       "surahs": [
         {
@@ -2311,7 +2311,7 @@
     },
     {
       "id": "yasser_aldosari",
-      "name": "???? ???????",
+      "name": "ياسر الدوسري",
       "server": "https://server11.mp3quran.net/yasser/",
       "surahs": [
         {

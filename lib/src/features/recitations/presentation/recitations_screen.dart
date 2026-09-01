@@ -16,6 +16,7 @@ class RecitationsScreen extends StatefulWidget {
 class _RecitationsScreenState extends State<RecitationsScreen> {
   late Future<List<Reciter>> _future;
   String? _busyKey;
+  String _query = '';
 
   @override
   void initState() {
@@ -45,9 +46,11 @@ class _RecitationsScreenState extends State<RecitationsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const ZekrniHeader(
+            ZekrniHeader(
               title: 'التلاوات',
               subtitle: 'تشغيل مباشر أو تحميل للاستماع بدون إنترنت',
+              showSearch: true,
+              onSearchChanged: (value) => setState(() => _query = value),
             ),
             Expanded(
               child: FutureBuilder<List<Reciter>>(
@@ -59,7 +62,7 @@ class _RecitationsScreenState extends State<RecitationsScreen> {
                   if (snapshot.hasError) {
                     return ErrorStateView(message: snapshot.error.toString());
                   }
-                  final reciters = snapshot.data ?? const [];
+                  final reciters = _filterReciters(snapshot.data ?? const []);
                   if (reciters.isEmpty) {
                     return const EmptyView(message: 'لا توجد قائمة شيوخ');
                   }
@@ -154,5 +157,24 @@ class _RecitationsScreenState extends State<RecitationsScreen> {
         ),
       ),
     );
+  }
+
+  List<Reciter> _filterReciters(List<Reciter> reciters) {
+    final query = _query.trim();
+    if (query.isEmpty) {
+      return reciters;
+    }
+    return reciters
+        .map((reciter) {
+          final surahs = reciter.surahs
+              .where((surah) => surah.name.contains(query))
+              .toList();
+          if (reciter.name.contains(query)) {
+            return reciter;
+          }
+          return Reciter(id: reciter.id, name: reciter.name, surahs: surahs);
+        })
+        .where((reciter) => reciter.surahs.isNotEmpty)
+        .toList();
   }
 }
