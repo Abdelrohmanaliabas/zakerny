@@ -6,7 +6,7 @@ import 'core/routing/app_router.dart';
 import 'core/storage/app_local_store.dart';
 import 'core/theme/app_theme.dart';
 
-class ZekrniApp extends StatelessWidget {
+class ZekrniApp extends StatefulWidget {
   const ZekrniApp({
     super.key,
     required this.store,
@@ -17,8 +17,25 @@ class ZekrniApp extends StatelessWidget {
   final NotificationService notifications;
 
   @override
+  State<ZekrniApp> createState() => _ZekrniAppState();
+}
+
+class _ZekrniAppState extends State<ZekrniApp> {
+  late ThemeMode _themeMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _themeMode = _readThemeMode();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final router = buildRouter(store: store, notifications: notifications);
+    final router = buildRouter(
+      store: widget.store,
+      notifications: widget.notifications,
+      onThemeModeChanged: _setThemeMode,
+    );
 
     return MaterialApp.router(
       title: 'ذكرني',
@@ -31,6 +48,8 @@ class ZekrniApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: _themeMode,
       routerConfig: router,
       builder: (context, child) {
         return Directionality(
@@ -39,5 +58,20 @@ class ZekrniApp extends StatelessWidget {
         );
       },
     );
+  }
+
+  ThemeMode _readThemeMode() {
+    return switch (widget.store.getString('app_theme_mode')) {
+      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
+  }
+
+  Future<void> _setThemeMode(ThemeMode mode) async {
+    await widget.store.setString('app_theme_mode', mode.name);
+    if (mounted) {
+      setState(() => _themeMode = mode);
+    }
   }
 }

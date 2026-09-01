@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zakerny/src/core/storage/app_local_store.dart';
 import 'package:zakerny/src/features/prayer_times/data/prayer_repository.dart';
+import 'package:zakerny/src/features/quran/data/quran_repository.dart';
 
 void main() {
   test('default prayer preferences are available offline', () async {
@@ -13,5 +14,20 @@ void main() {
 
     expect(prefs.city, 'القاهرة');
     expect(prefs.enabledPrayers['fajr'], isTrue);
+  });
+
+  test('quran local data contains juz, hizb, and page indexes', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+    final store = SharedPrefsAppLocalStore();
+    await store.init();
+
+    final surahs = await QuranRepository(store).loadSurahs();
+    final ayahs = surahs.expand((surah) => surah.ayahs).toList();
+
+    expect(surahs.length, 114);
+    expect(ayahs.any((ayah) => ayah.juz == 1), isTrue);
+    expect(ayahs.any((ayah) => ayah.hizbQuarter == 1), isTrue);
+    expect(ayahs.any((ayah) => ayah.page == 1), isTrue);
   });
 }

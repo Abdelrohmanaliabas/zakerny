@@ -15,24 +15,32 @@ class AppShell extends StatelessWidget {
     final location = GoRouterState.of(context).uri.path;
     final index = _indexFor(location);
 
-    return IslamicBackground(
-      child: Scaffold(
-        body: child,
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: index,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: Theme.of(context).colorScheme.primary,
-          unselectedItemColor: Colors.grey.shade600,
-          onTap: (value) => context.go(navItems[value].route),
-          items: navItems
-              .map(
-                (item) => BottomNavigationBarItem(
-                  icon: Icon(item.icon),
-                  activeIcon: Icon(item.activeIcon),
-                  label: item.label,
-                ),
-              )
-              .toList(),
+    return PopScope(
+      canPop: !_isTopLevelRoute(location) || location == '/',
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && location != '/') {
+          context.go('/');
+        }
+      },
+      child: IslamicBackground(
+        child: Scaffold(
+          body: child,
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: index,
+            type: BottomNavigationBarType.fixed,
+            selectedItemColor: Theme.of(context).colorScheme.primary,
+            unselectedItemColor: Colors.grey.shade600,
+            onTap: (value) => context.go(navItems[value].route),
+            items: navItems
+                .map(
+                  (item) => BottomNavigationBarItem(
+                    icon: Icon(item.icon),
+                    activeIcon: Icon(item.activeIcon),
+                    label: item.label,
+                  ),
+                )
+                .toList(),
+          ),
         ),
       ),
     );
@@ -49,5 +57,9 @@ class AppShell extends StatelessWidget {
       }
     }
     return 0;
+  }
+
+  bool _isTopLevelRoute(String location) {
+    return navItems.any((item) => item.route == location);
   }
 }

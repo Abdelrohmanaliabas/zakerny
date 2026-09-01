@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/storage/app_local_store.dart';
 import '../../prayer_times/application/prayer_controller.dart';
 import '../../prayer_times/domain/prayer_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key, required this.prayer});
+  const SettingsScreen({
+    super.key,
+    required this.prayer,
+    required this.store,
+    required this.onThemeModeChanged,
+  });
+
   final PrayerController prayer;
+  final AppLocalStore store;
+  final ValueChanged<ThemeMode> onThemeModeChanged;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -17,6 +26,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late final TextEditingController _lat;
   late final TextEditingController _lng;
   late final TextEditingController _customReminder;
+  late ThemeMode _themeMode;
   bool _saving = false;
 
   @override
@@ -29,6 +39,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _customReminder = TextEditingController(
       text: _prefs.reminderMinutes.toString(),
     );
+    _themeMode = switch (widget.store.getString('app_theme_mode')) {
+      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
   }
 
   @override
@@ -69,6 +84,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Text('المظهر', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 10),
+          SegmentedButton<ThemeMode>(
+            segments: const [
+              ButtonSegment(
+                value: ThemeMode.system,
+                icon: Icon(Icons.brightness_auto),
+                label: Text('تلقائي'),
+              ),
+              ButtonSegment(
+                value: ThemeMode.light,
+                icon: Icon(Icons.light_mode),
+                label: Text('فاتح'),
+              ),
+              ButtonSegment(
+                value: ThemeMode.dark,
+                icon: Icon(Icons.dark_mode),
+                label: Text('داكن'),
+              ),
+            ],
+            selected: {_themeMode},
+            onSelectionChanged: (selection) {
+              final mode = selection.first;
+              setState(() => _themeMode = mode);
+              widget.onThemeModeChanged(mode);
+            },
+          ),
+          const SizedBox(height: 20),
+          Text('مواقيت الصلاة', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 10),
           TextField(
             controller: _city,
             decoration: const InputDecoration(labelText: 'المدينة'),
@@ -208,6 +253,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     );
                   },
             child: Text(_saving ? 'جار الحفظ...' : 'حفظ'),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: _saving
+                ? null
+                : () => _save(
+                    _prefs.copyWith(
+                      city: _city.text.trim().isEmpty
+                          ? 'موقع يدوي'
+                          : _city.text.trim(),
+                      latitude: double.tryParse(_lat.text) ?? _prefs.latitude,
+                      longitude: double.tryParse(_lng.text) ?? _prefs.longitude,
+                    ),
+                  ),
+            icon: const Icon(Icons.notifications_active),
+            label: const Text('تفعيل تنبيهات الأذان الآن'),
           ),
         ],
       ),

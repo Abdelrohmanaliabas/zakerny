@@ -46,6 +46,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   go_router: ^17.5.0
+  flutter_timezone: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -71,9 +72,15 @@ flutter:
 
   assets:
     - assets/branding/app_icon.png
+    - assets/audio/adhan.mp3
     - assets/quran/quran.json
     - assets/hadith/hadith.json
     - assets/recitations/reciters.json
+
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

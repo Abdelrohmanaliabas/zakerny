@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../notifications/notification_service.dart';
@@ -8,10 +9,12 @@ import 'feature_registry.dart';
 GoRouter buildRouter({
   required AppLocalStore store,
   required NotificationService notifications,
+  required ValueChanged<ThemeMode> onThemeModeChanged,
 }) {
   final features = buildFeatureRegistry(
     store: store,
     notifications: notifications,
+    onThemeModeChanged: onThemeModeChanged,
   );
   final navItems = features.map((feature) => feature.navItem).toList();
 

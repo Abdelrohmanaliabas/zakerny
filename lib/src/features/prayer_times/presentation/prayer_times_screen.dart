@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/widgets/zekrni_header.dart';
 import '../application/prayer_controller.dart';
 import '../domain/prayer_day.dart';
 import '../domain/prayer_preferences.dart';
 
 class PrayerTimesScreen extends StatefulWidget {
   const PrayerTimesScreen({super.key, required this.controller});
+
   final PrayerController controller;
 
   @override
@@ -42,29 +44,119 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
     final next = day.nextPrayer(DateTime.now());
 
     return Scaffold(
-      appBar: AppBar(title: const Text('مواقيت الصلاة')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _NextPrayerCard(next: next),
-          const SizedBox(height: 12),
-          ...day.prayers.map(
-            (prayer) => Card(
-              child: ListTile(
-                leading: Icon(
-                  prayer.key == next.key
-                      ? Icons.notifications_active
-                      : Icons.access_time,
-                ),
-                title: Text(prayer.name),
-                subtitle: prayer.key == 'sunrise'
-                    ? const Text('ليست صلاة')
-                    : null,
-                trailing: Text(
-                  _timeFormat.format(prayer.time),
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+      body: SafeArea(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            ZekrniHeader(title: 'مواقيت الصلاة', subtitle: _prefs.city),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _NextPrayerCard(next: next),
+                  const SizedBox(height: 18),
+                  Text(
+                    'مواقيت اليوم',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 74,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: day.prayers.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        final prayer = day.prayers[index];
+                        return _PrayerChip(
+                          prayer: prayer,
+                          selected: prayer.key == next.key,
+                          time: _timeFormat.format(prayer.time),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  ...day.prayers.map(
+                    (prayer) => Card(
+                      child: ListTile(
+                        leading: Icon(
+                          prayer.key == next.key
+                              ? Icons.notifications_active
+                              : Icons.access_time,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        title: Text(prayer.name),
+                        subtitle: prayer.key == 'sunrise'
+                            ? const Text('الشروق')
+                            : Text(
+                                _prefs.enabledPrayers[prayer.key] == true
+                                    ? 'التنبيه مفعل'
+                                    : 'التنبيه متوقف',
+                              ),
+                        trailing: Text(
+                          _timeFormat.format(prayer.time),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NextPrayerCard extends StatelessWidget {
+  const _NextPrayerCard({required this.next});
+
+  final PrayerMoment next;
+
+  @override
+  Widget build(BuildContext context) {
+    final remaining = next.time.difference(DateTime.now());
+    final hours = remaining.inHours;
+    final minutes = remaining.inMinutes.remainder(60).clamp(0, 59);
+    final color = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: color.primary,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.volume_up, color: color.onPrimary, size: 36),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'الصلاة القادمة',
+                  style: TextStyle(color: color.onPrimary),
+                ),
+                Text(
+                  next.name,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: color.onPrimary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  'متبقي $hours ساعة و $minutes دقيقة',
+                  style: TextStyle(
+                    color: color.onPrimary.withValues(alpha: 0.86),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -73,43 +165,45 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
   }
 }
 
-class _NextPrayerCard extends StatelessWidget {
-  const _NextPrayerCard({required this.next});
-  final PrayerMoment next;
+class _PrayerChip extends StatelessWidget {
+  const _PrayerChip({
+    required this.prayer,
+    required this.selected,
+    required this.time,
+  });
+
+  final PrayerMoment prayer;
+  final bool selected;
+  final String time;
 
   @override
   Widget build(BuildContext context) {
-    final remaining = next.time.difference(DateTime.now());
-    final hours = remaining.inHours;
-    final minutes = remaining.inMinutes.remainder(60).clamp(0, 59);
-    return Card(
-      color: Theme.of(context).colorScheme.primary,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'الصلاة القادمة',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(color: Colors.white),
+    final color = Theme.of(context).colorScheme;
+    return Container(
+      width: 92,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: selected ? color.secondary : color.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            prayer.name,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: selected ? Colors.black87 : color.onSurface,
             ),
-            const SizedBox(height: 8),
-            Text(
-              next.name,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+          ),
+          Text(
+            time,
+            style: TextStyle(
+              fontSize: 12,
+              color: selected ? Colors.black87 : color.onSurfaceVariant,
             ),
-            const SizedBox(height: 4),
-            Text(
-              'متبقي $hours ساعة و $minutes دقيقة',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

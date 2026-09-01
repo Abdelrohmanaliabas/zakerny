@@ -40,6 +40,11 @@ class NotificationService extends ChangeNotifier {
         ?.requestNotificationsPermission();
     await _plugin
         .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.requestExactAlarmsPermission();
+    await _plugin
+        .resolvePlatformSpecificImplementation<
           IOSFlutterLocalNotificationsPlugin
         >()
         ?.requestPermissions(alert: true, badge: true, sound: true);
@@ -63,15 +68,17 @@ class NotificationService extends ChangeNotifier {
       scheduledDate: tz.TZDateTime.from(scheduled, tz.local),
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
-          'prayer_times',
-          'مواقيت الصلاة',
-          channelDescription: 'تنبيهات مواقيت الصلاة اليومية',
+          'prayer_times_adhan',
+          'أذان مواقيت الصلاة',
+          channelDescription: 'تنبيهات مواقيت الصلاة بصوت الأذان',
           importance: Importance.high,
           priority: Priority.high,
+          sound: RawResourceAndroidNotificationSound('adhan'),
+          playSound: true,
         ),
-        iOS: DarwinNotificationDetails(),
+        iOS: DarwinNotificationDetails(sound: 'adhan.caf'),
       ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       payload: '/prayers',
     );
   }

@@ -25,6 +25,7 @@ import 'app_feature.dart';
 List<AppFeature> buildFeatureRegistry({
   required AppLocalStore store,
   required NotificationService notifications,
+  required ValueChanged<ThemeMode> onThemeModeChanged,
 }) {
   final prayer = PrayerController(PrayerRepository(store), notifications);
   final quran = QuranController(QuranRepository(store));
@@ -92,6 +93,9 @@ List<AppFeature> buildFeatureRegistry({
           builder: (context, state) => QuranReaderScreen(
             controller: quran,
             surahId: int.tryParse(state.pathParameters['id'] ?? '') ?? 1,
+            initialAyahNumber: int.tryParse(
+              state.uri.queryParameters['ayah'] ?? '',
+            ),
           ),
         ),
       ],
@@ -138,7 +142,11 @@ List<AppFeature> buildFeatureRegistry({
       routes: [
         GoRoute(
           path: '/settings',
-          builder: (context, state) => SettingsScreen(prayer: prayer),
+          builder: (context, state) => SettingsScreen(
+            prayer: prayer,
+            store: store,
+            onThemeModeChanged: onThemeModeChanged,
+          ),
         ),
       ],
     ),
