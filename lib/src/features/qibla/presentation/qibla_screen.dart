@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/widgets/state_views.dart';
@@ -92,47 +93,65 @@ class _CompassCard extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            SizedBox.square(
-              dimension: 230,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: color.primary.withValues(alpha: 0.22),
-                        width: 2,
+            StreamBuilder<CompassEvent>(
+              stream: FlutterCompass.events,
+              builder: (context, snapshot) {
+                final heading = snapshot.data?.heading;
+                final relativeBearing = heading == null
+                    ? direction.bearing
+                    : (direction.bearing - heading + 360) % 360;
+                return Column(
+                  children: [
+                    SizedBox.square(
+                      dimension: 230,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: color.primary.withValues(alpha: 0.22),
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                          Transform.rotate(
+                            angle: -(heading ?? 0) * math.pi / 180,
+                            child: const PositionedCompassLabels(),
+                          ),
+                          Transform.rotate(
+                            angle: relativeBearing * math.pi / 180,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.navigation,
+                                  size: 98,
+                                  color: color.primary,
+                                ),
+                                const SizedBox(height: 14),
+                              ],
+                            ),
+                          ),
+                          CircleAvatar(
+                            radius: 34,
+                            backgroundColor: color.secondary,
+                            child: Icon(Icons.mosque, color: color.onSecondary),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  Positioned(
-                    top: 10,
-                    child: Text(
-                      'N',
-                      style: TextStyle(
-                        color: color.onSurfaceVariant,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    const SizedBox(height: 10),
+                    Text(
+                      heading == null
+                          ? 'حرك الهاتف لمعايرة البوصلة'
+                          : 'اتجاه الهاتف ${heading.round()}\u00b0',
+                      style: TextStyle(color: color.onSurfaceVariant),
                     ),
-                  ),
-                  Transform.rotate(
-                    angle: direction.bearing * math.pi / 180,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.navigation, size: 98, color: color.primary),
-                        const SizedBox(height: 14),
-                      ],
-                    ),
-                  ),
-                  CircleAvatar(
-                    radius: 34,
-                    backgroundColor: color.secondary,
-                    child: Icon(Icons.mosque, color: color.onSecondary),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 14),
             Text(
@@ -147,6 +166,30 @@ class _CompassCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class PositionedCompassLabels extends StatelessWidget {
+  const PositionedCompassLabels({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = TextStyle(
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      fontWeight: FontWeight.w800,
+    );
+    return SizedBox.square(
+      dimension: 210,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(top: 0, child: Text('N', style: style)),
+          Positioned(bottom: 0, child: Text('S', style: style)),
+          Positioned(left: 0, child: Text('W', style: style)),
+          Positioned(right: 0, child: Text('E', style: style)),
+        ],
       ),
     );
   }

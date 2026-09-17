@@ -66,54 +66,36 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
               Card(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
+                    horizontal: 16,
+                    vertical: 14,
                   ),
                   child: Column(
-                    children: surah.ayahs.map((ayah) {
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: _ayahChunks(surah.ayahs).map((ayahs) {
+                      final firstAyah = ayahs.first;
                       final key = _ayahKeys.putIfAbsent(
-                        ayah.number,
+                        firstAyah.number,
                         GlobalKey.new,
                       );
-                      final highlighted =
-                          ayah.number == widget.initialAyahNumber;
-                      return Container(
+                      for (final ayah in ayahs) {
+                        _ayahKeys[ayah.number] = key;
+                      }
+                      final highlighted = ayahs.any(
+                        (ayah) => ayah.number == widget.initialAyahNumber,
+                      );
+                      return _AyahParagraph(
                         key: key,
-                        decoration: BoxDecoration(
-                          color: highlighted
-                              ? Theme.of(
-                                  context,
-                                ).colorScheme.secondary.withValues(alpha: 0.16)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () =>
-                              widget.controller.saveLastRead(surah, ayah),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 3,
-                              horizontal: 4,
-                            ),
-                            child: Text.rich(
-                              TextSpan(
-                                text: ayah.text,
-                                children: [
-                                  WidgetSpan(
-                                    alignment: PlaceholderAlignment.middle,
-                                    child: _AyahBadge(number: ayah.number),
-                                  ),
-                                ],
-                              ),
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(
-                                    height: 1.72,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                              textAlign: TextAlign.justify,
-                            ),
-                          ),
+                        ayahs: ayahs,
+                        highlighted: highlighted,
+                        onTap: () => widget.controller.saveLastRead(
+                          surah,
+                          highlighted
+                              ? ayahs.firstWhere(
+                                  (ayah) =>
+                                      ayah.number == widget.initialAyahNumber,
+                                  orElse: () => firstAyah,
+                                )
+                              : firstAyah,
                         ),
                       );
                     }).toList(),
@@ -148,6 +130,20 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     );
   }
 
+  List<List<Ayah>> _ayahChunks(List<Ayah> ayahs) {
+    const chunkSize = 8;
+    final chunks = <List<Ayah>>[];
+    for (var index = 0; index < ayahs.length; index += chunkSize) {
+      chunks.add(
+        ayahs.sublist(
+          index,
+          index + chunkSize > ayahs.length ? ayahs.length : index + chunkSize,
+        ),
+      );
+    }
+    return chunks;
+  }
+
   void _scheduleInitialAyahScroll() {
     if (_didScrollToInitialAyah || widget.initialAyahNumber == null) {
       return;
@@ -166,6 +162,70 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         alignment: 0.18,
       );
     });
+  }
+}
+
+class _AyahParagraph extends StatelessWidget {
+  const _AyahParagraph({
+    super.key,
+    required this.ayahs,
+    required this.highlighted,
+    required this.onTap,
+  });
+
+  final List<Ayah> ayahs;
+  final bool highlighted;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme;
+    final textStyle = Theme.of(
+      context,
+    ).textTheme.titleLarge?.copyWith(height: 1.9, fontWeight: FontWeight.w500);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: highlighted
+              ? color.secondary.withValues(alpha: 0.14)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Text.rich(
+          TextSpan(
+            children: [
+              for (final ayah in ayahs) ...[
+                TextSpan(text: ayah.text),
+                TextSpan(
+                  text: ' ﴿${_arabicDigits(ayah.number)}﴾ ',
+                  style: TextStyle(
+                    color: color.secondary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          style: textStyle,
+          textAlign: TextAlign.justify,
+          textDirection: TextDirection.rtl,
+        ),
+      ),
+    );
+  }
+
+  String _arabicDigits(int value) {
+    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return value
+        .toString()
+        .split('')
+        .map((digit) => digits[int.parse(digit)])
+        .join();
   }
 }
 
@@ -227,32 +287,6 @@ class _MetaPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
       ),
       child: Text(label, style: const TextStyle(color: Colors.white)),
-    );
-  }
-}
-
-class _AyahBadge extends StatelessWidget {
-  const _AyahBadge({required this.number});
-
-  final int number;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondary,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Text(
-        '$number',
-        style: const TextStyle(
-          color: Colors.black87,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
     );
   }
 }
