@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/zekrni_header.dart';
@@ -15,6 +18,7 @@ class RecitationsScreen extends StatefulWidget {
 
 class _RecitationsScreenState extends State<RecitationsScreen> {
   late Future<List<Reciter>> _future;
+  StreamSubscription<PlayerState>? _playerSubscription;
   String? _busyKey;
   String _query = '';
 
@@ -22,6 +26,21 @@ class _RecitationsScreenState extends State<RecitationsScreen> {
   void initState() {
     super.initState();
     _future = widget.controller.loadReciters();
+    _playerSubscription = widget.controller.playerStateStream.listen((_) {
+      if (mounted) setState(() {});
+    });
+    widget.controller.activeRecitationNotifier.addListener(_onActiveChanged);
+  }
+
+  void _onActiveChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _playerSubscription?.cancel();
+    widget.controller.activeRecitationNotifier.removeListener(_onActiveChanged);
+    super.dispose();
   }
 
   Future<void> _run(String key, Future<void> Function() action) async {
@@ -66,89 +85,162 @@ class _RecitationsScreenState extends State<RecitationsScreen> {
                   if (reciters.isEmpty) {
                     return const EmptyView(message: 'لا توجد قائمة شيوخ');
                   }
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: reciters.length,
-                    itemBuilder: (context, index) {
-                      final reciter = reciters[index];
-                      return Card(
-                        child: ExpansionTile(
-                          leading: Icon(
-                            Icons.person_outline,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          title: Text(reciter.name),
-                          children: reciter.surahs.map((surah) {
-                            final download = widget.controller.findDownload(
-                              reciter.id,
-                              surah.id,
-                            );
-                            final key = '${reciter.id}-${surah.id}';
-                            final busy = _busyKey == key;
-                            return ListTile(
-                              title: Text(surah.name),
-                              subtitle: Text(
-                                download == null
-                                    ? 'Streaming عند توفر الرابط'
-                                    : 'محملة وتعمل بدون إنترنت',
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 900),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: reciters.length,
+                        itemBuilder: (context, index) {
+                          final reciter = reciters[index];
+                          return Card(
+                            child: ExpansionTile(
+                              leading: Icon(
+                                Icons.person_outline,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
-                              leading: busy
-                                  ? const SizedBox.square(
-                                      dimension: 22,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.music_note),
-                              trailing: Wrap(
-                                spacing: 4,
-                                children: [
-                                  IconButton(
-                                    tooltip: 'تشغيل',
-                                    onPressed: busy
-                                        ? null
-                                        : () => _run(
-                                            key,
-                                            () => widget.controller.play(
-                                              reciter,
-                                              surah,
-                                            ),
-                                          ),
-                                    icon: const Icon(Icons.play_arrow),
+                              title: Text(reciter.name),
+                              children: reciter.surahs.map((surah) {
+                                final download = widget.controller.findDownload(
+                                  reciter.id,
+                                  surah.id,
+                                );
+                                final key = '${reciter.id}-${surah.id}';
+                                final busy = _busyKey == key;
+                                final isCurrent = widget.controller.isCurrentTrack(
+                                  reciter.id,
+                                  surah.id,
+                                );
+                                final isPlaying = widget.controller
+                                    .isCurrentTrackPlaying(reciter.id, surah.id);
+
+                                return ListTile(
+                                  selected: isCurrent,
+                                  selectedTileColor: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer
+                                      .withValues(alpha: 0.15),
+                                  title: Text(
+                                    surah.name,
+                                    style: isCurrent
+                                        ? const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          )
+                                        : null,
                                   ),
-                                  if (download == null)
-                                    IconButton(
-                                      tooltip: 'تحميل',
-                                      onPressed: busy
-                                          ? null
-                                          : () => _run(
-                                              key,
-                                              () => widget.controller.download(
-                                                reciter,
-                                                surah,
-                                              ),
-                                            ),
-                                      icon: const Icon(Icons.download),
-                                    )
-                                  else
-                                    IconButton(
-                                      tooltip: 'حذف التحميل',
-                                      onPressed: busy
-                                          ? null
-                                          : () => _run(
-                                              key,
-                                              () => widget.controller
-                                                  .deleteDownload(download),
-                                            ),
-                                      icon: const Icon(Icons.delete_outline),
-                                    ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      );
-                    },
+                                  subtitle: Text(
+                                    download == null
+                                        ? 'Streaming عند توفر الرابط'
+                                        : 'محملة وتعمل بدون إنترنت',
+                                  ),
+                                  leading: busy
+                                      ? const SizedBox.square(
+                                          dimension: 22,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : isCurrent
+                                          ? Icon(
+                                              isPlaying
+                                                  ? Icons.graphic_eq
+                                                  : Icons.pause_circle_outline,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                            )
+                                          : const Icon(Icons.music_note),
+                                  trailing: Wrap(
+                                    spacing: 4,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    children: [
+                                      if (isCurrent) ...[
+                                        IconButton(
+                                          tooltip: isPlaying ? 'إيقاف مؤقت' : 'استئناف',
+                                          onPressed: busy
+                                              ? null
+                                              : () => _run(
+                                                    key,
+                                                    () => widget.controller
+                                                        .togglePlayPause(
+                                                          reciter,
+                                                          surah,
+                                                        ),
+                                                  ),
+                                          icon: Icon(
+                                            isPlaying
+                                                ? Icons.pause_circle_filled
+                                                : Icons.play_circle_filled,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          tooltip: 'إيقاف التلاوة',
+                                          onPressed: busy
+                                              ? null
+                                              : () => _run(
+                                                    key,
+                                                    () => widget.controller.stop(),
+                                                  ),
+                                          icon: Icon(
+                                            Icons.stop_circle_outlined,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .error,
+                                          ),
+                                        ),
+                                      ] else ...[
+                                        IconButton(
+                                          tooltip: 'تشغيل',
+                                          onPressed: busy
+                                              ? null
+                                              : () => _run(
+                                                    key,
+                                                    () => widget.controller.play(
+                                                      reciter,
+                                                      surah,
+                                                    ),
+                                                  ),
+                                          icon: const Icon(Icons.play_arrow),
+                                        ),
+                                      ],
+                                      if (download == null)
+                                        IconButton(
+                                          tooltip: 'تحميل',
+                                          onPressed: busy
+                                              ? null
+                                              : () => _run(
+                                                    key,
+                                                    () => widget.controller.download(
+                                                      reciter,
+                                                      surah,
+                                                    ),
+                                                  ),
+                                          icon: const Icon(Icons.download),
+                                        )
+                                      else
+                                        IconButton(
+                                          tooltip: 'حذف التحميل',
+                                          onPressed: busy
+                                              ? null
+                                              : () => _run(
+                                                    key,
+                                                    () => widget.controller
+                                                        .deleteDownload(download),
+                                                  ),
+                                          icon: const Icon(Icons.delete_outline),
+                                        ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   );
                 },
               ),

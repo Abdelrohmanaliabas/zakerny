@@ -29,4 +29,11 @@ class QuranController {
       ),
     );
   }
+
+  double getFontSize() => repository.getFontSize();
+  Future<void> setFontSize(double size) => repository.setFontSize(size);
+
+  bool getMushafMode() => repository.getMushafMode();
+  Future<void> setMushafMode(bool value) => repository.setMushafMode(value);
 }
+

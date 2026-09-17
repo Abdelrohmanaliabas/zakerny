@@ -1,6 +1,10 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -12,6 +16,16 @@ import 'src/features/prayer_times/data/prayer_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+    try {
+      await JustAudioBackground.init(
+        androidNotificationChannelId: 'com.example.zakerny.channel.audio',
+        androidNotificationChannelName: 'تلاوات القرآن الكريم',
+        androidNotificationOngoing: false,
+        androidShowNotificationBadge: true,
+      );
+    } catch (_) {}
+  }
   await initializeDateFormatting('ar');
   tz_data.initializeTimeZones();
   await _configureLocalTimezone();
@@ -39,6 +53,9 @@ Future<void> _scheduleStartupPrayerNotifications(
   AppLocalStore store,
   NotificationService notifications,
 ) async {
+  if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
+    return;
+  }
   try {
     final controller = PrayerController(PrayerRepository(store), notifications);
     await controller.reschedule(controller.loadPreferences());

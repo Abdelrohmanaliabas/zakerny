@@ -1,11 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zakerny/src/core/notifications/notification_service.dart';
 import 'package:zakerny/src/core/storage/app_local_store.dart';
 import 'package:zakerny/src/features/adhkar/data/adhkar_repository.dart';
 import 'package:zakerny/src/features/prayer_times/data/prayer_repository.dart';
 import 'package:zakerny/src/features/qibla/data/qibla_repository.dart';
 import 'package:zakerny/src/features/quran/data/quran_repository.dart';
 import 'package:zakerny/src/features/recitations/data/recitation_repository.dart';
+import 'package:zakerny/src/features/recitations/domain/recitation_models.dart';
 
 void main() {
   test('default prayer preferences are available offline', () async {
@@ -80,4 +82,54 @@ void main() {
     expect(direction.bearing, greaterThan(0));
     expect(direction.distanceKm, greaterThan(0));
   });
+
+  test('active recitation correctly matches reciter and surah', () {
+    const reciter = Reciter(
+      id: 'mishary',
+      name: 'مشاري العفاسي',
+      surahs: [],
+    );
+    const surah = RecitationSurah(
+      id: 1,
+      name: 'الفاتحة',
+    );
+    const active = ActiveRecitation(
+      reciter: reciter,
+      surah: surah,
+      isDownloaded: true,
+      localPath: '/path/to/mishary_1.mp3',
+    );
+
+    expect(active.matches('mishary', 1), isTrue);
+    expect(active.matches('mishary', 2), isFalse);
+    expect(active.matches('other', 1), isFalse);
+    expect(active.key, 'mishary-1');
+  });
+
+  test('quran reader font size and mode can be persisted and retrieved', () async {
+    SharedPreferences.setMockInitialValues({});
+    final store = SharedPrefsAppLocalStore();
+    await store.init();
+
+    final repository = QuranRepository(store);
+    expect(repository.getFontSize(), 23.0);
+    expect(repository.getMushafMode(), isTrue);
+
+    await repository.setFontSize(28.0);
+    await repository.setMushafMode(false);
+
+    expect(repository.getFontSize(), 28.0);
+    expect(repository.getMushafMode(), isFalse);
+  });
+
+  test('notification service initializes safely on desktop platforms', () async {
+    final service = NotificationService();
+    // On Windows test environment, isSupported is false
+    expect(service.isSupported, isFalse);
+    // These should complete without throwing any exception
+    await service.initialize();
+    await service.requestPermissions();
+    await service.cancelAllPrayerNotifications();
+  });
 }
+

@@ -69,3 +69,23 @@ class DownloadedRecitation {
     'path': path,
   };
 }
+
+class ActiveRecitation {
+  const ActiveRecitation({
+    required this.reciter,
+    required this.surah,
+    required this.isDownloaded,
+    this.localPath,
+  });
+
+  final Reciter reciter;
+  final RecitationSurah surah;
+  final bool isDownloaded;
+  final String? localPath;
+
+  String get key => '${reciter.id}-${surah.id}';
+
+  bool matches(String reciterId, int surahId) =>
+      reciter.id == reciterId && surah.id == surahId;
+}
+

@@ -53,4 +53,15 @@ class QuranRepository {
 
   Future<void> saveLastRead(QuranBookmark position) =>
       _store.setJson(_lastReadKey, position.toJson());
+
+  static const _fontSizeKey = 'quran_font_size';
+  static const _mushafModeKey = 'quran_mushaf_mode';
+
+  double getFontSize() => _store.getDouble(_fontSizeKey) ?? 23.0;
+  Future<void> setFontSize(double size) => _store.setDouble(_fontSizeKey, size);
+
+  bool getMushafMode() => _store.getBool(_mushafModeKey) ?? true;
+  Future<void> setMushafMode(bool value) =>
+      _store.setBool(_mushafModeKey, value);
 }
+

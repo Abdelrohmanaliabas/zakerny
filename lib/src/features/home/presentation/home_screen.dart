@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/widgets/zekrni_header.dart';
 import '../../hadith/application/hadith_controller.dart';
+import '../../hadith/domain/hadith_models.dart';
 import '../../prayer_times/application/prayer_controller.dart';
 import '../../quran/application/quran_controller.dart';
 import '../../recitations/application/recitations_controller.dart';
@@ -42,88 +43,95 @@ class HomeScreen extends StatelessWidget {
               subtitle: prefs.city,
               showSearch: true,
             ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _PrayerHeroCard(
-                    prayerName: next.name,
-                    time: timeFormat.format(next.time),
-                    remaining: remaining,
-                    onTap: () => context.go('/prayers'),
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    'من أجلك',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 10),
-                  GridView.count(
-                    crossAxisCount: 4,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 860),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _QuickAction(
-                        icon: Icons.explore,
-                        label: 'القبلة',
-                        onTap: () => context.push('/qibla'),
+                      _PrayerHeroCard(
+                        prayerName: next.name,
+                        time: timeFormat.format(next.time),
+                        remaining: remaining,
+                        onTap: () => context.go('/prayers'),
                       ),
-                      _QuickAction(
-                        icon: Icons.favorite,
-                        label: 'الأذكار',
-                        onTap: () => context.push('/adhkar'),
+                      const SizedBox(height: 18),
+                      Text(
+                        'من أجلك',
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      _QuickAction(
+                      const SizedBox(height: 10),
+                      GridView.count(
+                        crossAxisCount: 4,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        children: [
+                          _QuickAction(
+                            icon: Icons.explore,
+                            label: 'القبلة',
+                            onTap: () => context.push('/qibla'),
+                          ),
+                          _QuickAction(
+                            icon: Icons.favorite,
+                            label: 'الأذكار',
+                            onTap: () => context.push('/adhkar'),
+                          ),
+                          _QuickAction(
+                            icon: Icons.menu_book,
+                            label: 'القرآن',
+                            onTap: () => context.go('/quran'),
+                          ),
+                          _QuickAction(
+                            icon: Icons.headphones,
+                            label: 'قراء',
+                            onTap: () => context.go('/recitations'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      _HomeCard(
                         icon: Icons.menu_book,
-                        label: 'القرآن',
-                        onTap: () => context.go('/quran'),
+                        title: 'متابعة القراءة',
+                        value: lastRead == null
+                            ? 'لا يوجد موضع محفوظ'
+                            : '${lastRead.surahName}، آية ${lastRead.ayahNumber}',
+                        onTap: () => lastRead == null
+                            ? context.go('/quran')
+                            : context.push('/quran/surah/${lastRead.surahId}'),
                       ),
-                      _QuickAction(
-                        icon: Icons.headphones,
-                        label: 'قراء',
+                      const SizedBox(height: 10),
+                      FutureBuilder<List<Hadith>>(
+                        future: hadith.load(),
+                        builder: (context, snapshot) {
+                          final items = snapshot.data ?? const [];
+                          final lastId = hadith.lastHadithId();
+                          final item =
+                              items.where((h) => h.id == lastId).firstOrNull ??
+                              (items.isEmpty ? null : items.first);
+                          return _HomeCard(
+                            icon: Icons.article,
+                            title: 'آخر حديث',
+                            value: item?.title ?? 'لا توجد أحاديث محلية',
+                            onTap: () => context.go('/hadith'),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      _HomeCard(
+                        icon: Icons.download_done,
+                        title: 'التلاوات المحملة',
+                        value: downloads.isEmpty
+                            ? 'لا توجد ملفات محملة'
+                            : '${downloads.length} ملف جاهز دون إنترنت',
                         onTap: () => context.go('/recitations'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 18),
-                  _HomeCard(
-                    icon: Icons.menu_book,
-                    title: 'متابعة القراءة',
-                    value: lastRead == null
-                        ? 'لا يوجد موضع محفوظ'
-                        : '${lastRead.surahName}، آية ${lastRead.ayahNumber}',
-                    onTap: () => lastRead == null
-                        ? context.go('/quran')
-                        : context.push('/quran/surah/${lastRead.surahId}'),
-                  ),
-                  FutureBuilder(
-                    future: hadith.load(),
-                    builder: (context, snapshot) {
-                      final items = snapshot.data ?? const [];
-                      final lastId = hadith.lastHadithId();
-                      final item =
-                          items.where((h) => h.id == lastId).firstOrNull ??
-                          (items.isEmpty ? null : items.first);
-                      return _HomeCard(
-                        icon: Icons.favorite_border,
-                        title: 'آخر حديث',
-                        value: item?.title ?? 'لا توجد أحاديث محلية',
-                        onTap: () => context.go('/hadith'),
-                      );
-                    },
-                  ),
-                  _HomeCard(
-                    icon: Icons.download_done,
-                    title: 'التلاوات المحملة',
-                    value: downloads.isEmpty
-                        ? 'لا توجد ملفات محملة'
-                        : '${downloads.length} ملف جاهز دون إنترنت',
-                    onTap: () => context.go('/recitations'),
-                  ),
-                ],
+                ),
               ),
             ),
           ],

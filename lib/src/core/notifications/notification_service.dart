@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -10,6 +12,9 @@ class NotificationService extends ChangeNotifier {
       FlutterLocalNotificationsPlugin();
   String? _pendingRoute;
 
+  bool get isSupported =>
+      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
   String? takePendingRoute() {
     final route = _pendingRoute;
     _pendingRoute = null;
@@ -17,37 +22,43 @@ class NotificationService extends ChangeNotifier {
   }
 
   Future<void> initialize() async {
-    const android = AndroidInitializationSettings('@drawable/ic_stat_zekrni');
-    const ios = DarwinInitializationSettings();
-    await _plugin.initialize(
-      settings: const InitializationSettings(android: android, iOS: ios),
-      onDidReceiveNotificationResponse: (response) {
-        _setPendingRoute(response.payload);
-      },
-    );
+    if (!isSupported) return;
+    try {
+      const android = AndroidInitializationSettings('@drawable/ic_stat_zekrni');
+      const ios = DarwinInitializationSettings();
+      await _plugin.initialize(
+        settings: const InitializationSettings(android: android, iOS: ios),
+        onDidReceiveNotificationResponse: (response) {
+          _setPendingRoute(response.payload);
+        },
+      );
 
-    final launchDetails = await _plugin.getNotificationAppLaunchDetails();
-    if (launchDetails?.didNotificationLaunchApp == true) {
-      _setPendingRoute(launchDetails?.notificationResponse?.payload);
-    }
+      final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+      if (launchDetails?.didNotificationLaunchApp == true) {
+        _setPendingRoute(launchDetails?.notificationResponse?.payload);
+      }
+    } catch (_) {}
   }
 
   Future<void> requestPermissions() async {
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestExactAlarmsPermission();
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
+    if (!isSupported) return;
+    try {
+      await _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.requestNotificationsPermission();
+      await _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.requestExactAlarmsPermission();
+      await _plugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
+    } catch (_) {}
   }
 
   Future<void> schedulePrayerNotification({
@@ -55,47 +66,59 @@ class NotificationService extends ChangeNotifier {
     required PrayerMoment prayer,
     required int minutesBefore,
   }) async {
-    final scheduled = prayer.time.subtract(Duration(minutes: minutesBefore));
-    if (scheduled.isBefore(DateTime.now())) {
-      return;
-    }
-    await _plugin.zonedSchedule(
-      id: id,
-      title: 'ذكرني',
-      body: minutesBefore == 0
-          ? 'حان وقت صلاة ${prayer.name}'
-          : 'باقي $minutesBefore دقيقة على صلاة ${prayer.name}',
-      scheduledDate: tz.TZDateTime.from(scheduled, tz.local),
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'prayer_times_adhan',
-          'أذان مواقيت الصلاة',
-          channelDescription: 'تنبيهات مواقيت الصلاة بصوت الأذان',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: 'ic_stat_zekrni',
-          sound: RawResourceAndroidNotificationSound('adhan'),
-          playSound: true,
+    if (!isSupported) return;
+    try {
+      final scheduled = prayer.time.subtract(Duration(minutes: minutesBefore));
+      if (scheduled.isBefore(DateTime.now())) {
+        return;
+      }
+      await _plugin.zonedSchedule(
+        id: id,
+        title: 'ذكرني',
+        body: minutesBefore == 0
+            ? 'حان وقت صلاة ${prayer.name}'
+            : 'باقي $minutesBefore دقيقة على صلاة ${prayer.name}',
+        scheduledDate: tz.TZDateTime.from(scheduled, tz.local),
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'prayer_times_adhan',
+            'أذان مواقيت الصلاة',
+            channelDescription: 'تنبيهات مواقيت الصلاة بصوت الأذان',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: 'ic_stat_zekrni',
+            sound: RawResourceAndroidNotificationSound('adhan'),
+            playSound: true,
+          ),
+          iOS: DarwinNotificationDetails(sound: 'adhan.caf'),
         ),
-        iOS: DarwinNotificationDetails(sound: 'adhan.caf'),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      payload: '/prayers',
-    );
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: '/prayers',
+      );
+    } catch (_) {}
   }
 
-  Future<void> cancelPrayerNotification(int id) => _plugin.cancel(id: id);
+  Future<void> cancelPrayerNotification(int id) async {
+    if (!isSupported) return;
+    try {
+      await _plugin.cancel(id: id);
+    } catch (_) {}
+  }
 
   Future<void> cancelAllPrayerNotifications() async {
-    for (var id = 100; id < 700; id++) {
-      await _plugin.cancel(id: id);
-    }
+    if (!isSupported) return;
+    try {
+      for (var id = 100; id < 700; id++) {
+        await _plugin.cancel(id: id);
+      }
+    } catch (_) {}
   }
 
   Future<void> rescheduleAllPrayerNotifications({
     required List<PrayerDay> days,
     required PrayerPreferences preferences,
   }) async {
+    if (!isSupported) return;
     await requestPermissions();
     await cancelAllPrayerNotifications();
     var id = 100;
