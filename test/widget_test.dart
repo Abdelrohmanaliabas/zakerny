@@ -315,5 +315,48 @@ void main() {
     expect(find.text('اتجاه القبلة'), findsOneWidget);
     expect(find.text('الأذكار والسبحة'), findsOneWidget);
   });
+
+  test('ActiveRecitation supports ayahNumber and formats displayTitle correctly', () {
+    const reciter = Reciter(
+      id: 'alafasy',
+      name: 'مشاري راشد العفاسي',
+      surahs: [
+        RecitationSurah(id: 1, name: 'سُورَةُ ٱلْفَاتِحَةِ'),
+      ],
+    );
+
+    const fullSurahRecitation = ActiveRecitation(
+      reciter: reciter,
+      surah: RecitationSurah(id: 1, name: 'سُورَةُ ٱلْفَاتِحَةِ'),
+      isDownloaded: false,
+    );
+    expect(fullSurahRecitation.displayTitle, 'سُورَةُ ٱلْفَاتِحَةِ');
+    expect(fullSurahRecitation.key, 'alafasy-1');
+    expect(fullSurahRecitation.matches('alafasy', 1), isTrue);
+
+    const ayahRecitation = ActiveRecitation(
+      reciter: reciter,
+      surah: RecitationSurah(id: 1, name: 'سُورَةُ ٱلْفَاتِحَةِ'),
+      isDownloaded: false,
+      ayahNumber: 6,
+    );
+    expect(ayahRecitation.displayTitle, 'سُورَةُ ٱلْفَاتِحَةِ • آية 6');
+    expect(ayahRecitation.key, 'alafasy-1-6');
+    expect(ayahRecitation.matches('alafasy', 1, 6), isTrue);
+    expect(ayahRecitation.matches('alafasy', 1, 7), isFalse);
+  });
+
+  test('quran preferred reciter persists and defaults to alafasy', () async {
+    SharedPreferences.setMockInitialValues({});
+    final store = SharedPrefsAppLocalStore();
+    await store.init();
+
+    final repo = QuranRepository(store);
+    expect(repo.getPreferredReciterId(), 'alafasy');
+
+    await repo.setPreferredReciterId('husary');
+    expect(repo.getPreferredReciterId(), 'husary');
+  });
 }
+
 

@@ -108,6 +108,7 @@ List<AppFeature> buildFeatureRegistry({
           path: '/quran/surah/:id',
           builder: (context, state) => QuranReaderScreen(
             controller: quran,
+            recitationsController: recitations,
             surahId: int.tryParse(state.pathParameters['id'] ?? '') ?? 1,
             initialAyahNumber: int.tryParse(
               state.uri.queryParameters['ayah'] ?? '',

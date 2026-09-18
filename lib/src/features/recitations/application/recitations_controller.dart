@@ -23,13 +23,34 @@ class RecitationsController {
   Stream<Duration?> get durationStream => service.durationStream;
   bool get isPlaying => service.isPlaying;
 
-  bool isCurrentTrack(String reciterId, int surahId) {
+  bool isCurrentTrack(String reciterId, int surahId, [int? ayahNumber]) {
     final active = service.activeRecitation;
-    return active != null && active.matches(reciterId, surahId);
+    return active != null && active.matches(reciterId, surahId, ayahNumber);
   }
 
-  bool isCurrentTrackPlaying(String reciterId, int surahId) {
-    return isCurrentTrack(reciterId, surahId) && service.isPlaying;
+  bool isCurrentTrackPlaying(String reciterId, int surahId, [int? ayahNumber]) {
+    return isCurrentTrack(reciterId, surahId, ayahNumber) && service.isPlaying;
+  }
+
+  bool isSurahActive(int surahId) {
+    final active = service.activeRecitation;
+    return active != null && active.surah.id == surahId;
+  }
+
+  bool isSurahPlaying(int surahId) {
+    final active = service.activeRecitation;
+    return active != null &&
+        active.surah.id == surahId &&
+        active.ayahNumber == null &&
+        service.isPlaying;
+  }
+
+  bool isAyahPlaying(int surahId, int ayahNumber) {
+    final active = service.activeRecitation;
+    return active != null &&
+        active.surah.id == surahId &&
+        active.ayahNumber == ayahNumber &&
+        service.isPlaying;
   }
 
   Future<void> play(Reciter reciter, RecitationSurah surah) async {
@@ -48,6 +69,73 @@ class RecitationsController {
       surah.streamUrls,
       reciter: reciter,
       surah: surah,
+    );
+  }
+
+  Future<void> playSurahById(int surahId, {String? reciterId}) async {
+    final reciters = await loadReciters();
+    final reciter = reciters.where((r) => r.id == (reciterId ?? 'alafasy')).firstOrNull ??
+        reciters.first;
+    final surah = reciter.surahs.where((s) => s.id == surahId).firstOrNull;
+    if (surah == null) {
+      throw Exception('السورة غير متوفرة لهذا القارئ');
+    }
+    return play(reciter, surah);
+  }
+
+  Future<void> togglePlayPauseSurahById(int surahId, {String? reciterId}) async {
+    final active = service.activeRecitation;
+    if (active != null && active.surah.id == surahId && active.ayahNumber == null) {
+      if (service.isPlaying) {
+        await service.pause();
+      } else {
+        await service.resume();
+      }
+      return;
+    }
+    await playSurahById(surahId, reciterId: reciterId);
+  }
+
+  Future<void> playAyah({
+    required Reciter reciter,
+    required int surahId,
+    required String surahName,
+    required int ayahNumber,
+    int? globalNumber,
+  }) async {
+    return service.playAyah(
+      reciter: reciter,
+      surahId: surahId,
+      surahName: surahName,
+      ayahNumber: ayahNumber,
+      globalNumber: globalNumber,
+    );
+  }
+
+  Future<void> togglePlayPauseAyah({
+    required Reciter reciter,
+    required int surahId,
+    required String surahName,
+    required int ayahNumber,
+    int? globalNumber,
+  }) async {
+    final active = service.activeRecitation;
+    if (active != null &&
+        active.surah.id == surahId &&
+        active.ayahNumber == ayahNumber) {
+      if (service.isPlaying) {
+        await service.pause();
+      } else {
+        await service.resume();
+      }
+      return;
+    }
+    await playAyah(
+      reciter: reciter,
+      surahId: surahId,
+      surahName: surahName,
+      ayahNumber: ayahNumber,
+      globalNumber: globalNumber,
     );
   }
 

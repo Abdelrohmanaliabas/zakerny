@@ -1,8 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:just_audio/just_audio.dart';
 
 import '../../../core/widgets/state_views.dart';
+import '../../recitations/application/recitations_controller.dart';
+import '../../recitations/domain/recitation_models.dart';
+import '../../recitations/presentation/widgets/reciter_avatar.dart';
 import '../application/quran_controller.dart';
 import '../domain/quran_models.dart';
 
@@ -12,11 +18,13 @@ class QuranReaderScreen extends StatefulWidget {
     required this.controller,
     required this.surahId,
     this.initialAyahNumber,
+    this.recitationsController,
   });
 
   final QuranController controller;
   final int surahId;
   final int? initialAyahNumber;
+  final RecitationsController? recitationsController;
 
   @override
   State<QuranReaderScreen> createState() => _QuranReaderScreenState();
@@ -40,6 +48,10 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   int? _selectedSurahId;
   bool _didScrollToInitialAyah = false;
 
+  StreamSubscription<PlayerState>? _audioSub;
+  List<Reciter> _availableReciters = [];
+  Reciter? _selectedReciter;
+
   @override
   void initState() {
     super.initState();
@@ -49,11 +61,24 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     _selectedSurahId = widget.surahId;
 
     _loadData();
+    _loadReciters();
     _scrollController.addListener(_onScroll);
+    _audioSub = widget.recitationsController?.playerStateStream.listen((_) {
+      if (mounted) setState(() {});
+    });
+    widget.recitationsController?.activeRecitationNotifier
+        .addListener(_onAudioNotifierChanged);
+  }
+
+  void _onAudioNotifierChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _audioSub?.cancel();
+    widget.recitationsController?.activeRecitationNotifier
+        .removeListener(_onAudioNotifierChanged);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
@@ -82,6 +107,185 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           _errorMessage = e.toString();
           _isLoading = false;
         });
+      }
+    }
+  }
+
+  Future<void> _loadReciters() async {
+    final controller = widget.recitationsController;
+    if (controller == null) return;
+    try {
+      final reciters = await controller.loadReciters();
+      if (!mounted) return;
+      final savedId = widget.controller.getPreferredReciterId();
+      final current = reciters.where((r) => r.id == savedId).firstOrNull ??
+          reciters.firstOrNull;
+      setState(() {
+        _availableReciters = reciters;
+        _selectedReciter = current;
+      });
+    } catch (_) {}
+  }
+
+  void _showReciterPicker({VoidCallback? onSelected}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (pickerContext) {
+        return SafeArea(
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.65,
+            minChildSize: 0.4,
+            maxChildSize: 0.85,
+            expand: false,
+            builder: (context, scrollController) {
+              return Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 44,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.record_voice_over_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'اختر القارئ المفضل لتلاوة المصحف',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: ListView.builder(
+                      controller: scrollController,
+                      itemCount: _availableReciters.length,
+                      itemBuilder: (context, index) {
+                        final reciter = _availableReciters[index];
+                        final isSelected = _selectedReciter?.id == reciter.id;
+                        return ListTile(
+                          leading: ReciterAvatar(
+                            reciter: reciter,
+                            size: 42,
+                          ),
+                          title: Text(
+                            reciter.name,
+                            style: TextStyle(
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : null,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'المصحف المرتل • ${_arabicDigits(reciter.surahs.length)} سورة',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                          ),
+                          trailing: isSelected
+                              ? Icon(
+                                  Icons.check_circle_rounded,
+                                  color: Theme.of(context).colorScheme.primary,
+                                )
+                              : null,
+                          onTap: () {
+                            setState(() {
+                              _selectedReciter = reciter;
+                            });
+                            widget.controller
+                                .setPreferredReciterId(reciter.id);
+                            Navigator.pop(pickerContext);
+                            onSelected?.call();
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _toggleSurahPlay(Surah surah) async {
+    final controller = widget.recitationsController;
+    if (controller == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('خدمة التلاوات الصوتية غير متاحة')),
+      );
+      return;
+    }
+    try {
+      final reciter = _selectedReciter ??
+          _availableReciters.firstOrNull ??
+          (await controller.loadReciters()).first;
+      _selectedReciter = reciter;
+      await controller.togglePlayPauseSurahById(surah.id, reciterId: reciter.id);
+      if (mounted) setState(() {});
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('تعذر تشغيل تلاوة السورة: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleAyahPlay(Surah surah, Ayah ayah) async {
+    final controller = widget.recitationsController;
+    if (controller == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('خدمة التلاوات الصوتية غير متاحة')),
+      );
+      return;
+    }
+    try {
+      final reciter = _selectedReciter ??
+          _availableReciters.firstOrNull ??
+          (await controller.loadReciters()).first;
+      _selectedReciter = reciter;
+      await controller.togglePlayPauseAyah(
+        reciter: reciter,
+        surahId: surah.id,
+        surahName: surah.name,
+        ayahNumber: ayah.number,
+        globalNumber: ayah.globalNumber,
+      );
+      if (mounted) setState(() {});
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('تعذر تشغيل الآية: $e')),
+        );
       }
     }
   }
@@ -184,135 +388,348 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 44,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final reciterName =
+                _selectedReciter?.name ?? 'الشيخ مشاري راشد العفاسي';
+            final isAyahPlaying = widget.recitationsController?.isAyahPlaying(
+                  surah.id,
+                  ayah.number,
+                ) ??
+                false;
+            final isSurahPlaying = widget.recitationsController?.isSurahPlaying(
+                  surah.id,
+                ) ??
+                false;
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
                 ),
-                const SizedBox(height: 16),
-                Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
+                      width: 44,
+                      height: 4,
                       decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
+                        color: colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${surah.name} • آية ${_arabicDigits(ayah.number)}',
+                            style: TextStyle(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        if (ayah.juz != null)
+                          Text(
+                            'الجزء ${_arabicDigits(ayah.juz!)}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: theme.cardColor,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: colorScheme.outlineVariant
+                              .withValues(alpha: 0.4),
+                        ),
                       ),
                       child: Text(
-                        '${surah.name} • آية ${_arabicDigits(ayah.number)}',
-                        style: TextStyle(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.bold,
+                        displayText,
+                        textAlign: TextAlign.justify,
+                        textDirection: TextDirection.rtl,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontFamily: 'Amiri',
+                          fontSize: 20,
+                          height: 2.1,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    const Spacer(),
-                    if (ayah.juz != null)
-                      Text(
-                        'الجزء ${_arabicDigits(ayah.juz!)}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+                    const SizedBox(height: 14),
+                    // Audio Playback Card with Play Triangle
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: colorScheme.primary.withValues(alpha: 0.22),
+                          width: 1.2,
                         ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: theme.cardColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  child: Text(
-                    displayText,
-                    textAlign: TextAlign.justify,
-                    textDirection: TextDirection.rtl,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontFamily: 'Amiri',
-                      fontSize: 20,
-                      height: 2.1,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _ActionButton(
-                      icon: Icons.bookmark_add_outlined,
-                      label: 'حفظ علامة',
-                      onTap: () async {
-                        Navigator.pop(sheetContext);
-                        await widget.controller.bookmark(surah, ayah);
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'تم حفظ علامة عند ${surah.name} آية ${_arabicDigits(ayah.number)}',
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              // Prominent Play Triangle Button
+                              InkWell(
+                                onTap: () async {
+                                  await _toggleAyahPlay(surah, ayah);
+                                  setSheetState(() {});
+                                },
+                                borderRadius: BorderRadius.circular(25),
+                                child: Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        colorScheme.primary,
+                                        colorScheme.secondary,
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: colorScheme.primary
+                                            .withValues(alpha: 0.35),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    isAyahPlaying
+                                        ? Icons.pause_rounded
+                                        : Icons.play_arrow_rounded,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                ),
                               ),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                    _ActionButton(
-                      icon: Icons.bookmark_border,
-                      label: 'موضع قراءة',
-                      onTap: () async {
-                        Navigator.pop(sheetContext);
-                        await widget.controller.saveLastRead(surah, ayah);
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'تم حفظ موضع القراءة عند آية ${_arabicDigits(ayah.number)}',
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      isAyahPlaying
+                                          ? 'جارٍ تلاوة الآية ${_arabicDigits(ayah.number)}...'
+                                          : 'استماع للآية ${_arabicDigits(ayah.number)}',
+                                      style:
+                                          theme.textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      'بصوت $reciterName',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style:
+                                          theme.textTheme.bodySmall?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                    _ActionButton(
-                      icon: Icons.copy_rounded,
-                      label: 'نسخ الآية',
-                      onTap: () {
-                        Navigator.pop(sheetContext);
-                        Clipboard.setData(
-                          ClipboardData(
-                            text:
-                                '$displayText ﴿${surah.name}: ${ayah.number}﴾',
+                              OutlinedButton.icon(
+                                onPressed: () => _showReciterPicker(
+                                  onSelected: () => setSheetState(() {}),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  side: BorderSide(
+                                    color: colorScheme.primary
+                                        .withValues(alpha: 0.3),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.tune_rounded, size: 16),
+                                label: const Text(
+                                  'القارئ',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ],
                           ),
-                        );
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('تم نسخ نص الآية')),
-                          );
-                        }
-                      },
+                          const SizedBox(height: 10),
+                          Divider(
+                            height: 1,
+                            thickness: 0.8,
+                            color: colorScheme.outlineVariant
+                                .withValues(alpha: 0.4),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.verified_outlined,
+                                    size: 14,
+                                    color: colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'تلاوة صحيحة ومتقنة بالأحكام',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: colorScheme.onSurfaceVariant
+                                          .withValues(alpha: 0.85),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              TextButton.icon(
+                                onPressed: () async {
+                                  await _toggleSurahPlay(surah);
+                                  setSheetState(() {});
+                                },
+                                style: TextButton.styleFrom(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 8),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                icon: Icon(
+                                  isSurahPlaying
+                                      ? Icons.pause_circle_outline
+                                      : Icons.playlist_play_rounded,
+                                  size: 18,
+                                ),
+                                label: Text(
+                                  isSurahPlaying
+                                      ? 'إيقاف السورة'
+                                      : 'تشغيل السورة كاملة',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(height: 16),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _ActionButton(
+                            icon: isAyahPlaying
+                                ? Icons.pause_circle_filled_rounded
+                                : Icons.play_arrow_rounded,
+                            label: isAyahPlaying ? 'إيقاف' : 'استماع للآية',
+                            onTap: () async {
+                              await _toggleAyahPlay(surah, ayah);
+                              setSheetState(() {});
+                            },
+                          ),
+                          _ActionButton(
+                            icon: isSurahPlaying
+                                ? Icons.pause_circle_outline
+                                : Icons.playlist_play_rounded,
+                            label: isSurahPlaying
+                                ? 'إيقاف السورة'
+                                : 'تشغيل السورة',
+                            onTap: () async {
+                              await _toggleSurahPlay(surah);
+                              setSheetState(() {});
+                            },
+                          ),
+                          _ActionButton(
+                            icon: Icons.bookmark_add_outlined,
+                            label: 'حفظ علامة',
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              widget.controller.bookmark(surah, ayah);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'تم حفظ علامة عند ${surah.name} آية ${_arabicDigits(ayah.number)}',
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          _ActionButton(
+                            icon: Icons.bookmark_border,
+                            label: 'موضع قراءة',
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              widget.controller.saveLastRead(surah, ayah);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'تم حفظ موضع القراءة عند آية ${_arabicDigits(ayah.number)}',
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          _ActionButton(
+                            icon: Icons.copy_rounded,
+                            label: 'نسخ الآية',
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              Clipboard.setData(
+                                ClipboardData(
+                                  text:
+                                      '$displayText ﴿${surah.name}: ${ayah.number}﴾',
+                                ),
+                              );
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('تم نسخ نص الآية'),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                   ],
                 ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -534,6 +951,26 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: (widget.recitationsController
+                        ?.isSurahPlaying(_currentVisibleSurah.id) ??
+                    false)
+                ? 'إيقاف التلاوة'
+                : 'استماع لسورة ${_currentVisibleSurah.name}',
+            icon: Icon(
+              (widget.recitationsController
+                          ?.isSurahPlaying(_currentVisibleSurah.id) ??
+                      false)
+                  ? Icons.pause_circle_filled_rounded
+                  : Icons.play_circle_outline_rounded,
+              color: (widget.recitationsController
+                          ?.isSurahPlaying(_currentVisibleSurah.id) ??
+                      false)
+                  ? Theme.of(context).colorScheme.primary
+                  : null,
+            ),
+            onPressed: () => _toggleSurahPlay(_currentVisibleSurah),
+          ),
+          IconButton(
             tooltip: 'الانتقال إلى سورة',
             icon: const Icon(Icons.menu_book_outlined),
             onPressed: _showSurahJumpPicker,
@@ -583,7 +1020,15 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (index > 0) const SizedBox(height: 36),
-                    _SurahHeader(surah: surah),
+                    _SurahHeader(
+                      surah: surah,
+                      isPlaying: widget.recitationsController
+                              ?.isSurahPlaying(surah.id) ??
+                          false,
+                      reciterName: _selectedReciter?.name,
+                      onPlaySurah: () => _toggleSurahPlay(surah),
+                      onChangeReciter: () => _showReciterPicker(),
+                    ),
                     const SizedBox(height: 14),
                     if (surah.id != 9 && surah.id != 1) ...[
                       const _BasmalahBanner(),
@@ -1042,9 +1487,19 @@ class _AyahByAyahView extends StatelessWidget {
 }
 
 class _SurahHeader extends StatelessWidget {
-  const _SurahHeader({required this.surah});
+  const _SurahHeader({
+    required this.surah,
+    this.isPlaying = false,
+    this.reciterName,
+    this.onPlaySurah,
+    this.onChangeReciter,
+  });
 
   final Surah surah;
+  final bool isPlaying;
+  final String? reciterName;
+  final VoidCallback? onPlaySurah;
+  final VoidCallback? onChangeReciter;
 
   @override
   Widget build(BuildContext context) {
@@ -1128,6 +1583,61 @@ class _SurahHeader extends StatelessWidget {
                   label: 'الصفحة ${_arabicDigits(firstAyah!.page!)}',
                 ),
             ],
+          ),
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: onPlaySurah,
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.35),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    isPlaying
+                        ? 'إيقاف التلاوة'
+                        : 'استماع للسورة${reciterName != null ? ' ($reciterName)' : ''}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                  if (onChangeReciter != null) ...[
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: onChangeReciter,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.22),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.tune_rounded,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
         ],
       ),

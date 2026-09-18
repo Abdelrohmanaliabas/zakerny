@@ -53,11 +53,23 @@ class RecitationService {
     List<String> urls, {
     Reciter? reciter,
     RecitationSurah? surah,
+    int? ayahNumber,
+    String? customTitle,
   }) async {
-    final title = surah != null ? 'سورة ${surah.name}' : 'تلاوة عطرة';
+    final defaultSurahName = surah?.name ?? '';
+    final formattedSurahName =
+        (defaultSurahName.startsWith('سُورَة') || defaultSurahName.startsWith('سورة'))
+            ? defaultSurahName
+            : 'سورة $defaultSurahName';
+    final title = customTitle ??
+        (surah != null
+            ? (ayahNumber != null
+                ? '$formattedSurahName • آية $ayahNumber'
+                : formattedSurahName)
+            : 'تلاوة عطرة');
     final artist = reciter?.name ?? 'القارئ';
     final tagId =
-        '${reciter?.id ?? 'stream'}_${surah?.id ?? urls.first.hashCode}';
+        '${reciter?.id ?? 'stream'}_${surah?.id ?? urls.first.hashCode}_${ayahNumber ?? 'full'}';
 
     final mediaItem = MediaItem(
       id: tagId,
@@ -72,6 +84,8 @@ class RecitationService {
         reciter: reciter,
         surah: surah,
         isDownloaded: false,
+        ayahNumber: ayahNumber,
+        customTitle: customTitle,
       );
     }
 
@@ -90,17 +104,114 @@ class RecitationService {
       }
     }
     _activeRecitationNotifier.value = null;
-    throw lastError ?? Exception('No recitation URL is available');
+    throw lastError ?? Exception('لا يمكن تشغيل التلاوة حالياً، يرجى التأكد من اتصال الإنترنت');
+  }
+
+  Future<void> playAyah({
+    required Reciter reciter,
+    required int surahId,
+    required String surahName,
+    required int ayahNumber,
+    int? globalNumber,
+  }) async {
+    final surahPadded = surahId.toString().padLeft(3, '0');
+    final ayahPadded = ayahNumber.toString().padLeft(3, '0');
+
+    final urls = <String>[];
+    switch (reciter.id) {
+      case 'alafasy':
+        urls.add('https://everyayah.com/data/Alafasy_128kbps/$surahPadded$ayahPadded.mp3');
+        if (globalNumber != null) {
+          urls.add('https://cdn.islamic.network/quran/audio/128/ar.alafasy/$globalNumber.mp3');
+        }
+        break;
+      case 'husary':
+        urls.add('https://everyayah.com/data/Husary_128kbps/$surahPadded$ayahPadded.mp3');
+        if (globalNumber != null) {
+          urls.add('https://cdn.islamic.network/quran/audio/128/ar.husary/$globalNumber.mp3');
+        }
+        break;
+      case 'minshawi':
+        urls.add('https://everyayah.com/data/Minshawy_Murattal_128kbps/$surahPadded$ayahPadded.mp3');
+        if (globalNumber != null) {
+          urls.add('https://cdn.islamic.network/quran/audio/128/ar.minshawi/$globalNumber.mp3');
+        }
+        break;
+      case 'abdulbasit':
+        urls.add('https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/$surahPadded$ayahPadded.mp3');
+        urls.add('https://everyayah.com/data/Abdul_Basit_Murattal_64kbps/$surahPadded$ayahPadded.mp3');
+        break;
+      case 'maher_almuaiqly':
+        urls.add('https://everyayah.com/data/MaherAlMuaiqly128kbps/$surahPadded$ayahPadded.mp3');
+        break;
+      case 'yasser_aldosari':
+        urls.add('https://everyayah.com/data/Yasser_Ad-Dussary_128kbps/$surahPadded$ayahPadded.mp3');
+        break;
+      case 'saad_alghamdi':
+        urls.add('https://everyayah.com/data/Ghamadi_40kbps/$surahPadded$ayahPadded.mp3');
+        break;
+      case 'ahmed_alajmy':
+        urls.add('https://everyayah.com/data/Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net/$surahPadded$ayahPadded.mp3');
+        break;
+      case 'abdulrahman_alsudais':
+        urls.add('https://everyayah.com/data/Abdurrahmaan_As-Sudais_192kbps/$surahPadded$ayahPadded.mp3');
+        break;
+      case 'saud_alshuraim':
+        urls.add('https://everyayah.com/data/Saood_ash-Shuraym_128kbps/$surahPadded$ayahPadded.mp3');
+        break;
+      case 'abu_bakr_alshatri':
+        urls.add('https://everyayah.com/data/Abu_Bakr_Ash-Shaatree_128kbps/$surahPadded$ayahPadded.mp3');
+        break;
+      case 'ali_jaber':
+        urls.add('https://everyayah.com/data/Ali_Jaber_64kbps/$surahPadded$ayahPadded.mp3');
+        break;
+      case 'abdullah_basfar':
+        urls.add('https://everyayah.com/data/Abdullah_Basfar_192kbps/$surahPadded$ayahPadded.mp3');
+        break;
+      default:
+        urls.add('https://everyayah.com/data/Alafasy_128kbps/$surahPadded$ayahPadded.mp3');
+        if (globalNumber != null) {
+          urls.add('https://cdn.islamic.network/quran/audio/128/ar.alafasy/$globalNumber.mp3');
+        }
+        break;
+    }
+
+    if (reciter.id != 'alafasy') {
+      urls.add('https://everyayah.com/data/Alafasy_128kbps/$surahPadded$ayahPadded.mp3');
+    }
+
+    final dummySurah = RecitationSurah(
+      id: surahId,
+      name: surahName,
+      urls: urls,
+    );
+
+    return playUrls(
+      urls,
+      reciter: reciter,
+      surah: dummySurah,
+      ayahNumber: ayahNumber,
+    );
   }
 
   Future<void> playFile(
     String path, {
     Reciter? reciter,
     RecitationSurah? surah,
+    int? ayahNumber,
   }) async {
-    final title = surah != null ? 'سورة ${surah.name}' : 'تلاوة محملة';
+    final defaultSurahName = surah?.name ?? '';
+    final formattedSurahName =
+        (defaultSurahName.startsWith('سُورَة') || defaultSurahName.startsWith('سورة'))
+            ? defaultSurahName
+            : 'سورة $defaultSurahName';
+    final title = surah != null
+        ? (ayahNumber != null
+            ? '$formattedSurahName • آية $ayahNumber'
+            : formattedSurahName)
+        : 'تلاوة محملة';
     final artist = reciter?.name ?? 'القارئ';
-    final tagId = '${reciter?.id ?? 'file'}_${surah?.id ?? path.hashCode}';
+    final tagId = '${reciter?.id ?? 'file'}_${surah?.id ?? path.hashCode}_${ayahNumber ?? 'full'}';
 
     final mediaItem = MediaItem(
       id: tagId,
@@ -116,6 +227,7 @@ class RecitationService {
         surah: surah,
         isDownloaded: true,
         localPath: path,
+        ayahNumber: ayahNumber,
       );
     }
 

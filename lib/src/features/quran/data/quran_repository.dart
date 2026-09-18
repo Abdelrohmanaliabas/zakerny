@@ -63,5 +63,12 @@ class QuranRepository {
   bool getMushafMode() => _store.getBool(_mushafModeKey) ?? true;
   Future<void> setMushafMode(bool value) =>
       _store.setBool(_mushafModeKey, value);
+
+  static const _reciterIdKey = 'quran_preferred_reciter_id';
+
+  String getPreferredReciterId() =>
+      _store.getString(_reciterIdKey) ?? 'alafasy';
+  Future<void> setPreferredReciterId(String id) =>
+      _store.setString(_reciterIdKey, id);
 }
 

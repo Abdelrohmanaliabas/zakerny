@@ -110,16 +110,40 @@ class ActiveRecitation {
     required this.surah,
     required this.isDownloaded,
     this.localPath,
+    this.ayahNumber,
+    this.customTitle,
   });
 
   final Reciter reciter;
   final RecitationSurah surah;
   final bool isDownloaded;
   final String? localPath;
+  final int? ayahNumber;
+  final String? customTitle;
 
-  String get key => '${reciter.id}-${surah.id}';
+  String get key => ayahNumber != null
+      ? '${reciter.id}-${surah.id}-$ayahNumber'
+      : '${reciter.id}-${surah.id}';
 
-  bool matches(String reciterId, int surahId) =>
-      reciter.id == reciterId && surah.id == surahId;
+  String get displayTitle {
+    if (customTitle != null && customTitle!.isNotEmpty) {
+      return customTitle!;
+    }
+    final rawName = surah.name;
+    final prefix = (rawName.startsWith('سُورَة') || rawName.startsWith('سورة'))
+        ? rawName
+        : 'سورة $rawName';
+    if (ayahNumber != null) {
+      return '$prefix • آية $ayahNumber';
+    }
+    return prefix;
+  }
+
+  bool matches(String reciterId, int surahId, [int? ayah]) {
+    if (reciter.id != reciterId || surah.id != surahId) return false;
+    if (ayah != null) return ayahNumber == ayah;
+    return true;
+  }
 }
+
 

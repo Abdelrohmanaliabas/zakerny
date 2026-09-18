@@ -35,5 +35,9 @@ class QuranController {
 
   bool getMushafMode() => repository.getMushafMode();
   Future<void> setMushafMode(bool value) => repository.setMushafMode(value);
+
+  String getPreferredReciterId() => repository.getPreferredReciterId();
+  Future<void> setPreferredReciterId(String id) =>
+      repository.setPreferredReciterId(id);
 }
 
