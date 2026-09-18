@@ -7,17 +7,20 @@ class InAppAdhanDialog extends StatefulWidget {
     required this.prayerName,
     required this.city,
     this.autoPlayAudio = true,
+    this.audioAsset,
   });
 
   final String prayerName;
   final String city;
   final bool autoPlayAudio;
+  final String? audioAsset;
 
   static Future<void> show(
     BuildContext context, {
     required String prayerName,
     required String city,
     bool autoPlayAudio = true,
+    String? audioAsset,
   }) {
     return showDialog(
       context: context,
@@ -26,6 +29,7 @@ class InAppAdhanDialog extends StatefulWidget {
         prayerName: prayerName,
         city: city,
         autoPlayAudio: autoPlayAudio,
+        audioAsset: audioAsset,
       ),
     );
   }
@@ -61,7 +65,8 @@ class _InAppAdhanDialogState extends State<InAppAdhanDialog>
 
   Future<void> _initAndPlayAudio() async {
     try {
-      await _player.setAsset('assets/audio/adhan.mp3');
+      final asset = widget.audioAsset ?? 'assets/audio/adhan_makkah.mp3';
+      await _player.setAsset(asset);
       await _player.play();
       if (mounted) setState(() => _isPlaying = true);
 

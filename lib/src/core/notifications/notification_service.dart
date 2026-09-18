@@ -6,6 +6,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import '../../features/dhikr_reminders/domain/dhikr_reminder_item.dart';
+import '../../features/prayer_times/domain/adhan_voice.dart';
 import '../../features/prayer_times/domain/prayer_day.dart';
 import '../../features/prayer_times/domain/prayer_preferences.dart';
 import '../../features/prayer_times/overlay/adhan_overlay_widget.dart';
@@ -52,7 +54,13 @@ class NotificationService extends ChangeNotifier {
       if (launchDetails?.didNotificationLaunchApp == true) {
         final payload = launchDetails?.notificationResponse?.payload;
         if (payload != null) {
-          _setPendingRoute(payload.startsWith('adhan:') ? '/prayers' : payload);
+          if (payload.startsWith('adhan:') || payload.startsWith('reminder:')) {
+            _setPendingRoute('/prayers');
+          } else if (payload.startsWith('dhikr:')) {
+            _setPendingRoute('/adhkar');
+          } else {
+            _setPendingRoute(payload);
+          }
         }
       }
     } catch (_) {}
@@ -67,6 +75,8 @@ class NotificationService extends ChangeNotifier {
     if (payload != null) {
       if (payload.startsWith('adhan:') || payload.startsWith('reminder:')) {
         _setPendingRoute('/prayers');
+      } else if (payload.startsWith('dhikr:')) {
+        _setPendingRoute('/adhkar');
       } else {
         _setPendingRoute(payload);
       }
@@ -101,6 +111,7 @@ class NotificationService extends ChangeNotifier {
     required String city,
     required String formattedTime,
     required bool overlayOnAdhan,
+    required AdhanVoice voice,
   }) async {
     if (!isSupported) return;
     try {
@@ -111,18 +122,18 @@ class NotificationService extends ChangeNotifier {
       final bigTextStyle = BigTextStyleInformation(
         'الله أكبر، الله أكبر ۝ حان الآن موعد أذان صلاة ${prayer.name} حسب توقيت $city.\n'
         '«اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّداً الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَاماً مَحْمُوداً الَّذِي وَعَدْتَهُ»',
-        contentTitle: '🕌 حان موعد أذان ${prayer.name} | $formattedTime',
+        contentTitle: '🕌 حان موعد أذان ${prayer.name} (${voice.name}) | $formattedTime',
         summaryText: 'ذكرني • مواقيت الصلاة',
       );
 
       final androidDetails = AndroidNotificationDetails(
-        'prayer_times_adhan_v3',
-        'أذان مواقيت الصلاة',
-        channelDescription: 'تنبيهات الأذان الكاملة بأعلى أولوية وصوت الأذان',
+        voice.channelId,
+        'أذان - ${voice.name}',
+        channelDescription: 'تنبيهات الأذان الكاملة بأعلى أولوية وصوت ${voice.name}',
         importance: Importance.max,
         priority: Priority.max,
         icon: 'ic_stat_zekrni',
-        sound: const RawResourceAndroidNotificationSound('adhan'),
+        sound: RawResourceAndroidNotificationSound(voice.rawSoundName),
         playSound: true,
         enableVibration: true,
         vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
@@ -148,8 +159,8 @@ class NotificationService extends ChangeNotifier {
         ],
       );
 
-      const iosDetails = DarwinNotificationDetails(
-        sound: 'adhan.caf',
+      final iosDetails = DarwinNotificationDetails(
+        sound: '${voice.rawSoundName}.caf',
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
@@ -248,7 +259,116 @@ class NotificationService extends ChangeNotifier {
     } catch (_) {}
   }
 
-  /// Reschedules both Pre-Prayer Reminders AND Exact Prayer Time Azans
+  /// Periodic Daytime Dhikr Notifications (التذكير بالذكر النبوي والصلاة على النبي ﷺ)
+  Future<void> schedulePeriodicDhikrNotifications({
+    required PrayerPreferences preferences,
+  }) async {
+    if (!isSupported) return;
+    await cancelDhikrNotifications();
+    if (!preferences.dhikrReminderEnabled || preferences.dhikrIntervalMinutes <= 0) {
+      return;
+    }
+
+    final intervalMinutes = preferences.dhikrIntervalMinutes;
+    final now = DateTime.now();
+    var reminderId = 5000;
+    var dhikrIndex = 0;
+
+    // Schedule across next 3 days during active daytime hours (8:00 AM to 10:30 PM)
+    for (int dayOffset = 0; dayOffset < 3; dayOffset++) {
+      final date = now.add(Duration(days: dayOffset));
+      final startDay = DateTime(date.year, date.month, date.day, 8, 0);
+      final endDay = DateTime(date.year, date.month, date.day, 22, 30);
+
+      var scheduledTime = startDay;
+      while (scheduledTime.isBefore(endDay)) {
+        if (scheduledTime.isAfter(now)) {
+          final item = defaultDhikrReminders[dhikrIndex % defaultDhikrReminders.length];
+          dhikrIndex++;
+
+          await _scheduleSingleDhikrNotification(
+            id: reminderId++,
+            item: item,
+            scheduledTime: scheduledTime,
+          );
+
+          if (reminderId >= 5200) break;
+        }
+        scheduledTime = scheduledTime.add(Duration(minutes: intervalMinutes));
+      }
+      if (reminderId >= 5200) break;
+    }
+  }
+
+  Future<void> _scheduleSingleDhikrNotification({
+    required int id,
+    required DhikrReminderItem item,
+    required DateTime scheduledTime,
+  }) async {
+    final bigTextStyle = BigTextStyleInformation(
+      '${item.text}\n\n${item.virtue}',
+      contentTitle: item.title,
+      summaryText: 'ذكرني • تذكير بذكر الله',
+    );
+
+    final androidDetails = AndroidNotificationDetails(
+      'daily_dhikr_channel_v1',
+      'التذكير بذكر الله والصلاة على النبي',
+      channelDescription: 'تنبيهات الأذكار العائمة والصلاة على النبي ﷺ أثناء اليوم',
+      importance: Importance.max,
+      priority: Priority.max,
+      icon: 'ic_stat_zekrni',
+      playSound: true,
+      enableVibration: true,
+      color: const Color(0xFF0D9488),
+      category: AndroidNotificationCategory.reminder,
+      ticker: item.title,
+      styleInformation: bigTextStyle,
+      actions: const [
+        AndroidNotificationAction(
+          'open_adhkar',
+          '✨ فتح الأذكار',
+          showsUserInterface: true,
+        ),
+        AndroidNotificationAction(
+          'dismiss_dhikr',
+          'تم الذكر',
+          showsUserInterface: false,
+          cancelNotification: true,
+        ),
+      ],
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    await _plugin.zonedSchedule(
+      id: id,
+      title: item.title,
+      body: item.text,
+      scheduledDate: tz.TZDateTime.from(scheduledTime, tz.local),
+      notificationDetails: NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      payload: 'dhikr:${item.id}',
+    );
+  }
+
+  Future<void> cancelDhikrNotifications() async {
+    if (!isSupported) return;
+    try {
+      for (int id = 5000; id < 5250; id++) {
+        await _plugin.cancel(id: id);
+      }
+    } catch (_) {}
+  }
+
+  /// Reschedules both Pre-Prayer Reminders, Exact Prayer Time Azans, and Periodic Dhikr
   Future<void> rescheduleAllPrayerNotifications({
     required List<PrayerDay> days,
     required PrayerPreferences preferences,
@@ -268,13 +388,14 @@ class NotificationService extends ChangeNotifier {
           continue;
         }
 
-        // 1. ALWAYS schedule the exact Azan at prayer.time:
+        // 1. ALWAYS schedule the exact Azan at prayer.time with selected voice:
         await scheduleExactAdhanNotification(
           id: exactId++,
           prayer: prayer,
           city: preferences.city,
           formattedTime: timeFormat.format(prayer.time),
           overlayOnAdhan: preferences.overlayOnAdhan,
+          voice: preferences.selectedVoice,
         );
 
         // 2. Schedule Pre-Prayer Reminder if configured:
@@ -288,32 +409,37 @@ class NotificationService extends ChangeNotifier {
         }
       }
     }
+
+    // 3. Schedule Periodic Daytime Dhikr Reminders:
+    await schedulePeriodicDhikrNotifications(preferences: preferences);
   }
 
   /// Immediate test notification to verify audio, aesthetics, and actions
   Future<void> showTestAdhanNotification({
     required String prayerName,
     required String city,
+    AdhanVoice? voice,
   }) async {
     if (!isSupported) return;
     await requestPermissions();
 
+    final activeVoice = voice ?? supportedAdhanVoices.first;
     final nowTime = DateFormat('hh:mm a', 'ar').format(DateTime.now());
     final bigTextStyle = BigTextStyleInformation(
       'الله أكبر، الله أكبر ۝ حان الآن موعد أذان صلاة $prayerName حسب توقيت $city.\n'
       '«اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّداً الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَاماً مَحْمُوداً الَّذِي وَعَدْتَهُ»',
-      contentTitle: '🕌 تجربة أذان $prayerName | $nowTime',
+      contentTitle: '🕌 تجربة أذان $prayerName (${activeVoice.name}) | $nowTime',
       summaryText: 'ذكرني • تجربة الأذان',
     );
 
     final androidDetails = AndroidNotificationDetails(
-      'prayer_times_adhan_v3',
-      'أذان مواقيت الصلاة',
-      channelDescription: 'تنبيهات الأذان الكاملة بأعلى أولوية وصوت الأذان',
+      activeVoice.channelId,
+      'أذان - ${activeVoice.name}',
+      channelDescription: 'تنبيهات الأذان الكاملة بأعلى أولوية وصوت ${activeVoice.name}',
       importance: Importance.max,
       priority: Priority.max,
       icon: 'ic_stat_zekrni',
-      sound: const RawResourceAndroidNotificationSound('adhan'),
+      sound: RawResourceAndroidNotificationSound(activeVoice.rawSoundName),
       playSound: true,
       enableVibration: true,
       color: const Color(0xFF0D9488),
@@ -340,17 +466,85 @@ class NotificationService extends ChangeNotifier {
     await _plugin.show(
       id: 999,
       title: '🕌 حان موعد أذان $prayerName',
-      body: 'الله أكبر • تجربة أذان صلاة $prayerName بتوقيت $city',
+      body: 'الله أكبر • تجربة أذان صلاة $prayerName بتوقيت $city (${activeVoice.name})',
       notificationDetails: NotificationDetails(
         android: androidDetails,
-        iOS: const DarwinNotificationDetails(
-          sound: 'adhan.caf',
+        iOS: DarwinNotificationDetails(
+          sound: '${activeVoice.rawSoundName}.caf',
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
         ),
       ),
       payload: 'adhan:test:$prayerName',
+    );
+  }
+
+  /// Immediate test notification for Dhikr
+  Future<void> showTestDhikrNotification({
+    DhikrReminderItem? item,
+    bool showOverlay = false,
+  }) async {
+    if (!isSupported) return;
+    await requestPermissions();
+
+    final reminder = item ?? defaultDhikrReminders.first;
+
+    if (showOverlay) {
+      await AdhanOverlayManager.showDhikrOverlay(
+        title: reminder.title,
+        text: reminder.text,
+        virtue: reminder.virtue,
+      );
+    }
+
+    final bigTextStyle = BigTextStyleInformation(
+      '${reminder.text}\n\n${reminder.virtue}',
+      contentTitle: reminder.title,
+      summaryText: 'ذكرني • تجربة التذكير بذكر الله',
+    );
+
+    final androidDetails = AndroidNotificationDetails(
+      'daily_dhikr_channel_v1',
+      'التذكير بذكر الله والصلاة على النبي',
+      channelDescription: 'تنبيهات الأذكار العائمة والصلاة على النبي ﷺ أثناء اليوم',
+      importance: Importance.max,
+      priority: Priority.max,
+      icon: 'ic_stat_zekrni',
+      playSound: true,
+      enableVibration: true,
+      color: const Color(0xFF0D9488),
+      category: AndroidNotificationCategory.reminder,
+      ticker: reminder.title,
+      styleInformation: bigTextStyle,
+      actions: const [
+        AndroidNotificationAction(
+          'open_adhkar',
+          '✨ فتح الأذكار',
+          showsUserInterface: true,
+        ),
+        AndroidNotificationAction(
+          'dismiss_dhikr',
+          'تم الذكر',
+          showsUserInterface: false,
+          cancelNotification: true,
+        ),
+      ],
+    );
+
+    await _plugin.show(
+      id: 4999,
+      title: reminder.title,
+      body: reminder.text,
+      notificationDetails: NotificationDetails(
+        android: androidDetails,
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      ),
+      payload: 'dhikr:${reminder.id}',
     );
   }
 

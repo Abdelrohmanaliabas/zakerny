@@ -1,3 +1,5 @@
+import 'adhan_voice.dart';
+
 class PrayerPreferences {
   const PrayerPreferences({
     required this.city,
@@ -9,6 +11,10 @@ class PrayerPreferences {
     required this.reminderMinutes,
     required this.enabledPrayers,
     this.overlayOnAdhan = true,
+    this.adhanVoice = 'adhan_makkah',
+    this.dhikrReminderEnabled = true,
+    this.dhikrIntervalMinutes = 60,
+    this.dhikrOverlayEnabled = true,
   });
 
   factory PrayerPreferences.defaults() => const PrayerPreferences(
@@ -27,6 +33,10 @@ class PrayerPreferences {
       'isha': true,
     },
     overlayOnAdhan: true,
+    adhanVoice: 'adhan_makkah',
+    dhikrReminderEnabled: true,
+    dhikrIntervalMinutes: 60,
+    dhikrOverlayEnabled: true,
   );
 
   final String city;
@@ -38,6 +48,12 @@ class PrayerPreferences {
   final int reminderMinutes;
   final Map<String, bool> enabledPrayers;
   final bool overlayOnAdhan;
+  final String adhanVoice;
+  final bool dhikrReminderEnabled;
+  final int dhikrIntervalMinutes;
+  final bool dhikrOverlayEnabled;
+
+  AdhanVoice get selectedVoice => getAdhanVoiceById(adhanVoice);
 
   PrayerPreferences copyWith({
     String? city,
@@ -49,6 +65,10 @@ class PrayerPreferences {
     int? reminderMinutes,
     Map<String, bool>? enabledPrayers,
     bool? overlayOnAdhan,
+    String? adhanVoice,
+    bool? dhikrReminderEnabled,
+    int? dhikrIntervalMinutes,
+    bool? dhikrOverlayEnabled,
   }) {
     return PrayerPreferences(
       city: city ?? this.city,
@@ -60,6 +80,10 @@ class PrayerPreferences {
       reminderMinutes: reminderMinutes ?? this.reminderMinutes,
       enabledPrayers: enabledPrayers ?? this.enabledPrayers,
       overlayOnAdhan: overlayOnAdhan ?? this.overlayOnAdhan,
+      adhanVoice: adhanVoice ?? this.adhanVoice,
+      dhikrReminderEnabled: dhikrReminderEnabled ?? this.dhikrReminderEnabled,
+      dhikrIntervalMinutes: dhikrIntervalMinutes ?? this.dhikrIntervalMinutes,
+      dhikrOverlayEnabled: dhikrOverlayEnabled ?? this.dhikrOverlayEnabled,
     );
   }
 
@@ -84,6 +108,13 @@ class PrayerPreferences {
       },
       overlayOnAdhan:
           json['overlayOnAdhan'] as bool? ?? defaults.overlayOnAdhan,
+      adhanVoice: json['adhanVoice'] as String? ?? defaults.adhanVoice,
+      dhikrReminderEnabled:
+          json['dhikrReminderEnabled'] as bool? ?? defaults.dhikrReminderEnabled,
+      dhikrIntervalMinutes:
+          json['dhikrIntervalMinutes'] as int? ?? defaults.dhikrIntervalMinutes,
+      dhikrOverlayEnabled:
+          json['dhikrOverlayEnabled'] as bool? ?? defaults.dhikrOverlayEnabled,
     );
   }
 
@@ -97,5 +128,9 @@ class PrayerPreferences {
     'reminderMinutes': reminderMinutes,
     'enabledPrayers': enabledPrayers,
     'overlayOnAdhan': overlayOnAdhan,
+    'adhanVoice': adhanVoice,
+    'dhikrReminderEnabled': dhikrReminderEnabled,
+    'dhikrIntervalMinutes': dhikrIntervalMinutes,
+    'dhikrOverlayEnabled': dhikrOverlayEnabled,
   };
 }

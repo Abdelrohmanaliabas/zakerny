@@ -2,9 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 
 import '../../../core/storage/app_local_store.dart';
+import '../../dhikr_reminders/domain/dhikr_reminder_item.dart';
 import '../../prayer_times/application/prayer_controller.dart';
+import '../../prayer_times/domain/adhan_voice.dart';
 import '../../prayer_times/domain/prayer_preferences.dart';
 import '../../prayer_times/overlay/adhan_overlay_widget.dart';
 import '../../prayer_times/presentation/in_app_adhan_dialog.dart';
@@ -34,6 +37,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late ThemeMode _themeMode;
   bool _saving = false;
 
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  String? _playingVoiceId;
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +55,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       'dark' => ThemeMode.dark,
       _ => ThemeMode.system,
     };
+
+    _audioPlayer.playerStateStream.listen((state) {
+      if (mounted && !state.playing && state.processingState == ProcessingState.completed) {
+        setState(() => _playingVoiceId = null);
+      }
+    });
   }
 
   @override
@@ -57,7 +69,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _lat.dispose();
     _lng.dispose();
     _customReminder.dispose();
+    _audioPlayer.dispose();
     super.dispose();
+  }
+
+  Future<void> _toggleAudioPreview(AdhanVoice voice) async {
+    try {
+      if (_playingVoiceId == voice.id) {
+        await _audioPlayer.stop();
+        if (mounted) setState(() => _playingVoiceId = null);
+      } else {
+        await _audioPlayer.stop();
+        await _audioPlayer.setAsset(voice.assetPath);
+        await _audioPlayer.play();
+        if (mounted) setState(() => _playingVoiceId = voice.id);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _playingVoiceId = null);
+    }
   }
 
   Future<void> _save(PrayerPreferences prefs) async {
@@ -68,7 +97,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() => _prefs = saved);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('تم حفظ الإعدادات وإعادة جدولة التنبيهات والأذان بنجاح'),
+          content: Text('تم حفظ الإعدادات وإعادة جدولة التنبيهات والأذكار بنجاح'),
           backgroundColor: Color(0xFF0D9488),
         ),
       );
@@ -110,6 +139,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         context,
         prayerName: 'العصر',
         city: _prefs.city,
+        audioAsset: _prefs.selectedVoice.assetPath,
       );
       return;
     }
@@ -152,14 +182,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await widget.prayer.notifications.showTestAdhanNotification(
         prayerName: 'الظهر',
         city: _prefs.city,
+        voice: _prefs.selectedVoice,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'تم إرسال إشعار الأذان التجريبي بصوت الأذان والخيارات التفاعلية',
+              'تم إرسال إشعار الأذان التجريبي بصوت ${_prefs.selectedVoice.name}',
             ),
-            backgroundColor: Color(0xFF0D9488),
+            backgroundColor: const Color(0xFF0D9488),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
+  Future<void> _testDhikrNotification({bool overlay = false}) async {
+    try {
+      final sampleItem = defaultDhikrReminders.first;
+      if (overlay) {
+        if (!kIsWeb && Platform.isAndroid) {
+          final granted = await AdhanOverlayManager.isPermissionGranted();
+          if (!granted) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                  'تحتاج إلى تفعيل إذن "الظهور فوق التطبيقات" أولاً من إعدادات النظام',
+                ),
+                action: SnackBarAction(
+                  label: 'منح الإذن',
+                  onPressed: () => AdhanOverlayManager.requestPermission(),
+                ),
+              ),
+            );
+            return;
+          }
+        }
+      }
+
+      await widget.prayer.notifications.showTestDhikrNotification(
+        item: sampleItem,
+        showOverlay: overlay,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              overlay
+                  ? 'تم إظهار نافذة الذكر العائمة بنجاح ✨'
+                  : 'تم إرسال إشعار الذكر التجريبي بنجاح 🔔',
+            ),
+            backgroundColor: const Color(0xFF0D9488),
           ),
         );
       }
@@ -211,49 +292,139 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Prayer Notifications Header & Explanatory Card
+          // Prayer Notifications Header
           Text(
             'نظام التنبيهات والأذان',
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colorScheme.outlineVariant),
+          const SizedBox(height: 12),
+
+          // 1. Adhan Voice Selection Card
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: BorderSide(color: colorScheme.outlineVariant),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.check_circle, color: colorScheme.primary, size: 20),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'نظام تنبيه مزدوج وموثوق:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '1. تنبيه مسبق قبل الأذان بالدقائق المحددة للاستعداد والوضوء.\n'
-                  '2. رنين الأذان الكامل في وقت الصلاة الفعلي بالثانية.\n'
-                  '3. إشعار تفاعلي فوري على الشاشة وأزرار سريعة لكتم أو فتح التطبيق.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: colorScheme.onSurfaceVariant,
-                    height: 1.5,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0D9488).withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.record_voice_over_rounded,
+                          color: Color(0xFF0D9488),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'صوت الأذان والمؤذن',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                            Text(
+                              'اختر صوت الأذان المفضل مع إمكانية الاستماع والمعاينة',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 14),
+                  ...supportedAdhanVoices.map((voice) {
+                    final isSelected = _prefs.adhanVoice == voice.id;
+                    final isPlaying = _playingVoiceId == voice.id;
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFF0D9488).withValues(alpha: 0.08)
+                            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isSelected
+                              ? const Color(0xFF0D9488)
+                              : colorScheme.outlineVariant.withValues(alpha: 0.6),
+                          width: isSelected ? 1.5 : 1,
+                        ),
+                      ),
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 2,
+                        ),
+                        leading: Icon(
+                          isSelected
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_unchecked,
+                          color: isSelected
+                              ? const Color(0xFF0D9488)
+                              : colorScheme.outline,
+                        ),
+                        title: Text(
+                          voice.name,
+                          style: TextStyle(
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            color: isSelected ? const Color(0xFF0D9488) : null,
+                          ),
+                        ),
+                        subtitle: Text(
+                          voice.subtitle,
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        trailing: IconButton.filledTonal(
+                          style: IconButton.styleFrom(
+                            backgroundColor: isPlaying
+                                ? const Color(0xFF0D9488)
+                                : const Color(0xFF0D9488).withValues(alpha: 0.15),
+                            foregroundColor: isPlaying
+                                ? Colors.white
+                                : const Color(0xFF0D9488),
+                          ),
+                          icon: Icon(
+                            isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                            size: 20,
+                          ),
+                          tooltip: isPlaying ? 'إيقاف' : 'استماع',
+                          onPressed: () => _toggleAudioPreview(voice),
+                        ),
+                        onTap: () {
+                          setState(() {
+                            _prefs = _prefs.copyWith(adhanVoice: voice.id);
+                          });
+                          _save(_prefs);
+                        },
+                      ),
+                    );
+                  }),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 16),
 
-          // Overlay Window Setting
+          // 2. Overlay Window Setting Card
           Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -319,6 +490,157 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                   ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // 3. New Section: Periodic Daytime Dhikr Reminders
+          Text(
+            'الأذكار التنبيهية خلال اليوم',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 10),
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: BorderSide(
+                color: _prefs.dhikrReminderEnabled
+                    ? const Color(0xFF0D9488)
+                    : colorScheme.outlineVariant,
+                width: _prefs.dhikrReminderEnabled ? 1.5 : 1,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0D9488).withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.auto_awesome,
+                        color: Color(0xFF0D9488),
+                      ),
+                    ),
+                    title: const Text(
+                      'تفعيل التذكير بالأذكار والصلاة على النبي',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text(
+                      'إشعارات دورية تذكرك بالصلاة على النبي ﷺ، والتهليل، والاستغفار، والتسبيح خلال اليوم.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: _prefs.dhikrReminderEnabled,
+                    onChanged: (val) {
+                      setState(() {
+                        _prefs = _prefs.copyWith(dhikrReminderEnabled: val);
+                      });
+                      _save(_prefs);
+                    },
+                  ),
+                  if (_prefs.dhikrReminderEnabled) ...[
+                    const Divider(height: 24),
+                    Text(
+                      'وتيرة التكرار خلال أوقات اليوم النشطة:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        {'label': 'كل 15 دقيقة', 'val': 15},
+                        {'label': 'كل 30 دقيقة', 'val': 30},
+                        {'label': 'كل ساعة', 'val': 60},
+                        {'label': 'كل ساعتين', 'val': 120},
+                        {'label': 'كل 3 ساعات', 'val': 180},
+                      ].map((opt) {
+                        final val = opt['val'] as int;
+                        final isSelected = _prefs.dhikrIntervalMinutes == val;
+                        return ChoiceChip(
+                          label: Text(opt['label'] as String),
+                          selected: isSelected,
+                          onSelected: (_) {
+                            setState(() {
+                              _prefs = _prefs.copyWith(dhikrIntervalMinutes: val);
+                            });
+                            _save(_prefs);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 14),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      secondary: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD4AF37).withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.featured_play_list_rounded,
+                          color: Color(0xFFD4AF37),
+                          size: 20,
+                        ),
+                      ),
+                      title: const Text(
+                        'نافذة إسلامية عائمة عند التذكير',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      subtitle: const Text(
+                        'ظهور بطاقة ذكر أنيقة فوق التطبيقات أثناء تصفح الهاتف تُغلق تلقائياً بعد ثوانٍ معدودة.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      value: _prefs.dhikrOverlayEnabled,
+                      onChanged: (val) {
+                        setState(() {
+                          _prefs = _prefs.copyWith(dhikrOverlayEnabled: val);
+                        });
+                        _save(_prefs);
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _testDhikrNotification(overlay: false),
+                            icon: const Icon(Icons.notifications_active_outlined, size: 18),
+                            label: const Text(
+                              'تجربة إشعار الذكر',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _testDhikrNotification(overlay: true),
+                            icon: const Icon(Icons.open_in_browser_rounded, size: 18),
+                            label: const Text(
+                              'تجربة النافذة العائمة',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -479,7 +801,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     );
                   },
             child: Text(
-              _saving ? 'جار الحفظ والجدولة...' : 'حفظ الإعدادات وجدولة الأذان',
+              _saving ? 'جار الحفظ والجدولة...' : 'حفظ الإعدادات وجدولة الأذان والتنبيهات',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
           ),

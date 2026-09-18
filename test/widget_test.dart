@@ -12,6 +12,8 @@ import 'package:zakerny/src/features/recitations/data/recitation_repository.dart
 import 'package:zakerny/src/features/recitations/domain/recitation_models.dart';
 import 'package:zakerny/src/features/recitations/presentation/widgets/reciter_avatar.dart';
 import 'package:zakerny/src/features/prayer_times/domain/prayer_preferences.dart';
+import 'package:zakerny/src/features/prayer_times/domain/adhan_voice.dart';
+import 'package:zakerny/src/features/dhikr_reminders/domain/dhikr_reminder_item.dart';
 import 'package:zakerny/src/features/prayer_times/overlay/adhan_overlay_widget.dart';
 import 'package:zakerny/src/features/prayer_times/presentation/in_app_adhan_dialog.dart';
 
@@ -240,6 +242,56 @@ void main() {
     expect(find.text('حان الآن موعد أذان الفجر'), findsOneWidget);
     expect(find.text('حسب التوقيت المحلي لـ القاهرة'), findsOneWidget);
     expect(find.text('تم الاستماع'), findsOneWidget);
+  });
+
+  test('prayer preferences properly serialize and deserialize adhanVoice and dhikr settings', () {
+    final defaultPrefs = PrayerPreferences.defaults();
+    expect(defaultPrefs.adhanVoice, 'adhan_makkah');
+    expect(defaultPrefs.dhikrReminderEnabled, isTrue);
+    expect(defaultPrefs.dhikrIntervalMinutes, 60);
+    expect(defaultPrefs.dhikrOverlayEnabled, isTrue);
+
+    final modified = defaultPrefs.copyWith(
+      adhanVoice: 'adhan_alafasy',
+      dhikrReminderEnabled: false,
+      dhikrIntervalMinutes: 30,
+      dhikrOverlayEnabled: false,
+    );
+    expect(modified.adhanVoice, 'adhan_alafasy');
+    expect(modified.dhikrReminderEnabled, isFalse);
+    expect(modified.dhikrIntervalMinutes, 30);
+    expect(modified.dhikrOverlayEnabled, isFalse);
+
+    final json = modified.toJson();
+    expect(json['adhanVoice'], 'adhan_alafasy');
+    expect(json['dhikrReminderEnabled'], isFalse);
+    expect(json['dhikrIntervalMinutes'], 30);
+    expect(json['dhikrOverlayEnabled'], isFalse);
+
+    final fromJson = PrayerPreferences.fromJson(json);
+    expect(fromJson.adhanVoice, 'adhan_alafasy');
+    expect(fromJson.dhikrReminderEnabled, isFalse);
+    expect(fromJson.dhikrIntervalMinutes, 30);
+    expect(fromJson.dhikrOverlayEnabled, isFalse);
+    expect(fromJson.selectedVoice.id, 'adhan_alafasy');
+  });
+
+  test('supported adhan voices and default dhikr items are complete and valid', () {
+    expect(supportedAdhanVoices.length, greaterThanOrEqualTo(5));
+    expect(supportedAdhanVoices.any((v) => v.id == 'adhan_makkah'), isTrue);
+    expect(supportedAdhanVoices.any((v) => v.id == 'adhan_madinah'), isTrue);
+    expect(supportedAdhanVoices.any((v) => v.id == 'adhan_alafasy'), isTrue);
+    expect(supportedAdhanVoices.any((v) => v.id == 'adhan_abdulbasit'), isTrue);
+    expect(supportedAdhanVoices.any((v) => v.id == 'adhan_quds'), isTrue);
+
+    final makkahVoice = getAdhanVoiceById('adhan_makkah');
+    expect(makkahVoice.name.contains('المكي'), isTrue);
+
+    expect(defaultDhikrReminders.length, greaterThanOrEqualTo(5));
+    expect(defaultDhikrReminders.any((d) => d.id == 'salawat'), isTrue);
+    expect(defaultDhikrReminders.any((d) => d.id == 'tahleel'), isTrue);
+    expect(defaultDhikrReminders.any((d) => d.id == 'tasbeeh'), isTrue);
+    expect(defaultDhikrReminders.any((d) => d.id == 'istighfar'), isTrue);
   });
 }
 
