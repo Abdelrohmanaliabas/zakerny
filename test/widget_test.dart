@@ -16,6 +16,7 @@ import 'package:zakerny/src/features/prayer_times/domain/adhan_voice.dart';
 import 'package:zakerny/src/features/dhikr_reminders/domain/dhikr_reminder_item.dart';
 import 'package:zakerny/src/features/prayer_times/overlay/adhan_overlay_widget.dart';
 import 'package:zakerny/src/features/prayer_times/presentation/in_app_adhan_dialog.dart';
+import 'package:zakerny/src/core/widgets/zekrni_header.dart';
 
 void main() {
   test('default prayer preferences are available offline', () async {
@@ -292,6 +293,27 @@ void main() {
     expect(defaultDhikrReminders.any((d) => d.id == 'tahleel'), isTrue);
     expect(defaultDhikrReminders.any((d) => d.id == 'tasbeeh'), isTrue);
     expect(defaultDhikrReminders.any((d) => d.id == 'istighfar'), isTrue);
+  });
+
+  testWidgets('ZekrniHeader renders properly and menu button opens quick menu', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: ZekrniHeader(title: 'ذكرني', subtitle: 'القاهرة'),
+        ),
+      ),
+    );
+
+    expect(find.text('ذكرني'), findsOneWidget);
+    expect(find.text('القاهرة'), findsOneWidget);
+    expect(find.byType(PopupMenuButton<String>), findsOneWidget);
+
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+
+    expect(find.text('الإعدادات والأذان'), findsOneWidget);
+    expect(find.text('اتجاه القبلة'), findsOneWidget);
+    expect(find.text('الأذكار والسبحة'), findsOneWidget);
   });
 }
 

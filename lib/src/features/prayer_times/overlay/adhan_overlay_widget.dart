@@ -41,13 +41,13 @@ class AdhanOverlayManager {
       }
 
       await FlutterOverlayWindow.showOverlay(
-        enableDrag: true,
+        enableDrag: false,
         overlayTitle: 'أذان صلاة $prayerName',
         overlayContent: 'حان الآن موعد أذان $prayerName بتوقيت $city',
         flag: OverlayFlag.defaultFlag,
         visibility: NotificationVisibility.visibilityPublic,
         positionGravity: PositionGravity.auto,
-        height: 520,
+        height: WindowSize.matchParent,
         width: WindowSize.matchParent,
       );
 
@@ -77,13 +77,13 @@ class AdhanOverlayManager {
       }
 
       await FlutterOverlayWindow.showOverlay(
-        enableDrag: true,
+        enableDrag: false,
         overlayTitle: title,
         overlayContent: text,
         flag: OverlayFlag.defaultFlag,
         visibility: NotificationVisibility.visibilityPublic,
         positionGravity: PositionGravity.auto,
-        height: 390,
+        height: WindowSize.matchParent,
         width: WindowSize.matchParent,
       );
 
@@ -205,381 +205,424 @@ class _AdhanOverlayWidgetState extends State<AdhanOverlayWidget>
       textDirection: TextDirection.rtl,
       child: Material(
         color: Colors.transparent,
-        child: Center(
-          child: _type == 'dhikr'
-              ? _buildDhikrOverlayContent()
-              : _buildAdhanOverlayContent(),
+        child: Stack(
+          children: [
+            // Tap outside backdrop to dismiss
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => AdhanOverlayManager.closeOverlay(),
+                child: const ColoredBox(color: Colors.transparent),
+              ),
+            ),
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: _type == 'dhikr'
+                        ? _buildDhikrOverlayContent()
+                        : _buildAdhanOverlayContent(),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildDhikrOverlayContent() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [
-            Color(0xF5062822),
-            Color(0xF50A3831),
-            Color(0xF5041C18),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFD4AF37).withValues(alpha: 0.65),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.65),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: const Color(0xFF0D9488).withValues(alpha: 0.35),
-            blurRadius: 25,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(7),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0D9488).withValues(alpha: 0.3),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.auto_awesome,
-                      color: Color(0xFF34D399),
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _dhikrTitle,
-                    style: const TextStyle(
-                      color: Color(0xFFFDE68A),
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Cairo',
-                    ),
-                  ),
-                ],
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.close,
-                  color: Colors.white70,
-                  size: 20,
-                ),
-                tooltip: 'إغلاق',
-                onPressed: () => AdhanOverlayManager.closeOverlay(),
-              ),
+    return GestureDetector(
+      onTap: () {}, // Prevent tap inside card from dismissing
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [
+              Color(0xF8062822),
+              Color(0xF80A3831),
+              Color(0xF8041C18),
             ],
           ),
-          const SizedBox(height: 10),
-
-          // Dhikr Text Card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFFD4AF37).withValues(alpha: 0.25),
-              ),
-            ),
-            child: Text(
-              _dhikrText,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Amiri',
-                height: 1.6,
-              ),
-            ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: const Color(0xFFD4AF37).withValues(alpha: 0.65),
+            width: 1.5,
           ),
-
-          if (_dhikrVirtue.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              _dhikrVirtue,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: const Color(0xFF9AE6B4).withValues(alpha: 0.9),
-                fontSize: 11.5,
-                fontFamily: 'Cairo',
-                height: 1.4,
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.65),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+            BoxShadow(
+              color: const Color(0xFF0D9488).withValues(alpha: 0.35),
+              blurRadius: 25,
+              spreadRadius: 1,
             ),
           ],
-
-          const SizedBox(height: 14),
-
-          // Actions
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF0D9488),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0D9488).withValues(alpha: 0.3),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.auto_awesome,
+                          color: Color(0xFF34D399),
+                          size: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          _dhikrTitle,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFFFDE68A),
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Cairo',
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  icon: const Icon(
+                    Icons.close,
+                    color: Colors.white70,
+                    size: 18,
+                  ),
+                  tooltip: 'إغلاق',
                   onPressed: () => AdhanOverlayManager.closeOverlay(),
-                  icon: const Icon(Icons.check_circle_outline, size: 18),
-                  label: const Text(
-                    'تم الذكر • إغلاق',
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12.5,
-                    ),
-                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Dhikr Text Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFFD4AF37).withValues(alpha: 0.25),
+                ),
+              ),
+              child: Text(
+                _dhikrText,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Amiri',
+                  height: 1.5,
+                ),
+              ),
+            ),
+
+            if (_dhikrVirtue.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                _dhikrVirtue,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: const Color(0xFF9AE6B4).withValues(alpha: 0.9),
+                  fontSize: 11,
+                  fontFamily: 'Cairo',
+                  height: 1.3,
                 ),
               ),
             ],
-          ),
-        ],
+
+            const SizedBox(height: 12),
+
+            // Actions
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF0D9488),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+              onPressed: () => AdhanOverlayManager.closeOverlay(),
+              icon: const Icon(Icons.check_circle_outline, size: 16),
+              label: const Text(
+                'تم الذكر • إغلاق',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildAdhanOverlayContent() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: emotionsGradient,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFD4AF37).withValues(alpha: 0.55),
-          width: 1.5,
+    return GestureDetector(
+      onTap: () {},
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: emotionsGradient,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: const Color(0xFFD4AF37).withValues(alpha: 0.55),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.6),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+            BoxShadow(
+              color: const Color(0xFF0D9488).withValues(alpha: 0.3),
+              blurRadius: 30,
+              spreadRadius: 2,
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.6),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-          BoxShadow(
-            color: const Color(0xFF0D9488).withValues(alpha: 0.3),
-            blurRadius: 30,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Top Header Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0D9488).withValues(alpha: 0.25),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.mosque,
-                      color: Color(0xFF34D399),
-                      size: 20,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top Header Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0D9488).withValues(alpha: 0.25),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.mosque,
+                          color: Color(0xFF34D399),
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Flexible(
+                        child: Text(
+                          'تطبيق ذكرني • موعد الأذان',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Color(0xFF9AE6B4),
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Cairo',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  icon: const Icon(
+                    Icons.close,
+                    color: Colors.white70,
+                    size: 20,
+                  ),
+                  tooltip: 'إغلاق الشاشة',
+                  onPressed: () => AdhanOverlayManager.closeOverlay(),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            // Pulsing Center Icon
+            Center(
+              child: ScaleTransition(
+                scale: _pulseAnimation,
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        const Color(0xFFD4AF37).withValues(alpha: 0.35),
+                        const Color(0xFF0F766E).withValues(alpha: 0.2),
+                        Colors.transparent,
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'تطبيق ذكرني • موعد الأذان',
-                    style: TextStyle(
-                      color: Color(0xFF9AE6B4),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Cairo',
-                    ),
+                  child: const Icon(
+                    Icons.notifications_active_rounded,
+                    color: Color(0xFFFBBF24),
+                    size: 42,
                   ),
-                ],
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.close,
-                  color: Colors.white70,
-                  size: 22,
-                ),
-                tooltip: 'إغلاق الشاشة',
-                onPressed: () => AdhanOverlayManager.closeOverlay(),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Pulsing Center Icon
-          ScaleTransition(
-            scale: _pulseAnimation,
-            child: Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFFD4AF37).withValues(alpha: 0.35),
-                    const Color(0xFF0F766E).withValues(alpha: 0.2),
-                    Colors.transparent,
-                  ],
                 ),
               ),
-              child: const Icon(
-                Icons.notifications_active_rounded,
-                color: Color(0xFFFBBF24),
-                size: 52,
-              ),
             ),
-          ),
 
-          const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
-          // Title
-          const Text(
-            'الله أكبر • الله أكبر',
-            style: TextStyle(
-              color: Color(0xFFFDE68A),
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Amiri',
-              letterSpacing: 0.5,
-            ),
-          ),
-
-          const SizedBox(height: 6),
-
-          // Prayer Name
-          Text(
-            'حان الآن موعد أذان $_prayerName',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Cairo',
-            ),
-          ),
-
-          if (_time.isNotEmpty || _city.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              '$_time ${_city.isNotEmpty ? "• حسب توقيت $_city" : ""}',
+            // Title
+            const Text(
+              'الله أكبر • الله أكبر',
+              textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.75),
-                fontSize: 13,
+                color: Color(0xFFFDE68A),
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Amiri',
+                letterSpacing: 0.5,
+              ),
+            ),
+
+            const SizedBox(height: 4),
+
+            // Prayer Name
+            Text(
+              'حان الآن موعد أذان $_prayerName',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
               ),
             ),
-          ],
 
-          const SizedBox(height: 12),
-
-          // Subtle Hadith / Dua Card
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 8,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.25),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
-            ),
-            child: const Text(
-              '«حي على الصلاة • حي على الفلاح»\n«اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ وَالصَّلَاةِ القَائِمَةِ...»',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFFE2E8F0),
-                fontSize: 12,
-                fontFamily: 'Amiri',
-                height: 1.4,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Action Buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white70,
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () => AdhanOverlayManager.closeOverlay(),
-                  icon: const Icon(Icons.volume_off, size: 18),
-                  label: const Text(
-                    'كتم / إغلاق',
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF0D9488),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () => AdhanOverlayManager.closeOverlay(),
-                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                  label: const Text(
-                    'تطبيق ذكرني',
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
+            if (_time.isNotEmpty || _city.isNotEmpty) ...[
+              const SizedBox(height: 3),
+              Text(
+                '$_time ${_city.isNotEmpty ? "• حسب توقيت $_city" : ""}',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.75),
+                  fontSize: 12,
+                  fontFamily: 'Cairo',
                 ),
               ),
             ],
-          ),
-        ],
+
+            const SizedBox(height: 10),
+
+            // Subtle Hadith / Dua Card
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+              child: const Text(
+                '«حي على الصلاة • حي على الفلاح»\n«اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ وَالصَّلَاةِ القَائِمَةِ...»',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFFE2E8F0),
+                  fontSize: 11.5,
+                  fontFamily: 'Amiri',
+                  height: 1.35,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white70,
+                      side: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onPressed: () => AdhanOverlayManager.closeOverlay(),
+                    icon: const Icon(Icons.volume_off, size: 16),
+                    label: const Text(
+                      'كتم / إغلاق',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF0D9488),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onPressed: () => AdhanOverlayManager.closeOverlay(),
+                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                    label: const Text(
+                      'تطبيق ذكرني',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
