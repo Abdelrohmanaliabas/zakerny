@@ -8,6 +8,7 @@ class PrayerPreferences {
     required this.madhab,
     required this.reminderMinutes,
     required this.enabledPrayers,
+    this.overlayOnAdhan = true,
   });
 
   factory PrayerPreferences.defaults() => const PrayerPreferences(
@@ -25,6 +26,7 @@ class PrayerPreferences {
       'maghrib': true,
       'isha': true,
     },
+    overlayOnAdhan: true,
   );
 
   final String city;
@@ -35,6 +37,7 @@ class PrayerPreferences {
   final String madhab;
   final int reminderMinutes;
   final Map<String, bool> enabledPrayers;
+  final bool overlayOnAdhan;
 
   PrayerPreferences copyWith({
     String? city,
@@ -45,6 +48,7 @@ class PrayerPreferences {
     String? madhab,
     int? reminderMinutes,
     Map<String, bool>? enabledPrayers,
+    bool? overlayOnAdhan,
   }) {
     return PrayerPreferences(
       city: city ?? this.city,
@@ -55,6 +59,7 @@ class PrayerPreferences {
       madhab: madhab ?? this.madhab,
       reminderMinutes: reminderMinutes ?? this.reminderMinutes,
       enabledPrayers: enabledPrayers ?? this.enabledPrayers,
+      overlayOnAdhan: overlayOnAdhan ?? this.overlayOnAdhan,
     );
   }
 
@@ -77,6 +82,8 @@ class PrayerPreferences {
           (key, value) => MapEntry(key, value == true),
         ),
       },
+      overlayOnAdhan:
+          json['overlayOnAdhan'] as bool? ?? defaults.overlayOnAdhan,
     );
   }
 
@@ -89,5 +96,6 @@ class PrayerPreferences {
     'madhab': madhab,
     'reminderMinutes': reminderMinutes,
     'enabledPrayers': enabledPrayers,
+    'overlayOnAdhan': overlayOnAdhan,
   };
 }

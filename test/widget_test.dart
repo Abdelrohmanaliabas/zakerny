@@ -11,6 +11,9 @@ import 'package:zakerny/src/features/quran/data/quran_repository.dart';
 import 'package:zakerny/src/features/recitations/data/recitation_repository.dart';
 import 'package:zakerny/src/features/recitations/domain/recitation_models.dart';
 import 'package:zakerny/src/features/recitations/presentation/widgets/reciter_avatar.dart';
+import 'package:zakerny/src/features/prayer_times/domain/prayer_preferences.dart';
+import 'package:zakerny/src/features/prayer_times/overlay/adhan_overlay_widget.dart';
+import 'package:zakerny/src/features/prayer_times/presentation/in_app_adhan_dialog.dart';
 
 void main() {
   test('default prayer preferences are available offline', () async {
@@ -183,6 +186,60 @@ void main() {
     );
 
     expect(find.byType(ReciterAvatar), findsOneWidget);
+  });
+
+  test('prayer preferences properly serialize and deserialize overlayOnAdhan', () {
+    final defaultPrefs = PrayerPreferences.defaults();
+    expect(defaultPrefs.overlayOnAdhan, isTrue);
+    expect(defaultPrefs.reminderMinutes, 10);
+
+    final modified = defaultPrefs.copyWith(
+      overlayOnAdhan: false,
+      reminderMinutes: 15,
+    );
+    expect(modified.overlayOnAdhan, isFalse);
+    expect(modified.reminderMinutes, 15);
+
+    final json = modified.toJson();
+    expect(json['overlayOnAdhan'], isFalse);
+    expect(json['reminderMinutes'], 15);
+
+    final fromJson = PrayerPreferences.fromJson(json);
+    expect(fromJson.overlayOnAdhan, isFalse);
+    expect(fromJson.reminderMinutes, 15);
+  });
+
+  testWidgets('AdhanOverlayWidget renders properly with Islamic theme and buttons', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: AdhanOverlayWidget(),
+      ),
+    );
+
+    expect(find.byType(AdhanOverlayWidget), findsOneWidget);
+    expect(find.text('الله أكبر • الله أكبر'), findsOneWidget);
+    expect(find.text('تطبيق ذكرني • موعد الأذان'), findsOneWidget);
+    expect(find.text('كتم / إغلاق'), findsOneWidget);
+    expect(find.text('تطبيق ذكرني'), findsOneWidget);
+  });
+
+  testWidgets('InAppAdhanDialog renders properly with audio control and dua', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: InAppAdhanDialog(
+            prayerName: 'الفجر',
+            city: 'القاهرة',
+            autoPlayAudio: false,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(InAppAdhanDialog), findsOneWidget);
+    expect(find.text('حان الآن موعد أذان الفجر'), findsOneWidget);
+    expect(find.text('حسب التوقيت المحلي لـ القاهرة'), findsOneWidget);
+    expect(find.text('تم الاستماع'), findsOneWidget);
   });
 }
 

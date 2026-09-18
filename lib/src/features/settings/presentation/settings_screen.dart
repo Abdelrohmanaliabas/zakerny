@@ -1,8 +1,13 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/storage/app_local_store.dart';
 import '../../prayer_times/application/prayer_controller.dart';
 import '../../prayer_times/domain/prayer_preferences.dart';
+import '../../prayer_times/overlay/adhan_overlay_widget.dart';
+import '../../prayer_times/presentation/in_app_adhan_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
@@ -63,7 +68,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() => _prefs = saved);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('تم حفظ الإعدادات وإعادة جدولة التنبيهات'),
+          content: Text('تم حفظ الإعدادات وإعادة جدولة التنبيهات والأذان بنجاح'),
+          backgroundColor: Color(0xFF0D9488),
         ),
       );
     } catch (error) {
@@ -76,9 +82,101 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _toggleOverlay(bool value) async {
+    if (value && !kIsWeb && Platform.isAndroid) {
+      final granted = await AdhanOverlayManager.isPermissionGranted();
+      if (!granted) {
+        final result = await AdhanOverlayManager.requestPermission();
+        if (result != true && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'يرجى منح إذن "الظهور فوق التطبيقات" لتفعيل ميزة الشاشة العائمة',
+              ),
+            ),
+          );
+        }
+      }
+    }
+    setState(() {
+      _prefs = _prefs.copyWith(overlayOnAdhan: value);
+    });
+    await _save(_prefs);
+  }
+
+  Future<void> _previewOverlay() async {
+    if (kIsWeb || !Platform.isAndroid) {
+      await InAppAdhanDialog.show(
+        context,
+        prayerName: 'العصر',
+        city: _prefs.city,
+      );
+      return;
+    }
+
+    final granted = await AdhanOverlayManager.isPermissionGranted();
+    if (!granted) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'تحتاج إلى تفعيل إذن "الظهور فوق التطبيقات" أولاً من إعدادات النظام',
+          ),
+          action: SnackBarAction(
+            label: 'منح الإذن',
+            onPressed: () => AdhanOverlayManager.requestPermission(),
+          ),
+        ),
+      );
+      return;
+    }
+
+    await AdhanOverlayManager.showAdhanOverlay(
+      prayerName: 'العصر',
+      time: '03:45 م',
+      city: _prefs.city,
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم إظهار شاشة الأذان فوق التطبيقات للمعاينة'),
+          backgroundColor: Color(0xFF0D9488),
+        ),
+      );
+    }
+  }
+
+  Future<void> _testAdhanNotification() async {
+    try {
+      await widget.prayer.notifications.showTestAdhanNotification(
+        prayerName: 'الظهر',
+        city: _prefs.city,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'تم إرسال إشعار الأذان التجريبي بصوت الأذان والخيارات التفاعلية',
+            ),
+            backgroundColor: Color(0xFF0D9488),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final reminderOptions = [0, 5, 10, 15, 30];
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(title: const Text('الإعدادات')),
       body: ListView(
@@ -111,8 +209,123 @@ class _SettingsScreenState extends State<SettingsScreen> {
               widget.onThemeModeChanged(mode);
             },
           ),
+          const SizedBox(height: 24),
+
+          // Prayer Notifications Header & Explanatory Card
+          Text(
+            'نظام التنبيهات والأذان',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colorScheme.outlineVariant),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.check_circle, color: colorScheme.primary, size: 20),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'نظام تنبيه مزدوج وموثوق:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '1. تنبيه مسبق قبل الأذان بالدقائق المحددة للاستعداد والوضوء.\n'
+                  '2. رنين الأذان الكامل في وقت الصلاة الفعلي بالثانية.\n'
+                  '3. إشعار تفاعلي فوري على الشاشة وأزرار سريعة لكتم أو فتح التطبيق.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Overlay Window Setting
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: BorderSide(
+                color: _prefs.overlayOnAdhan
+                    ? const Color(0xFF0D9488)
+                    : colorScheme.outlineVariant,
+                width: _prefs.overlayOnAdhan ? 1.5 : 1,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0D9488).withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.picture_in_picture_alt_rounded,
+                        color: Color(0xFF0D9488),
+                      ),
+                    ),
+                    title: const Text(
+                      'الظهور فوق التطبيقات عند الأذان',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text(
+                      'إذا كان الهاتف قيد الاستخدام، تظهر شاشة أذان تفاعلية فوق أي تطبيق مفتوح.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: _prefs.overlayOnAdhan,
+                    onChanged: _saving ? null : _toggleOverlay,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _previewOverlay,
+                          icon: const Icon(Icons.visibility, size: 18),
+                          label: const Text(
+                            'معاينة الشاشة العائمة',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _testAdhanNotification,
+                          icon: const Icon(Icons.notifications_active, size: 18),
+                          label: const Text(
+                            'تجربة إشعار الأذان',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           const SizedBox(height: 20),
-          Text('مواقيت الصلاة', style: Theme.of(context).textTheme.titleLarge),
+          Text('مواقيت الصلاة والموقع', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 10),
           TextField(
             controller: _city,
@@ -196,13 +409,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: (value) =>
                 setState(() => _prefs = _prefs.copyWith(madhab: value)),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
+          Text(
+            'وقت التنبيه المسبق قبل الأذان',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             children: reminderOptions
                 .map(
                   (m) => ChoiceChip(
-                    label: Text('$m دقيقة'),
+                    label: Text(m == 0 ? 'بدون تذكير مسبق' : '$m دقيقة قبلها'),
                     selected: _prefs.reminderMinutes == m,
                     onSelected: (_) => setState(() {
                       _prefs = _prefs.copyWith(reminderMinutes: m);
@@ -217,13 +435,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             controller: _customReminder,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
-              labelText: 'قيمة مخصصة للتنبيه بالدقائق',
+              labelText: 'قيمة مخصصة للتنبيه المسبق بالدقائق',
             ),
             onChanged: (value) => _prefs = _prefs.copyWith(
               reminderMinutes: int.tryParse(value) ?? _prefs.reminderMinutes,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
+          Text(
+            'الصلوات المفعلة للتنبيه والأذان',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
           ..._prefs.enabledPrayers.entries.map(
             (entry) => SwitchListTile(
               title: Text(_prayerName(entry.key)),
@@ -235,8 +458,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           FilledButton(
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
             onPressed: _saving
                 ? null
                 : () {
@@ -252,23 +478,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     );
                   },
-            child: Text(_saving ? 'جار الحفظ...' : 'حفظ'),
-          ),
-          const SizedBox(height: 10),
-          OutlinedButton.icon(
-            onPressed: _saving
-                ? null
-                : () => _save(
-                    _prefs.copyWith(
-                      city: _city.text.trim().isEmpty
-                          ? 'موقع يدوي'
-                          : _city.text.trim(),
-                      latitude: double.tryParse(_lat.text) ?? _prefs.latitude,
-                      longitude: double.tryParse(_lng.text) ?? _prefs.longitude,
-                    ),
-                  ),
-            icon: const Icon(Icons.notifications_active),
-            label: const Text('تفعيل تنبيهات الأذان الآن'),
+            child: Text(
+              _saving ? 'جار الحفظ والجدولة...' : 'حفظ الإعدادات وجدولة الأذان',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
           ),
         ],
       ),

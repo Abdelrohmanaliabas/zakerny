@@ -13,6 +13,18 @@ import 'src/core/notifications/notification_service.dart';
 import 'src/core/storage/app_local_store.dart';
 import 'src/features/prayer_times/application/prayer_controller.dart';
 import 'src/features/prayer_times/data/prayer_repository.dart';
+import 'src/features/prayer_times/overlay/adhan_overlay_widget.dart';
+
+@pragma('vm:entry-point')
+void overlayMain() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: AdhanOverlayWidget(),
+    ),
+  );
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
