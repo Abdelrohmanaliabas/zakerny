@@ -31,7 +31,8 @@ class HadithRepository {
           (h) =>
               h.text.contains(trimmed) ||
               h.title.contains(trimmed) ||
-              h.collection.contains(trimmed),
+              h.collection.contains(trimmed) ||
+              (h.narrator != null && h.narrator!.contains(trimmed)),
         )
         .toList();
   }

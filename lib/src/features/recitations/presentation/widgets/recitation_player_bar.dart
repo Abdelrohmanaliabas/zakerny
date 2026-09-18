@@ -3,6 +3,7 @@ import 'package:just_audio/just_audio.dart';
 
 import '../../data/recitation_service.dart';
 import '../../domain/recitation_models.dart';
+import 'reciter_avatar.dart';
 
 class RecitationPlayerBar extends StatelessWidget {
   const RecitationPlayerBar({
@@ -60,17 +61,36 @@ class RecitationPlayerBar extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.12),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isPlaying ? Icons.graphic_eq : Icons.music_note,
-                          color: colorScheme.primary,
-                        ),
+                      Stack(
+                        children: [
+                          ReciterAvatar(
+                            reciter: active.reciter,
+                            size: 44,
+                          ),
+                          if (isPlaying)
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: theme.brightness == Brightness.dark
+                                        ? colorScheme.surfaceContainerHighest
+                                        : colorScheme.surface,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.graphic_eq,
+                                  size: 10,
+                                  color: colorScheme.onPrimary,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(width: 12),
                       Expanded(

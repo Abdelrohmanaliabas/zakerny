@@ -1,16 +1,43 @@
 class Reciter {
-  const Reciter({required this.id, required this.name, required this.surahs});
+  const Reciter({
+    required this.id,
+    required this.name,
+    required this.surahs,
+    this.photoUrl,
+    this.avatarAsset,
+  });
+
   final String id;
   final String name;
   final List<RecitationSurah> surahs;
+  final String? photoUrl;
+  final String? avatarAsset;
 
-  factory Reciter.fromJson(Map<String, dynamic> json) => Reciter(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    surahs: (json['surahs'] as List)
-        .map((e) => RecitationSurah.fromJson(e as Map<String, dynamic>))
-        .toList(),
-  );
+  String get defaultAvatarAsset =>
+      avatarAsset ?? 'assets/recitations/avatars/$id.webp';
+
+  factory Reciter.fromJson(Map<String, dynamic> json) {
+    final id = json['id'] as String;
+    return Reciter(
+      id: id,
+      name: json['name'] as String,
+      photoUrl: json['photoUrl'] as String? ?? json['photo'] as String?,
+      avatarAsset: json['avatarAsset'] as String? ??
+          json['avatar'] as String? ??
+          'assets/recitations/avatars/$id.webp',
+      surahs: (json['surahs'] as List)
+          .map((e) => RecitationSurah.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    if (photoUrl != null) 'photoUrl': photoUrl,
+    if (avatarAsset != null) 'avatarAsset': avatarAsset,
+    'surahs': surahs.map((e) => e.toJson()).toList(),
+  };
 }
 
 class RecitationSurah {
@@ -42,6 +69,13 @@ class RecitationSurah {
       urls: rawUrls is List ? rawUrls.whereType<String>().toList() : const [],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    if (url != null) 'url': url,
+    'urls': urls,
+  };
 }
 
 class DownloadedRecitation {

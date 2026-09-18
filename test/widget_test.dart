@@ -1,13 +1,16 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zakerny/src/core/notifications/notification_service.dart';
 import 'package:zakerny/src/core/storage/app_local_store.dart';
 import 'package:zakerny/src/features/adhkar/data/adhkar_repository.dart';
+import 'package:zakerny/src/features/hadith/data/hadith_repository.dart';
 import 'package:zakerny/src/features/prayer_times/data/prayer_repository.dart';
 import 'package:zakerny/src/features/qibla/data/qibla_repository.dart';
 import 'package:zakerny/src/features/quran/data/quran_repository.dart';
 import 'package:zakerny/src/features/recitations/data/recitation_repository.dart';
 import 'package:zakerny/src/features/recitations/domain/recitation_models.dart';
+import 'package:zakerny/src/features/recitations/presentation/widgets/reciter_avatar.dart';
 
 void main() {
   test('default prayer preferences are available offline', () async {
@@ -36,7 +39,7 @@ void main() {
     expect(ayahs.any((ayah) => ayah.page == 1), isTrue);
   });
 
-  test('recitations include five reciters with full surah lists', () async {
+  test('recitations include twenty reciters with full surah lists and avatars', () async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
     final store = SharedPrefsAppLocalStore();
@@ -44,9 +47,13 @@ void main() {
 
     final reciters = await RecitationRepository(store).loadReciters();
 
-    expect(reciters.length, 5);
+    expect(reciters.length, 20);
     expect(reciters.every((reciter) => reciter.surahs.length == 114), isTrue);
     expect(reciters.any((reciter) => reciter.id == 'yasser_aldosari'), isTrue);
+    expect(reciters.any((reciter) => reciter.id == 'maher_almuaiqly'), isTrue);
+    expect(reciters.any((reciter) => reciter.id == 'saad_alghamdi'), isTrue);
+    expect(reciters.every((reciter) => reciter.photoUrl != null && reciter.photoUrl!.isNotEmpty), isTrue);
+    expect(reciters.every((reciter) => reciter.defaultAvatarAsset.isNotEmpty), isTrue);
     expect(
       reciters.every(
         (reciter) =>
@@ -130,6 +137,52 @@ void main() {
     await service.initialize();
     await service.requestPermissions();
     await service.cancelAllPrayerNotifications();
+  });
+
+  test('hadith repository loads authentic hadiths with narrators and search works', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+    final store = SharedPrefsAppLocalStore();
+    await store.init();
+
+    final repository = HadithRepository(store);
+    final hadiths = await repository.loadHadiths();
+
+    expect(hadiths.length, greaterThanOrEqualTo(100));
+    expect(hadiths.every((h) => h.grade == 'صحيح'), isTrue);
+    expect(hadiths.every((h) => (h.narrator?.isNotEmpty ?? false)), isTrue);
+    expect(hadiths.any((h) => (h.narrator?.contains('البخاري') ?? false)), isTrue);
+    expect(hadiths.any((h) => (h.narrator?.contains('مسلم') ?? false)), isTrue);
+    expect(hadiths.any((h) => (h.narrator?.contains('الترمذي') ?? false)), isTrue);
+
+    final tirmidhiSearch = await repository.search('الترمذي');
+    expect(tirmidhiSearch.isNotEmpty, isTrue);
+
+    final collections = hadiths.map((h) => h.collection).toSet();
+    expect(collections.contains('صحيح البخاري'), isTrue);
+    expect(collections.contains('سنن الترمذي'), isTrue);
+  });
+
+  testWidgets('ReciterAvatar renders correctly with fallback and border', (tester) async {
+    const testReciter = Reciter(
+      id: 'alafasy',
+      name: 'مشاري راشد العفاسي',
+      photoUrl: 'https://example.com/avatar.webp',
+      surahs: [],
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: ReciterAvatar(
+            reciter: testReciter,
+            size: 50,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(ReciterAvatar), findsOneWidget);
   });
 }
 

@@ -7,6 +7,7 @@ import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/zekrni_header.dart';
 import '../application/recitations_controller.dart';
 import '../domain/recitation_models.dart';
+import 'widgets/reciter_avatar.dart';
 
 class RecitationsScreen extends StatefulWidget {
   const RecitationsScreen({super.key, required this.controller});
@@ -95,11 +96,25 @@ class _RecitationsScreenState extends State<RecitationsScreen> {
                           final reciter = reciters[index];
                           return Card(
                             child: ExpansionTile(
-                              leading: Icon(
-                                Icons.person_outline,
-                                color: Theme.of(context).colorScheme.primary,
+                              leading: ReciterAvatar(
+                                reciter: reciter,
+                                size: 46,
                               ),
-                              title: Text(reciter.name),
+                              title: Text(
+                                reciter.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'المصحف كامل • ${reciter.surahs.length} سورة',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
                               children: reciter.surahs.map((surah) {
                                 final download = widget.controller.findDownload(
                                   reciter.id,

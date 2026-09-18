@@ -80,11 +80,18 @@ flutter:
     - assets/quran/quran.json
     - assets/hadith/hadith.json
     - assets/recitations/reciters.json
+    - assets/recitations/avatars/
 
   fonts:
     - family: Cairo
       fonts:
         - asset: assets/fonts/Cairo.ttf
+    - family: Amiri
+      fonts:
+        - asset: assets/fonts/Amiri-Regular.ttf
+    - family: AmiriQuran
+      fonts:
+        - asset: assets/fonts/AmiriQuran-Regular.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

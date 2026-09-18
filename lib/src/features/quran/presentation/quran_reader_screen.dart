@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -23,7 +24,8 @@ class QuranReaderScreen extends StatefulWidget {
 
 class _QuranReaderScreenState extends State<QuranReaderScreen> {
   final ScrollController _scrollController = ScrollController();
-  final Map<String, GlobalKey> _ayahKeys = {};
+  final Map<String, GlobalKey> _pageKeys = {};
+  final Map<String, GlobalKey> _cardKeys = {};
   final Map<int, GlobalKey> _surahKeys = {};
 
   List<Surah> _allSurahs = [];
@@ -139,7 +141,15 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     _didScrollToInitialAyah = true;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final key = _ayahKeys['${widget.surahId}-${widget.initialAyahNumber}'];
+      GlobalKey? key;
+      if (_isMushafMode) {
+        final surah = _displayedSurahs.where((s) => s.id == widget.surahId).firstOrNull;
+        final ayah = surah?.ayahs.where((a) => a.number == widget.initialAyahNumber).firstOrNull;
+        final page = ayah?.page ?? 1;
+        key = _pageKeys['${widget.surahId}-$page'];
+      } else {
+        key = _cardKeys['${widget.surahId}-${widget.initialAyahNumber}'];
+      }
       final context = key?.currentContext;
       if (context != null) {
         Scrollable.ensureVisible(
@@ -234,7 +244,9 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                     textAlign: TextAlign.justify,
                     textDirection: TextDirection.rtl,
                     style: theme.textTheme.titleMedium?.copyWith(
-                      height: 1.8,
+                      fontFamily: 'Amiri',
+                      fontSize: 20,
+                      height: 2.1,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -584,7 +596,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                         selectedAyahNumber: _selectedSurahId == surah.id
                             ? _selectedAyahNumber
                             : null,
-                        ayahKeys: _ayahKeys,
+                        pageKeys: _pageKeys,
                         onAyahTapped: (ayah) => _onAyahTapped(surah, ayah),
                       )
                     else
@@ -594,7 +606,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                         selectedAyahNumber: _selectedSurahId == surah.id
                             ? _selectedAyahNumber
                             : null,
-                        ayahKeys: _ayahKeys,
+                        cardKeys: _cardKeys,
                         onAyahTapped: (ayah) => _onAyahTapped(surah, ayah),
                       ),
                     const SizedBox(height: 24),
@@ -617,134 +629,303 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   }
 }
 
-class _MushafContinuousView extends StatelessWidget {
+class _MushafContinuousView extends StatefulWidget {
   const _MushafContinuousView({
     required this.surah,
     required this.fontSize,
     required this.selectedAyahNumber,
-    required this.ayahKeys,
+    required this.pageKeys,
     required this.onAyahTapped,
   });
 
   final Surah surah;
   final double fontSize;
   final int? selectedAyahNumber;
-  final Map<String, GlobalKey> ayahKeys;
+  final Map<String, GlobalKey> pageKeys;
   final void Function(Ayah ayah) onAyahTapped;
+
+  @override
+  State<_MushafContinuousView> createState() => _MushafContinuousViewState();
+}
+
+class _MushafContinuousViewState extends State<_MushafContinuousView> {
+  final Map<int, TapGestureRecognizer> _recognizers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _initRecognizers();
+  }
+
+  @override
+  void didUpdateWidget(covariant _MushafContinuousView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.surah.id != widget.surah.id ||
+        oldWidget.surah.ayahs.length != widget.surah.ayahs.length) {
+      _disposeRecognizers();
+      _initRecognizers();
+    }
+  }
+
+  void _initRecognizers() {
+    for (final ayah in widget.surah.ayahs) {
+      _recognizers[ayah.number] = TapGestureRecognizer()
+        ..onTap = () => widget.onAyahTapped(ayah);
+    }
+  }
+
+  void _disposeRecognizers() {
+    for (final recognizer in _recognizers.values) {
+      recognizer.dispose();
+    }
+    _recognizers.clear();
+  }
+
+  @override
+  void dispose() {
+    _disposeRecognizers();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Group ayahs by Medina Mushaf page number
+    final pageGroups = <int, List<Ayah>>{};
+    for (final ayah in widget.surah.ayahs) {
+      final p = ayah.page ?? 1;
+      pageGroups.putIfAbsent(p, () => []).add(ayah);
+    }
+
+    final pages = pageGroups.entries.toList();
+    final firstPageNumber = pages.isNotEmpty ? pages.first.key : 1;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < pages.length; i++) ...[
+          if (i > 0) const SizedBox(height: 18),
+          _MushafPageCard(
+            surah: widget.surah,
+            pageNumber: pages[i].key,
+            isFirstPageOfSurah: pages[i].key == firstPageNumber,
+            ayahs: pages[i].value,
+            fontSize: widget.fontSize,
+            selectedAyahNumber: widget.selectedAyahNumber,
+            recognizers: _recognizers,
+            pageKeys: widget.pageKeys,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _MushafPageCard extends StatelessWidget {
+  const _MushafPageCard({
+    required this.surah,
+    required this.pageNumber,
+    required this.isFirstPageOfSurah,
+    required this.ayahs,
+    required this.fontSize,
+    required this.selectedAyahNumber,
+    required this.recognizers,
+    required this.pageKeys,
+  });
+
+  final Surah surah;
+  final int pageNumber;
+  final bool isFirstPageOfSurah;
+  final List<Ayah> ayahs;
+  final double fontSize;
+  final int? selectedAyahNumber;
+  final Map<int, TapGestureRecognizer> recognizers;
+  final Map<String, GlobalKey> pageKeys;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+    final pageKey = pageKeys.putIfAbsent(
+      '${surah.id}-$pageNumber',
+      GlobalKey.new,
+    );
+
+    final firstAyah = ayahs.firstOrNull;
+
+    return Container(
+      key: pageKey,
+      decoration: BoxDecoration(
+        color: isDark ? theme.cardColor : const Color(0xFFFDFBF7),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark
+              ? colorScheme.outlineVariant.withValues(alpha: 0.3)
+              : const Color(0xFFE5DECF),
+          width: 1.2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: _buildAyahSections(context),
-        ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.all(5),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark
+                        ? colorScheme.primary.withValues(alpha: 0.12)
+                        : colorScheme.secondary.withValues(alpha: 0.25),
+                    width: 0.8,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (!isFirstPageOfSurah && firstAyah != null) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        surah.name,
+                        style: TextStyle(
+                          fontFamily: 'Amiri',
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
+                        ),
+                      ),
+                      if (firstAyah.juz != null)
+                        Text(
+                          'الجزء ${_arabicDigits(firstAyah.juz!)}',
+                          style: TextStyle(
+                            fontFamily: 'Amiri',
+                            fontSize: 13,
+                            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Divider(
+                    height: 1,
+                    thickness: 0.7,
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                Text.rich(
+                  TextSpan(
+                    style: TextStyle(
+                      fontFamily: 'Amiri',
+                      fontSize: fontSize,
+                      height: 2.35,
+                      fontWeight: FontWeight.w400,
+                      color: theme.textTheme.bodyLarge?.color,
+                      letterSpacing: 0.1,
+                    ),
+                    children: [
+                      for (final ayah in ayahs) ...[
+                        _buildAyahSpan(
+                          ayah: ayah,
+                          isSelected: ayah.number == selectedAyahNumber,
+                          colorScheme: colorScheme,
+                        ),
+                      ],
+                    ],
+                  ),
+                  textAlign: TextAlign.justify,
+                  textDirection: TextDirection.rtl,
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 1,
+                      color: colorScheme.secondary.withValues(alpha: 0.45),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Text(
+                        '۞  ${_arabicDigits(pageNumber)}  ۞',
+                        style: TextStyle(
+                          fontFamily: 'Amiri',
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.secondary,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 32,
+                      height: 1,
+                      color: colorScheme.secondary.withValues(alpha: 0.45),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  List<Widget> _buildAyahSections(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    const chunkSize = 6;
-    final widgets = <Widget>[];
+  InlineSpan _buildAyahSpan({
+    required Ayah ayah,
+    required bool isSelected,
+    required ColorScheme colorScheme,
+  }) {
+    final text = _getAyahTextWithoutBasmalah(
+      surah.id,
+      ayah.number,
+      ayah.text,
+    );
+    final recognizer = recognizers[ayah.number];
 
-    for (var i = 0; i < surah.ayahs.length; i += chunkSize) {
-      final end = (i + chunkSize > surah.ayahs.length)
-          ? surah.ayahs.length
-          : i + chunkSize;
-      final chunk = surah.ayahs.sublist(i, end);
-      final firstAyah = chunk.first;
-
-      final key = ayahKeys.putIfAbsent(
-        '${surah.id}-${firstAyah.number}',
-        GlobalKey.new,
-      );
-      for (final a in chunk) {
-        ayahKeys['${surah.id}-${a.number}'] = key;
-      }
-
-      final hasSelected = chunk.any((a) => a.number == selectedAyahNumber);
-
-      widgets.add(
-        Container(
-          key: key,
-          margin: const EdgeInsets.symmetric(vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            color: hasSelected
-                ? colorScheme.primary.withValues(alpha: 0.14)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+    return TextSpan(
+      children: [
+        TextSpan(
+          text: text,
+          style: TextStyle(
+            backgroundColor: isSelected
+                ? colorScheme.primary.withValues(alpha: 0.18)
+                : null,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
-          child: Text.rich(
-            TextSpan(
-              children: [
-                for (final ayah in chunk) ...[
-                  WidgetSpan(
-                    alignment: PlaceholderAlignment.middle,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: () => onAyahTapped(ayah),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 2,
-                          vertical: 1,
-                        ),
-                        child: Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: _getAyahTextWithoutBasmalah(
-                                  surah.id,
-                                  ayah.number,
-                                  ayah.text,
-                                ),
-                              ),
-                              TextSpan(
-                                text: ' ﴿${_arabicDigits(ayah.number)}﴾ ',
-                                style: TextStyle(
-                                  color: colorScheme.secondary,
-                                  fontSize: fontSize * 0.88,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ],
-                          ),
-                          style: TextStyle(
-                            fontSize: fontSize,
-                            height: 2.2,
-                            fontWeight: FontWeight.w500,
-                            color: theme.textTheme.bodyLarge?.color,
-                          ),
-                          textAlign: TextAlign.justify,
-                          textDirection: TextDirection.rtl,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            textAlign: TextAlign.justify,
-            textDirection: TextDirection.rtl,
-          ),
+          recognizer: recognizer,
         ),
-      );
-    }
-    return widgets;
+        TextSpan(
+          text: ' ﴿${_arabicDigits(ayah.number)}﴾ ',
+          style: TextStyle(
+            fontFamily: 'Amiri',
+            color: isSelected ? colorScheme.primary : colorScheme.secondary,
+            fontSize: fontSize * 0.9,
+            fontWeight: FontWeight.bold,
+            backgroundColor: isSelected
+                ? colorScheme.primary.withValues(alpha: 0.18)
+                : null,
+          ),
+          recognizer: recognizer,
+        ),
+      ],
+    );
   }
 }
 
@@ -753,14 +934,14 @@ class _AyahByAyahView extends StatelessWidget {
     required this.surah,
     required this.fontSize,
     required this.selectedAyahNumber,
-    required this.ayahKeys,
+    required this.cardKeys,
     required this.onAyahTapped,
   });
 
   final Surah surah;
   final double fontSize;
   final int? selectedAyahNumber;
-  final Map<String, GlobalKey> ayahKeys;
+  final Map<String, GlobalKey> cardKeys;
   final void Function(Ayah ayah) onAyahTapped;
 
   @override
@@ -772,89 +953,88 @@ class _AyahByAyahView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final ayah in surah.ayahs) ...[
-          Builder(
-            builder: (context) {
-              final key = ayahKeys.putIfAbsent(
-                '${surah.id}-${ayah.number}',
-                GlobalKey.new,
-              );
-              final isSelected = ayah.number == selectedAyahNumber;
-              final text = _getAyahTextWithoutBasmalah(
-                surah.id,
-                ayah.number,
-                ayah.text,
-              );
+          () {
+            final key = cardKeys.putIfAbsent(
+              '${surah.id}-${ayah.number}',
+              GlobalKey.new,
+            );
+            final isSelected = ayah.number == selectedAyahNumber;
+            final text = _getAyahTextWithoutBasmalah(
+              surah.id,
+              ayah.number,
+              ayah.text,
+            );
 
-              return Card(
-                key: key,
-                margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(
-                    color: isSelected
-                        ? colorScheme.primary
-                        : colorScheme.outlineVariant.withValues(alpha: 0.3),
-                    width: isSelected ? 1.5 : 1.0,
-                  ),
+            return Card(
+              key: key,
+              margin: const EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.outlineVariant.withValues(alpha: 0.3),
+                  width: isSelected ? 1.5 : 1.0,
                 ),
-                color: isSelected
-                    ? colorScheme.primary.withValues(alpha: 0.08)
-                    : null,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () => onAyahTapped(ayah),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: colorScheme.primary.withValues(alpha: 0.14),
-                                shape: BoxShape.circle,
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                _arabicDigits(ayah.number),
-                                style: TextStyle(
-                                  color: colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
+              ),
+              color: isSelected
+                  ? colorScheme.primary.withValues(alpha: 0.08)
+                  : null,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => onAyahTapped(ayah),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary.withValues(alpha: 0.14),
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              _arabicDigits(ayah.number),
+                              style: TextStyle(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
                               ),
                             ),
-                            const Spacer(),
-                            if (ayah.juz != null)
-                              Text(
-                                'جزء ${_arabicDigits(ayah.juz!)}',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          text,
-                          style: TextStyle(
-                            fontSize: fontSize,
-                            height: 2.1,
-                            fontWeight: FontWeight.w600,
                           ),
-                          textAlign: TextAlign.justify,
-                          textDirection: TextDirection.rtl,
+                          const Spacer(),
+                          if (ayah.juz != null)
+                            Text(
+                              'جزء ${_arabicDigits(ayah.juz!)}',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        text,
+                        style: TextStyle(
+                          fontFamily: 'Amiri',
+                          fontSize: fontSize,
+                          height: 2.2,
+                          fontWeight: FontWeight.w600,
                         ),
-                      ],
-                    ),
+                        textAlign: TextAlign.justify,
+                        textDirection: TextDirection.rtl,
+                      ),
+                    ],
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          }(),
         ],
       ],
     );
@@ -962,24 +1142,35 @@ class _BasmalahBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: isDark ? theme.cardColor : const Color(0xFFFDFBF7),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: colorScheme.secondary.withValues(alpha: 0.45),
+          color: isDark
+              ? colorScheme.outlineVariant.withValues(alpha: 0.3)
+              : const Color(0xFFE5DECF),
           width: 1.2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       alignment: Alignment.center,
       child: Text(
         'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
         textAlign: TextAlign.center,
         style: TextStyle(
-          fontSize: 21,
-          fontWeight: FontWeight.w700,
+          fontFamily: 'Amiri',
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
           color: theme.textTheme.titleLarge?.color,
           letterSpacing: 0.5,
         ),
