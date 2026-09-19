@@ -42,6 +42,7 @@ class PrayerRepository {
   }
 
   PrayerDay timesFor(DateTime date, PrayerPreferences prefs) {
+    final normalizedDate = DateTime(date.year, date.month, date.day);
     final params = switch (prefs.calculationMethod) {
       'egyptian' => CalculationMethodParameters.egyptian(),
       'ummAlQura' => CalculationMethodParameters.ummAlQura(),
@@ -49,7 +50,7 @@ class PrayerRepository {
     };
     params.madhab = prefs.madhab == 'hanafi' ? Madhab.hanafi : Madhab.shafi;
     final times = PrayerTimes(
-      date: date,
+      date: normalizedDate,
       coordinates: Coordinates(prefs.latitude, prefs.longitude),
       calculationParameters: params,
     );

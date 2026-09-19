@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/widgets/fatimid_decorations.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/zekrni_header.dart';
 import '../application/qibla_controller.dart';
@@ -35,12 +36,13 @@ class _QiblaScreenState extends State<QiblaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Column(
           children: [
             const ZekrniHeader(
-              title: 'القبلة',
-              subtitle: 'اتجاه دقيق من موقعك إلى الكعبة',
+              title: 'اتجاه القبلة',
+              subtitle: 'تحديد دقيق لاتجاه الكعبة المشرفة وفق الأسطرلاب الفاطمي',
             ),
             Expanded(
               child: FutureBuilder<QiblaDirection>(
@@ -59,14 +61,47 @@ class _QiblaScreenState extends State<QiblaScreen> {
                   return ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
-                      _CompassCard(direction: direction),
-                      const SizedBox(height: 14),
+                      // بوصلة الأسطرلاب الفاطمي
+                      _FatimidAstrolabeCard(direction: direction),
+                      const SizedBox(height: 16),
                       _DirectionInfo(direction: direction),
-                      const SizedBox(height: 14),
-                      FilledButton.icon(
-                        onPressed: _useCurrentLocation,
-                        icon: const Icon(Icons.my_location),
-                        label: const Text('استخدام موقعي الحالي'),
+                      const SizedBox(height: 16),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: FatimidColors.emeraldGradient,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: FatimidColors.emeraldPrimary.withValues(alpha: 0.35),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              side: BorderSide(
+                                color: FatimidColors.goldPrimary.withValues(alpha: 0.6),
+                                width: 1.2,
+                              ),
+                            ),
+                          ),
+                          onPressed: _useCurrentLocation,
+                          icon: const Icon(Icons.my_location_rounded, color: FatimidColors.goldLight),
+                          label: const Text(
+                            'تحديث الموقع الحالي للمعايرة',
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   );
@@ -80,92 +115,203 @@ class _QiblaScreenState extends State<QiblaScreen> {
   }
 }
 
-class _CompassCard extends StatelessWidget {
-  const _CompassCard({required this.direction});
+/// بطاقة أسطرلاب القبلة الفاطمي المذهب (The Fatimid Astrolabe Card)
+class _FatimidAstrolabeCard extends StatelessWidget {
+  const _FatimidAstrolabeCard({required this.direction});
 
   final QiblaDirection direction;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            StreamBuilder<CompassEvent>(
-              stream: FlutterCompass.events,
-              builder: (context, snapshot) {
-                final heading = snapshot.data?.heading;
-                final relativeBearing = heading == null
-                    ? direction.bearing
-                    : (direction.bearing - heading + 360) % 360;
-                return Column(
-                  children: [
-                    SizedBox.square(
-                      dimension: 230,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: color.primary.withValues(alpha: 0.22),
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                          Transform.rotate(
-                            angle: -(heading ?? 0) * math.pi / 180,
-                            child: const PositionedCompassLabels(),
-                          ),
-                          Transform.rotate(
-                            angle: relativeBearing * math.pi / 180,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.navigation,
-                                  size: 98,
-                                  color: color.primary,
-                                ),
-                                const SizedBox(height: 14),
-                              ],
-                            ),
-                          ),
-                          CircleAvatar(
-                            radius: 34,
-                            backgroundColor: color.secondary,
-                            child: Icon(Icons.mosque, color: color.onSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      heading == null
-                          ? 'حرك الهاتف لمعايرة البوصلة'
-                          : 'اتجاه الهاتف ${heading.round()}\u00b0',
-                      style: TextStyle(color: color.onSurfaceVariant),
-                    ),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 14),
-            Text(
-              direction.bearingLabel,
-              style: Theme.of(
-                context,
-              ).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            Text(
-              'من اتجاه الشمال',
-              style: TextStyle(color: color.onSurfaceVariant),
-            ),
-          ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? FatimidColors.obsidianCard : Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.35 : 0.28),
+          width: 1.4,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Background rosette
+          Positioned(
+            child: FatimidRosette(
+              size: 260,
+              color: FatimidColors.goldPrimary,
+              opacity: isDark ? 0.08 : 0.06,
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
+            child: Column(
+              children: [
+                StreamBuilder<CompassEvent>(
+                  stream: FlutterCompass.events,
+                  builder: (context, snapshot) {
+                    final heading = snapshot.data?.heading;
+                    final relativeBearing = heading == null
+                        ? direction.bearing
+                        : (direction.bearing - heading + 360) % 360;
+
+                    return Column(
+                      children: [
+                        SizedBox.square(
+                          dimension: 250,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // 1. الحلقة النحاسية الخارجية للأسطرلاب
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: FatimidColors.goldPrimary.withValues(alpha: 0.4),
+                                    width: 3,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: FatimidColors.goldPrimary.withValues(alpha: 0.15),
+                                      blurRadius: 16,
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // 2. حلقة تدريج الدرجات الدائرية
+                              Container(
+                                width: 220,
+                                height: 220,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: FatimidColors.goldPrimary.withValues(alpha: 0.2),
+                                    width: 1,
+                                  ),
+                                ),
+                              ),
+
+                              // 3. اتجاهات البوصلة الأربعة الدوارة
+                              Transform.rotate(
+                                angle: -(heading ?? 0) * math.pi / 180,
+                                child: const PositionedCompassLabels(),
+                              ),
+
+                              // 4. مؤشر الكعبة الفاطمي المذهب
+                              Transform.rotate(
+                                angle: relativeBearing * math.pi / 180,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: FatimidColors.goldPrimary.withValues(alpha: 0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.navigation_rounded,
+                                        size: 78,
+                                        color: FatimidColors.goldPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 18),
+                                  ],
+                                ),
+                              ),
+
+                              // 5. مركز الكعبة المشرفة الفاطمي
+                              Container(
+                                width: 62,
+                                height: 62,
+                                decoration: BoxDecoration(
+                                  gradient: FatimidColors.goldGradient,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: FatimidColors.goldPrimary.withValues(alpha: 0.45),
+                                      blurRadius: 12,
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: Container(
+                                    width: 52,
+                                    height: 52,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF102820),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.mosque,
+                                      color: FatimidColors.goldLight,
+                                      size: 26,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: FatimidColors.goldPrimary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            heading == null
+                                ? 'حرك الهاتف لمعايرة البوصلة'
+                                : 'اتجاه زاوية الهاتف: ${heading.round()}°',
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4A6B5F),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  direction.bearingLabel,
+                  style: TextStyle(
+                    fontFamily: 'Amiri',
+                    fontSize: 38,
+                    fontWeight: FontWeight.bold,
+                    color: FatimidColors.goldPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'انحراف عن اتجاه الشمال الحقيقي',
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF5B7A6F),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -176,19 +322,22 @@ class PositionedCompassLabels extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = TextStyle(
-      color: Theme.of(context).colorScheme.onSurfaceVariant,
-      fontWeight: FontWeight.w800,
+    const style = TextStyle(
+      fontFamily: 'Cairo',
+      color: FatimidColors.goldPrimary,
+      fontWeight: FontWeight.w900,
+      fontSize: 13,
     );
-    return SizedBox.square(
-      dimension: 210,
+
+    return const SizedBox.square(
+      dimension: 220,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Positioned(top: 0, child: Text('N', style: style)),
-          Positioned(bottom: 0, child: Text('S', style: style)),
-          Positioned(left: 0, child: Text('W', style: style)),
-          Positioned(right: 0, child: Text('E', style: style)),
+          Positioned(top: 2, child: Text('ش (N)', style: style)),
+          Positioned(bottom: 2, child: Text('ج (S)', style: style)),
+          Positioned(left: 2, child: Text('غ (W)', style: style)),
+          Positioned(right: 2, child: Text('ق (E)', style: style)),
         ],
       ),
     );
@@ -202,27 +351,52 @@ class _DirectionInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? FatimidColors.obsidianCard : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.25 : 0.18),
+          width: 1,
+        ),
+      ),
       child: Column(
         children: [
           ListTile(
-            leading: const Icon(Icons.place_outlined),
-            title: const Text('الموقع'),
-            subtitle: Text(direction.city),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.straighten),
-            title: const Text('المسافة إلى مكة'),
-            subtitle: Text(direction.distanceLabel),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.explore_outlined),
-            title: const Text('الإحداثيات المستخدمة'),
+            leading: const Icon(Icons.place_rounded, color: FatimidColors.goldPrimary),
+            title: const Text(
+              'المدينة الحالية',
+              style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold, fontSize: 14),
+            ),
             subtitle: Text(
-              '${direction.latitude.toStringAsFixed(4)}, '
-              '${direction.longitude.toStringAsFixed(4)}',
+              direction.city,
+              style: TextStyle(fontFamily: 'Cairo', color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF5B7A6F)),
+            ),
+          ),
+          Divider(height: 1, color: FatimidColors.goldPrimary.withValues(alpha: 0.15)),
+          ListTile(
+            leading: const Icon(Icons.straighten_rounded, color: FatimidColors.goldPrimary),
+            title: const Text(
+              'المسافة إلى الكعبة المشرفة',
+              style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            subtitle: Text(
+              direction.distanceLabel,
+              style: TextStyle(fontFamily: 'Cairo', color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF5B7A6F)),
+            ),
+          ),
+          Divider(height: 1, color: FatimidColors.goldPrimary.withValues(alpha: 0.15)),
+          ListTile(
+            leading: const Icon(Icons.explore_outlined, color: FatimidColors.goldPrimary),
+            title: const Text(
+              'الإحداثيات الجغرافية',
+              style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            subtitle: Text(
+              '${direction.latitude.toStringAsFixed(4)}° شمالاً، ${direction.longitude.toStringAsFixed(4)}° شرقاً',
+              style: TextStyle(fontFamily: 'Cairo', color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF5B7A6F)),
             ),
           ),
         ],

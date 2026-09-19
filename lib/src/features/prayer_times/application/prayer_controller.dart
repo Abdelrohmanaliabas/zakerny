@@ -1,4 +1,5 @@
 import '../../../core/notifications/notification_service.dart';
+import '../../dhikr_reminders/application/voice_dhikr_service.dart';
 import '../data/prayer_repository.dart';
 import '../domain/prayer_day.dart';
 import '../domain/prayer_preferences.dart';
@@ -14,8 +15,12 @@ class PrayerController {
   PrayerDay today(PrayerPreferences prefs) =>
       repository.timesFor(DateTime.now(), prefs);
 
+  PrayerDay tomorrow(PrayerPreferences prefs) =>
+      repository.timesFor(DateTime.now().add(const Duration(days: 1)), prefs);
+
   Future<PrayerPreferences> save(PrayerPreferences prefs) async {
     await repository.savePreferences(prefs);
+    VoiceDhikrService.instance.updatePreferences(prefs);
     await _reschedule(prefs);
     return prefs;
   }

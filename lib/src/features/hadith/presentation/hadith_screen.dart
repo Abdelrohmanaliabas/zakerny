@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/utils/arabic_text_utils.dart';
+import '../../../core/widgets/fatimid_decorations.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/zekrni_header.dart';
 import '../application/hadith_controller.dart';
@@ -56,7 +58,7 @@ class _HadithScreenState extends State<HadithScreen> {
                   return Column(
                     children: [
                       SizedBox(
-                        height: 56,
+                        height: 52,
                         child: ListView.separated(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           scrollDirection: Axis.horizontal,
@@ -64,11 +66,49 @@ class _HadithScreenState extends State<HadithScreen> {
                           separatorBuilder: (_, _) => const SizedBox(width: 8),
                           itemBuilder: (context, index) {
                             final collection = collections[index];
-                            return ChoiceChip(
-                              selected: collection == _selectedCollection,
-                              label: Text(collection),
-                              onSelected: (_) => setState(
-                                () => _selectedCollection = collection,
+                            final isSelected = collection == _selectedCollection;
+                            final isDark = Theme.of(context).brightness == Brightness.dark;
+
+                            return InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () => setState(() => _selectedCollection = collection),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  gradient: isSelected ? FatimidColors.goldGradient : null,
+                                  color: isSelected
+                                      ? null
+                                      : (isDark ? FatimidColors.obsidianCard : Colors.white),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? FatimidColors.goldLight
+                                        : FatimidColors.goldPrimary.withValues(
+                                            alpha: isDark ? 0.25 : 0.2,
+                                          ),
+                                    width: 1,
+                                  ),
+                                  boxShadow: [
+                                    if (isSelected)
+                                      BoxShadow(
+                                        color: FatimidColors.goldPrimary.withValues(alpha: 0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                  ],
+                                ),
+                                child: Text(
+                                  collection,
+                                  style: TextStyle(
+                                    fontFamily: 'Cairo',
+                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                    fontSize: 12.5,
+                                    color: isSelected
+                                        ? const Color(0xFF332000)
+                                        : (isDark ? const Color(0xFFA5C4B8) : const Color(0xFF375449)),
+                                  ),
+                                ),
                               ),
                             );
                           },
@@ -113,10 +153,10 @@ class _HadithScreenState extends State<HadithScreen> {
           hadith.collection == _selectedCollection;
       final matchesQuery =
           query.isEmpty ||
-          hadith.title.contains(query) ||
-          hadith.text.contains(query) ||
-          hadith.collection.contains(query) ||
-          (hadith.narrator != null && hadith.narrator!.contains(query));
+          ArabicTextUtils.contains(hadith.title, query) ||
+          ArabicTextUtils.contains(hadith.text, query) ||
+          ArabicTextUtils.contains(hadith.collection, query) ||
+          (hadith.narrator != null && ArabicTextUtils.contains(hadith.narrator!, query));
       return matchesCollection && matchesQuery;
     }).toList();
   }
@@ -286,21 +326,30 @@ class _HadithCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      elevation: 0,
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(
-          color: color.outlineVariant.withValues(alpha: 0.35),
+      decoration: BoxDecoration(
+        color: isDark ? FatimidColors.obsidianCard : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.28 : 0.2),
+          width: 1.1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

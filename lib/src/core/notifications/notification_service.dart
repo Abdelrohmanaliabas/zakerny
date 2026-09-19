@@ -274,6 +274,12 @@ class NotificationService extends ChangeNotifier {
     var reminderId = 5000;
     var dhikrIndex = 0;
 
+    final enabledReminders = defaultDhikrReminders
+        .where((r) => preferences.enabledDhikrIds.contains(r.id))
+        .toList();
+    final itemsToUse =
+        enabledReminders.isNotEmpty ? enabledReminders : defaultDhikrReminders;
+
     // Schedule across next 3 days during active daytime hours (8:00 AM to 10:30 PM)
     for (int dayOffset = 0; dayOffset < 3; dayOffset++) {
       final date = now.add(Duration(days: dayOffset));
@@ -283,7 +289,7 @@ class NotificationService extends ChangeNotifier {
       var scheduledTime = startDay;
       while (scheduledTime.isBefore(endDay)) {
         if (scheduledTime.isAfter(now)) {
-          final item = defaultDhikrReminders[dhikrIndex % defaultDhikrReminders.length];
+          final item = itemsToUse[dhikrIndex % itemsToUse.length];
           dhikrIndex++;
 
           await _scheduleSingleDhikrNotification(

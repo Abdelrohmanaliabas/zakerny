@@ -251,29 +251,39 @@ void main() {
     expect(defaultPrefs.dhikrReminderEnabled, isTrue);
     expect(defaultPrefs.dhikrIntervalMinutes, 60);
     expect(defaultPrefs.dhikrOverlayEnabled, isTrue);
+    expect(defaultPrefs.dhikrVoiceEnabled, isTrue);
+    expect(defaultPrefs.enabledDhikrIds.contains('salawat'), isTrue);
 
     final modified = defaultPrefs.copyWith(
       adhanVoice: 'adhan_alafasy',
       dhikrReminderEnabled: false,
       dhikrIntervalMinutes: 30,
       dhikrOverlayEnabled: false,
+      dhikrVoiceEnabled: false,
+      enabledDhikrIds: ['salawat', 'tasbeeh'],
     );
     expect(modified.adhanVoice, 'adhan_alafasy');
     expect(modified.dhikrReminderEnabled, isFalse);
     expect(modified.dhikrIntervalMinutes, 30);
     expect(modified.dhikrOverlayEnabled, isFalse);
+    expect(modified.dhikrVoiceEnabled, isFalse);
+    expect(modified.enabledDhikrIds, ['salawat', 'tasbeeh']);
 
     final json = modified.toJson();
     expect(json['adhanVoice'], 'adhan_alafasy');
     expect(json['dhikrReminderEnabled'], isFalse);
     expect(json['dhikrIntervalMinutes'], 30);
     expect(json['dhikrOverlayEnabled'], isFalse);
+    expect(json['dhikrVoiceEnabled'], isFalse);
+    expect(json['enabledDhikrIds'], ['salawat', 'tasbeeh']);
 
     final fromJson = PrayerPreferences.fromJson(json);
     expect(fromJson.adhanVoice, 'adhan_alafasy');
     expect(fromJson.dhikrReminderEnabled, isFalse);
     expect(fromJson.dhikrIntervalMinutes, 30);
     expect(fromJson.dhikrOverlayEnabled, isFalse);
+    expect(fromJson.dhikrVoiceEnabled, isFalse);
+    expect(fromJson.enabledDhikrIds, ['salawat', 'tasbeeh']);
     expect(fromJson.selectedVoice.id, 'adhan_alafasy');
   });
 
@@ -288,11 +298,23 @@ void main() {
     final makkahVoice = getAdhanVoiceById('adhan_makkah');
     expect(makkahVoice.name.contains('المكي'), isTrue);
 
-    expect(defaultDhikrReminders.length, greaterThanOrEqualTo(5));
+    expect(defaultDhikrReminders.length, greaterThanOrEqualTo(9));
     expect(defaultDhikrReminders.any((d) => d.id == 'salawat'), isTrue);
     expect(defaultDhikrReminders.any((d) => d.id == 'tahleel'), isTrue);
+    expect(defaultDhikrReminders.any((d) => d.id == 'thikr'), isTrue);
     expect(defaultDhikrReminders.any((d) => d.id == 'tasbeeh'), isTrue);
+    expect(defaultDhikrReminders.any((d) => d.id == 'takbeer'), isTrue);
     expect(defaultDhikrReminders.any((d) => d.id == 'istighfar'), isTrue);
+    expect(defaultDhikrReminders.any((d) => d.id == 'hawqala'), isTrue);
+    expect(defaultDhikrReminders.any((d) => d.id == 'alhamdulillah'), isTrue);
+    expect(defaultDhikrReminders.any((d) => d.id == 'subhanallah'), isTrue);
+
+    final audioItems = defaultDhikrReminders.where((d) => d.audioAsset != null).toList();
+    expect(audioItems.length, 9);
+    for (final item in audioItems) {
+      expect(item.audioAsset!.startsWith('assets/audio/dhikr/'), isTrue);
+      expect(item.spokenPhrase, isNotEmpty);
+    }
   });
 
   testWidgets('ZekrniHeader renders properly and menu button opens quick menu', (tester) async {
@@ -356,6 +378,41 @@ void main() {
 
     await repo.setPreferredReciterId('husary');
     expect(repo.getPreferredReciterId(), 'husary');
+  });
+
+  test('expanded adhkar repository loads all 5 categories with authentic content and counter features', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+    final store = SharedPrefsAppLocalStore();
+    await store.init();
+
+    final repo = AdhkarRepository(store);
+    final categories = await repo.loadCategories();
+
+    expect(categories.length, 5);
+    final categoryIds = categories.map((c) => c.id).toList();
+    expect(categoryIds, containsAll([
+      'morning',
+      'evening',
+      'after_prayer',
+      'sleep_wake',
+      'tasbeeh_istighfar',
+    ]));
+
+    // Check morning adhkar has Ayat al-Kursi with full text
+    final morning = categories.firstWhere((c) => c.id == 'morning');
+    expect(morning.items.length, greaterThanOrEqualTo(10));
+    final kursi = morning.items.firstWhere((i) => i.id == 'morning_ayat_kursi');
+    expect(kursi.text.contains('اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ'), isTrue);
+    expect(kursi.text.contains('وَهُوَ الْعَلِيُّ الْعَظِيمُ'), isTrue);
+
+    // Test counter increment and resetAll
+    expect(repo.countFor(kursi.id), 0);
+    await repo.increment(kursi);
+    expect(repo.countFor(kursi.id), 1);
+
+    await repo.resetAll(morning.items);
+    expect(repo.countFor(kursi.id), 0);
   });
 }
 

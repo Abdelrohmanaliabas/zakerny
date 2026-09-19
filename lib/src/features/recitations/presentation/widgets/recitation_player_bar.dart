@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../../core/widgets/fatimid_decorations.dart';
 import '../../data/recitation_service.dart';
 import '../../domain/recitation_models.dart';
 import 'reciter_avatar.dart';
@@ -26,24 +27,30 @@ class RecitationPlayerBar extends StatelessWidget {
 
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
+        final isDark = theme.brightness == Brightness.dark;
 
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark
-                ? colorScheme.surfaceContainerHighest
-                : colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
+            color: isDark
+                ? FatimidColors.obsidianCard.withValues(alpha: 0.96)
+                : Colors.white.withValues(alpha: 0.96),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: colorScheme.primary.withValues(alpha: 0.25),
-              width: 1.2,
+              color: FatimidColors.goldPrimary.withValues(alpha: 0.45),
+              width: 1.3,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 16,
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                blurRadius: 18,
                 offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: FatimidColors.goldPrimary.withValues(alpha: 0.15),
+                blurRadius: 10,
+                spreadRadius: 0.5,
               ),
             ],
           ),
@@ -144,7 +151,7 @@ class RecitationPlayerBar extends StatelessWidget {
                             isPlaying
                                 ? Icons.pause_circle_filled
                                 : Icons.play_circle_filled,
-                            color: colorScheme.primary,
+                            color: FatimidColors.goldPrimary,
                           ),
                           iconSize: 36,
                           onPressed: () {

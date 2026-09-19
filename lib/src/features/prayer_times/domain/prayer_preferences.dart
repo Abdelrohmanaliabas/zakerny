@@ -1,5 +1,17 @@
 import 'adhan_voice.dart';
 
+const List<String> defaultEnabledDhikrIds = [
+  'salawat',
+  'tahleel',
+  'thikr',
+  'tasbeeh',
+  'takbeer',
+  'istighfar',
+  'hawqala',
+  'alhamdulillah',
+  'subhanallah',
+];
+
 class PrayerPreferences {
   const PrayerPreferences({
     required this.city,
@@ -15,6 +27,8 @@ class PrayerPreferences {
     this.dhikrReminderEnabled = true,
     this.dhikrIntervalMinutes = 60,
     this.dhikrOverlayEnabled = true,
+    this.dhikrVoiceEnabled = true,
+    this.enabledDhikrIds = defaultEnabledDhikrIds,
   });
 
   factory PrayerPreferences.defaults() => const PrayerPreferences(
@@ -37,6 +51,8 @@ class PrayerPreferences {
     dhikrReminderEnabled: true,
     dhikrIntervalMinutes: 60,
     dhikrOverlayEnabled: true,
+    dhikrVoiceEnabled: true,
+    enabledDhikrIds: defaultEnabledDhikrIds,
   );
 
   final String city;
@@ -52,6 +68,8 @@ class PrayerPreferences {
   final bool dhikrReminderEnabled;
   final int dhikrIntervalMinutes;
   final bool dhikrOverlayEnabled;
+  final bool dhikrVoiceEnabled;
+  final List<String> enabledDhikrIds;
 
   AdhanVoice get selectedVoice => getAdhanVoiceById(adhanVoice);
 
@@ -69,6 +87,8 @@ class PrayerPreferences {
     bool? dhikrReminderEnabled,
     int? dhikrIntervalMinutes,
     bool? dhikrOverlayEnabled,
+    bool? dhikrVoiceEnabled,
+    List<String>? enabledDhikrIds,
   }) {
     return PrayerPreferences(
       city: city ?? this.city,
@@ -84,6 +104,8 @@ class PrayerPreferences {
       dhikrReminderEnabled: dhikrReminderEnabled ?? this.dhikrReminderEnabled,
       dhikrIntervalMinutes: dhikrIntervalMinutes ?? this.dhikrIntervalMinutes,
       dhikrOverlayEnabled: dhikrOverlayEnabled ?? this.dhikrOverlayEnabled,
+      dhikrVoiceEnabled: dhikrVoiceEnabled ?? this.dhikrVoiceEnabled,
+      enabledDhikrIds: enabledDhikrIds ?? this.enabledDhikrIds,
     );
   }
 
@@ -115,6 +137,12 @@ class PrayerPreferences {
           json['dhikrIntervalMinutes'] as int? ?? defaults.dhikrIntervalMinutes,
       dhikrOverlayEnabled:
           json['dhikrOverlayEnabled'] as bool? ?? defaults.dhikrOverlayEnabled,
+      dhikrVoiceEnabled:
+          json['dhikrVoiceEnabled'] as bool? ?? defaults.dhikrVoiceEnabled,
+      enabledDhikrIds: (json['enabledDhikrIds'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          defaults.enabledDhikrIds,
     );
   }
 
@@ -132,5 +160,7 @@ class PrayerPreferences {
     'dhikrReminderEnabled': dhikrReminderEnabled,
     'dhikrIntervalMinutes': dhikrIntervalMinutes,
     'dhikrOverlayEnabled': dhikrOverlayEnabled,
+    'dhikrVoiceEnabled': dhikrVoiceEnabled,
+    'enabledDhikrIds': enabledDhikrIds,
   };
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'fatimid_decorations.dart';
 
 class ZekrniHeader extends StatelessWidget {
   const ZekrniHeader({
@@ -25,24 +26,63 @@ class ZekrniHeader extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF101F1A).withValues(alpha: 0.92)
-            : Colors.white.withValues(alpha: 0.8),
+            ? const Color(0xFF0D1C17).withValues(alpha: 0.94)
+            : Colors.white.withValues(alpha: 0.92),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+        border: Border(
+          bottom: BorderSide(
+            color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.35 : 0.3),
+            width: 1.2,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: color.primary.withValues(alpha: 0.16),
-                child: Icon(Icons.auto_stories, color: color.primary),
+              // Fatimid Golden Rosette Avatar
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  gradient: FatimidColors.goldGradient,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: FatimidColors.goldPrimary.withValues(alpha: 0.35),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF0A1813) : Colors.white,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: Icon(
+                      Icons.auto_stories,
+                      color: isDark ? FatimidColors.goldLight : FatimidColors.emeraldPrimary,
+                      size: 22,
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,14 +90,37 @@ class ZekrniHeader extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.2,
+                        color: isDark ? Colors.white : const Color(0xFF0F2B22),
                       ),
                     ),
-                    if (subtitle != null)
-                      Text(
-                        subtitle!,
-                        style: TextStyle(color: color.onSurfaceVariant),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: 13,
+                            color: FatimidColors.goldPrimary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            subtitle!,
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? const Color(0xFFA5C4B8)
+                                  : const Color(0xFF5B7A6F),
+                            ),
+                          ),
+                        ],
                       ),
+                    ],
                   ],
                 ),
               ),
@@ -74,12 +137,56 @@ class ZekrniHeader extends StatelessWidget {
             ],
           ),
           if (showSearch) ...[
-            const SizedBox(height: 16),
-            TextField(
-              onChanged: onSearchChanged,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'بحث...',
+            const SizedBox(height: 14),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: TextField(
+                onChanged: onSearchChanged,
+                style: const TextStyle(fontSize: 14),
+                decoration: InputDecoration(
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: FatimidColors.goldPrimary,
+                    size: 20,
+                  ),
+                  hintText: 'ابحث في السور، الأذكار، الأحاديث...',
+                  hintStyle: TextStyle(
+                    fontSize: 13,
+                    color: color.onSurfaceVariant.withValues(alpha: 0.6),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  fillColor: isDark ? const Color(0xFF132720) : const Color(0xFFF9F6EE),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: FatimidColors.goldPrimary.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: FatimidColors.goldPrimary.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: FatimidColors.goldPrimary,
+                      width: 1.5,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
@@ -95,11 +202,12 @@ class ZekrniHeader extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side: BorderSide(
-              color: color.outlineVariant.withValues(alpha: 0.5),
+              color: FatimidColors.goldPrimary.withValues(alpha: 0.45),
+              width: 1.2,
             ),
           ),
-          elevation: 8,
-          color: isDark ? const Color(0xFF162A24) : Colors.white,
+          elevation: 12,
+          color: isDark ? const Color(0xFF11231E) : Colors.white,
         ),
       ),
       child: PopupMenuButton<String>(
@@ -120,7 +228,7 @@ class ZekrniHeader extends StatelessWidget {
             value: '/settings',
             icon: Icons.settings_rounded,
             title: 'الإعدادات والأذان',
-            color: color.primary,
+            color: FatimidColors.goldPrimary,
           ),
           _buildPopupItem(
             value: '/qibla',
@@ -145,7 +253,7 @@ class ZekrniHeader extends StatelessWidget {
             value: '/prayers',
             icon: Icons.access_time_filled_rounded,
             title: 'مواقيت الصلاة',
-            color: color.primary,
+            color: FatimidColors.emeraldLight,
           ),
           _buildPopupItem(
             value: '/quran',
@@ -170,18 +278,25 @@ class ZekrniHeader extends StatelessWidget {
             value: '/',
             icon: Icons.home_rounded,
             title: 'الصفحة الرئيسية',
-            color: color.primary,
+            color: FatimidColors.goldPrimary,
           ),
         ],
         child: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.secondaryContainer,
+            gradient: FatimidColors.goldGradient,
             shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: FatimidColors.goldPrimary.withValues(alpha: 0.35),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          child: Icon(
+          child: const Icon(
             Icons.tune_rounded,
-            color: color.onSecondaryContainer,
+            color: Color(0xFF332000),
             size: 20,
           ),
         ),
@@ -199,14 +314,21 @@ class ZekrniHeader extends StatelessWidget {
       value: value,
       child: Row(
         children: [
-          Icon(icon, color: color, size: 20),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               title,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 fontFamily: 'Cairo',
                 fontSize: 13,
               ),

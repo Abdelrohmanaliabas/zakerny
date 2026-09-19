@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../core/widgets/fatimid_decorations.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../recitations/application/recitations_controller.dart';
 import '../../recitations/domain/recitation_models.dart';
@@ -1503,141 +1504,167 @@ class _SurahHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final firstAyah = surah.ayahs.firstOrNull;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primary,
-            colorScheme.primary.withValues(alpha: 0.85),
-          ],
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
+        gradient: FatimidColors.emeraldGradient,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: FatimidColors.goldPrimary,
+          width: 1.6,
         ),
-        borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withValues(alpha: 0.28),
-            blurRadius: 18,
+            color: FatimidColors.emeraldPrimary.withValues(alpha: 0.4),
+            blurRadius: 22,
             offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: FatimidColors.goldPrimary.withValues(alpha: 0.25),
+            blurRadius: 16,
+            spreadRadius: 0.5,
           ),
         ],
       ),
-      child: Column(
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '۞',
-                style: TextStyle(
-                  color: colorScheme.secondary,
-                  fontSize: 22,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                surah.name,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  color: colorScheme.onPrimary,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '۞',
-                style: TextStyle(
-                  color: colorScheme.secondary,
-                  fontSize: 22,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 6,
-            children: [
-              _HeaderBadge(
-                icon: Icons.place_outlined,
-                label: surah.revelationLabel,
-              ),
-              _HeaderBadge(
-                icon: Icons.format_list_numbered_rounded,
-                label: '${_arabicDigits(surah.ayahs.length)} آيات',
-              ),
-              if (firstAyah?.juz != null)
-                _HeaderBadge(
-                  icon: Icons.auto_stories_outlined,
-                  label: 'الجزء ${_arabicDigits(firstAyah!.juz!)}',
-                ),
-              if (firstAyah?.page != null)
-                _HeaderBadge(
-                  icon: Icons.description_outlined,
-                  label: 'الصفحة ${_arabicDigits(firstAyah!.page!)}',
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          InkWell(
-            onTap: onPlaySurah,
-            borderRadius: BorderRadius.circular(24),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.35),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    isPlaying
-                        ? 'إيقاف التلاوة'
-                        : 'استماع للسورة${reciterName != null ? ' ($reciterName)' : ''}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                  if (onChangeReciter != null) ...[
-                    const SizedBox(width: 8),
-                    InkWell(
-                      onTap: onChangeReciter,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.22),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.tune_rounded,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+          // Fluted sunburst rosette in center of header
+          Positioned(
+            left: 0,
+            right: 0,
+            top: -20,
+            child: Center(
+              child: FatimidRosette(
+                size: 160,
+                color: FatimidColors.goldLight,
+                opacity: 0.14,
               ),
             ),
+          ),
+          Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '۞',
+                    style: TextStyle(
+                      color: FatimidColors.goldPrimary,
+                      fontSize: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    surah.name,
+                    style: const TextStyle(
+                      fontFamily: 'Amiri',
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '۞',
+                    style: TextStyle(
+                      color: FatimidColors.goldPrimary,
+                      fontSize: 24,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  _HeaderBadge(
+                    icon: Icons.place_outlined,
+                    label: surah.revelationLabel,
+                  ),
+                  _HeaderBadge(
+                    icon: Icons.format_list_numbered_rounded,
+                    label: '${_arabicDigits(surah.ayahs.length)} آيات',
+                  ),
+                  if (firstAyah?.juz != null)
+                    _HeaderBadge(
+                      icon: Icons.auto_stories_outlined,
+                      label: 'الجزء ${_arabicDigits(firstAyah!.juz!)}',
+                    ),
+                  if (firstAyah?.page != null)
+                    _HeaderBadge(
+                      icon: Icons.description_outlined,
+                      label: 'الصفحة ${_arabicDigits(firstAyah!.page!)}',
+                    ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              InkWell(
+                onTap: onPlaySurah,
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: isPlaying ? FatimidColors.goldGradient : null,
+                    color: isPlaying ? null : Colors.white.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: isPlaying
+                          ? FatimidColors.goldLight
+                          : FatimidColors.goldPrimary.withValues(alpha: 0.5),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                        color: isPlaying ? const Color(0xFF332000) : Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        isPlaying
+                            ? 'إيقاف التلاوة'
+                            : 'استماع للسورة${reciterName != null ? ' ($reciterName)' : ''}',
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          color: isPlaying ? const Color(0xFF332000) : Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      if (onChangeReciter != null) ...[
+                        const SizedBox(width: 8),
+                        InkWell(
+                          onTap: onChangeReciter,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: isPlaying
+                                  ? Colors.black.withValues(alpha: 0.15)
+                                  : Colors.white.withValues(alpha: 0.22),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.tune_rounded,
+                              color: isPlaying ? const Color(0xFF332000) : Colors.white,
+                              size: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1651,39 +1678,60 @@ class _BasmalahBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark ? theme.cardColor : const Color(0xFFFDFBF7),
-        borderRadius: BorderRadius.circular(16),
+        color: isDark ? FatimidColors.obsidianCard : const Color(0xFFFDFBF5),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark
-              ? colorScheme.outlineVariant.withValues(alpha: 0.3)
-              : const Color(0xFFE5DECF),
+          color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.35 : 0.3),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 8,
+            color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.15 : 0.05),
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       alignment: Alignment.center,
-      child: Text(
-        'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontFamily: 'Amiri',
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: theme.textTheme.titleLarge?.color,
-          letterSpacing: 0.5,
-        ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '۞',
+                style: TextStyle(
+                  color: FatimidColors.goldPrimary.withValues(alpha: 0.6),
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                '۞',
+                style: TextStyle(
+                  color: FatimidColors.goldPrimary.withValues(alpha: 0.6),
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Amiri',
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
+              color: isDark ? const Color(0xFFFDF0D0) : const Color(0xFF1B382D),
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }

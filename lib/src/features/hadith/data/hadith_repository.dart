@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 
 import '../../../core/storage/app_local_store.dart';
+import '../../../core/utils/arabic_text_utils.dart';
 import '../domain/hadith_models.dart';
 
 class HadithRepository {
@@ -29,10 +30,10 @@ class HadithRepository {
     return all
         .where(
           (h) =>
-              h.text.contains(trimmed) ||
-              h.title.contains(trimmed) ||
-              h.collection.contains(trimmed) ||
-              (h.narrator != null && h.narrator!.contains(trimmed)),
+              ArabicTextUtils.contains(h.text, trimmed) ||
+              ArabicTextUtils.contains(h.title, trimmed) ||
+              ArabicTextUtils.contains(h.collection, trimmed) ||
+              (h.narrator != null && ArabicTextUtils.contains(h.narrator!, trimmed)),
         )
         .toList();
   }

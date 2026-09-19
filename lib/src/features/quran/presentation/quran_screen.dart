@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/utils/arabic_text_utils.dart';
+import '../../../core/widgets/fatimid_decorations.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/zekrni_header.dart';
 import '../application/quran_controller.dart';
@@ -22,6 +24,7 @@ class _QuranScreenState extends State<QuranScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: FutureBuilder<List<Surah>>(
           future: widget.controller.loadSurahs(),
@@ -33,45 +36,51 @@ class _QuranScreenState extends State<QuranScreen> {
               return ErrorStateView(message: snapshot.error.toString());
             }
             final allSurahs = snapshot.data ?? const [];
+            final cleanQuery = _query.trim();
             final surahs = allSurahs
-                .where((surah) => surah.name.contains(_query))
+                .where((surah) =>
+                    cleanQuery.isEmpty ||
+                    ArabicTextUtils.contains(surah.name, cleanQuery) ||
+                    (surah.englishName?.toLowerCase().contains(cleanQuery.toLowerCase()) ?? false) ||
+                    surah.id.toString() == cleanQuery)
                 .toList();
+
             return Column(
               children: [
                 ZekrniHeader(
-                  title: 'قرآن',
-                  subtitle: 'المصحف الكامل - ${allSurahs.length} سورة',
+                  title: 'المصحف الشريف',
+                  subtitle: 'المصحف الكامل • ${allSurahs.length} سورة كريمة',
                   showSearch: true,
                   onSearchChanged: (value) => setState(() => _query = value),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                   child: Row(
                     children: [
                       Expanded(
-                        child: _TabPill(
-                          label: 'سورة',
+                        child: _FatimidTabPill(
+                          label: 'السور',
                           selected: _tab == 0,
                           onTap: () => setState(() => _tab = 0),
                         ),
                       ),
                       Expanded(
-                        child: _TabPill(
-                          label: 'جزء',
+                        child: _FatimidTabPill(
+                          label: 'الأجزاء',
                           selected: _tab == 1,
                           onTap: () => setState(() => _tab = 1),
                         ),
                       ),
                       Expanded(
-                        child: _TabPill(
-                          label: 'حزب',
+                        child: _FatimidTabPill(
+                          label: 'الأحزاب',
                           selected: _tab == 2,
                           onTap: () => setState(() => _tab = 2),
                         ),
                       ),
                       Expanded(
-                        child: _TabPill(
-                          label: 'صفحة',
+                        child: _FatimidTabPill(
+                          label: 'الصفحات',
                           selected: _tab == 3,
                           onTap: () => setState(() => _tab = 3),
                         ),
@@ -83,23 +92,23 @@ class _QuranScreenState extends State<QuranScreen> {
                   child: switch (_tab) {
                     0 => _SurahList(surahs: surahs),
                     1 => _NumberGrid(
-                      surahs: allSurahs,
-                      count: 30,
-                      label: 'جزء',
-                      type: _QuranIndexType.juz,
-                    ),
+                        surahs: allSurahs,
+                        count: 30,
+                        label: 'جزء',
+                        type: _QuranIndexType.juz,
+                      ),
                     2 => _NumberGrid(
-                      surahs: allSurahs,
-                      count: 60,
-                      label: 'حزب',
-                      type: _QuranIndexType.hizb,
-                    ),
+                        surahs: allSurahs,
+                        count: 60,
+                        label: 'حزب',
+                        type: _QuranIndexType.hizb,
+                      ),
                     _ => _NumberGrid(
-                      surahs: allSurahs,
-                      count: 604,
-                      label: 'صفحة',
-                      type: _QuranIndexType.page,
-                    ),
+                        surahs: allSurahs,
+                        count: 604,
+                        label: 'صفحة',
+                        type: _QuranIndexType.page,
+                      ),
                   },
                 ),
               ],
@@ -113,10 +122,36 @@ class _QuranScreenState extends State<QuranScreen> {
           if (last == null) {
             return const SizedBox.shrink();
           }
-          return FloatingActionButton.extended(
-            onPressed: () => context.push('/quran/surah/${last.surahId}'),
-            icon: const Icon(Icons.play_arrow),
-            label: const Text('متابعة'),
+          return Container(
+            decoration: BoxDecoration(
+              gradient: FatimidColors.goldGradient,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: FatimidColors.goldPrimary.withValues(alpha: 0.4),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: FloatingActionButton.extended(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              focusElevation: 0,
+              hoverElevation: 0,
+              highlightElevation: 0,
+              foregroundColor: const Color(0xFF332000),
+              onPressed: () => context.push('/quran/surah/${last.surahId}'),
+              icon: const Icon(Icons.play_arrow_rounded, size: 24),
+              label: Text(
+                'متابعة: ${last.surahName}',
+                style: const TextStyle(
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                ),
+              ),
+            ),
           );
         },
       ),
@@ -134,41 +169,115 @@ class _SurahList extends StatelessWidget {
     if (surahs.isEmpty) {
       return const EmptyView(message: 'لا توجد نتائج في المصحف');
     }
-    return ListView.separated(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 88),
       itemCount: surahs.length,
-      separatorBuilder: (context, index) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final surah = surahs[index];
-        return ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 4,
-            vertical: 7,
-          ),
-          leading: _SurahBadge(number: surah.id),
-          title: Text(
-            surah.name,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          subtitle: Text(
-            '${surah.revelationLabel}، ${surah.ayahs.length} آيات',
-          ),
-          trailing: Wrap(
-            spacing: 8,
-            children: [
-              Icon(
-                Icons.library_books,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              Icon(
-                Icons.favorite_border,
-                color: Theme.of(context).colorScheme.secondary,
+        final isMakki = (surah.revelationType?.toLowerCase().contains('makk') ?? false) ||
+            surah.revelationLabel.contains('مك');
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: isDark ? FatimidColors.obsidianCard : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.22 : 0.18),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
-          onTap: () => context.push('/quran/surah/${surah.id}'),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: () => context.push('/quran/surah/${surah.id}'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: Row(
+                  children: [
+                    // النجمة الثمانية الفاطمية لرقم السورة
+                    FatimidStarBadge(
+                      number: surah.id,
+                      size: 44,
+                      isGold: true,
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                surah.name,
+                                style: const TextStyle(
+                                  fontFamily: 'Amiri',
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: (isMakki
+                                          ? const Color(0xFFD97706)
+                                          : FatimidColors.emeraldPrimary)
+                                      .withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: (isMakki
+                                            ? const Color(0xFFD97706)
+                                            : FatimidColors.emeraldPrimary)
+                                        .withValues(alpha: 0.3),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Text(
+                                  surah.revelationLabel,
+                                  style: TextStyle(
+                                    fontFamily: 'Cairo',
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: isMakki
+                                        ? const Color(0xFFD97706)
+                                        : (isDark ? const Color(0xFF6EE7B7) : FatimidColors.emeraldPrimary),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${surah.ayahs.length} آية كريمة',
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 12,
+                              color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF5B7A6F),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_left_rounded,
+                      color: FatimidColors.goldPrimary.withValues(alpha: 0.8),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         );
       },
     );
@@ -190,45 +299,68 @@ class _NumberGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 4,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 1.25,
+        childAspectRatio: 1.15,
       ),
       itemCount: count,
       itemBuilder: (context, index) {
         final number = index + 1;
         final target = _findTarget(number);
         return InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           onTap: target == null
               ? null
               : () => context.push(
                   '/quran/surah/${target.surah.id}?ayah=${target.ayah.number}',
                 ),
-          child: Card(
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? FatimidColors.obsidianCard : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.3 : 0.22),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       '$label $number',
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                      style: const TextStyle(
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                      ),
                     ),
                     if (target != null) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       Text(
                         target.surah.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
+                          fontFamily: 'Amiri',
                           fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.bold,
+                          color: FatimidColors.goldPrimary,
                         ),
                       ),
                     ],
@@ -270,8 +402,8 @@ class _QuranTarget {
   final Ayah ayah;
 }
 
-class _TabPill extends StatelessWidget {
-  const _TabPill({
+class _FatimidTabPill extends StatelessWidget {
+  const _FatimidTabPill({
     required this.label,
     required this.selected,
     required this.onTap,
@@ -283,54 +415,50 @@ class _TabPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 3),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: selected ? color.secondary : color.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(20),
+            gradient: selected ? FatimidColors.goldGradient : null,
+            color: selected
+                ? null
+                : (isDark ? FatimidColors.obsidianCard : Colors.white),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: selected
+                  ? FatimidColors.goldLight
+                  : FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.25 : 0.2),
+              width: 1,
+            ),
+            boxShadow: [
+              if (selected)
+                BoxShadow(
+                  color: FatimidColors.goldPrimary.withValues(alpha: 0.35),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+            ],
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: selected ? Colors.black87 : color.onSurfaceVariant,
+              fontFamily: 'Cairo',
+              fontSize: 12,
               fontWeight: FontWeight.w800,
+              color: selected
+                  ? const Color(0xFF332000)
+                  : (isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4B6B5E)),
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SurahBadge extends StatelessWidget {
-  const _SurahBadge({required this.number});
-
-  final int number;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 42,
-      height: 42,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).colorScheme.secondary,
-          width: 2,
-        ),
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        '$number',
-        style: const TextStyle(fontWeight: FontWeight.w800),
       ),
     );
   }

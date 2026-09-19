@@ -4,12 +4,16 @@ class DhikrReminderItem {
     required this.title,
     required this.text,
     required this.virtue,
+    this.audioAsset,
+    this.spokenPhrase,
   });
 
   final String id;
   final String title;
   final String text;
   final String virtue;
+  final String? audioAsset;
+  final String? spokenPhrase;
 }
 
 const List<DhikrReminderItem> defaultDhikrReminders = [
@@ -18,30 +22,72 @@ const List<DhikrReminderItem> defaultDhikrReminders = [
     title: 'ﷺ صلّ على النبي',
     text: 'اللَّهُمَّ صَلِّ وَسَلِّمْ وَبَارِكْ عَلَى نَبِيِّنَا مُحَمَّدٍ',
     virtue: '«مَنْ صَلَّى عَلَيَّ صَلَاةً صَلَّى اللهُ عَلَيْهِ بِهَا عَشْرًا»',
+    spokenPhrase: 'صلّ على محمد',
+    audioAsset: 'assets/audio/dhikr/dhikr_salawat.mp3',
   ),
   DhikrReminderItem(
     id: 'tahleel',
     title: '☝️ وَحِّدِ الله',
     text: 'لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ المُلْكُ وَلَهُ الحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
     virtue: '«أَفْضَلُ مَا قُلْتُ أَنَا وَالنَّبِيُّونَ مِنْ قَبْلِي»',
+    spokenPhrase: 'وحّد الله، لا إله إلا الله',
+    audioAsset: 'assets/audio/dhikr/dhikr_tahleel.mp3',
+  ),
+  DhikrReminderItem(
+    id: 'thikr',
+    title: '🌿 اذكر الله',
+    text: 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ',
+    virtue: '«مَثَلُ الَّذِي يَذْكُرُ رَبَّهُ وَالَّذِي لَا يَذْكُرُ رَبَّهُ مَثَلُ الحَيِّ وَالمَيِّتِ»',
+    spokenPhrase: 'اذكر الله',
+    audioAsset: 'assets/audio/dhikr/dhikr_thikr.mp3',
   ),
   DhikrReminderItem(
     id: 'tasbeeh',
     title: '✨ سبحان الله وبحمده',
     text: 'سُبْحَانَ اللهِ وَبِحَمْدِهِ، سُبْحَانَ اللهِ العَظِيمِ',
     virtue: '«كَلِمَتَانِ خَفِيفَتَانِ عَلَى اللِّسَانِ، ثَقِيلَتَانِ فِي المِيزَانِ، حَبِيبَتَانِ إِلَى الرَّحْمَنِ»',
+    spokenPhrase: 'سبحان الله وبحمده، سبحان الله العظيم',
+    audioAsset: 'assets/audio/dhikr/dhikr_tasbeeh.mp3',
+  ),
+  DhikrReminderItem(
+    id: 'takbeer',
+    title: '🌙 الله أكبر',
+    text: 'اللهُ أَكْبَرُ كَبِيرًا، وَالحَمْدُ للهِ كَثِيرًا، وَسُبْحَانَ اللهِ بُكْرَةً وَأَصِيلًا',
+    virtue: '«عَجِبْتُ لَهَا فُتِحَتْ لَهَا أَبْوَابُ السَّمَاءِ»',
+    spokenPhrase: 'الله أكبر',
+    audioAsset: 'assets/audio/dhikr/dhikr_takbeer.mp3',
   ),
   DhikrReminderItem(
     id: 'istighfar',
     title: '🌿 أستغفر الله وأتوب إليه',
     text: 'أَسْتَغْفِرُ اللهَ العَظِيمَ الَّذِي لَا إِلَهَ إِلَّا هُوَ الحَيُّ القَيُّومُ وَأَتُوبُ إِلَيْهِ',
     virtue: '«طُوبَى لِمَنْ وَجَدَ فِي صَحِيفَتِهِ اسْتِغْفَارًا كَثِيرًا»',
+    spokenPhrase: 'أستغفر الله وأتوب إليه',
+    audioAsset: 'assets/audio/dhikr/dhikr_istighfar.mp3',
   ),
   DhikrReminderItem(
     id: 'hawqala',
     title: '💎 لا حول ولا قوة إلا بالله',
     text: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ العَلِيِّ العَظِيمِ',
     virtue: '«كَنْزٌ مِنْ كُنُوزِ الجَنَّةِ»',
+    spokenPhrase: 'لا حول ولا قوة إلا بالله',
+    audioAsset: 'assets/audio/dhikr/dhikr_hawqala.mp3',
+  ),
+  DhikrReminderItem(
+    id: 'alhamdulillah',
+    title: '🤲 الحمد لله رب العالمين',
+    text: 'الحَمْدُ للهِ رَبِّ العَالَمِينَ حَمْدًا كَثِيرًا طَيِّبًا مُبَارَكًا فِيهِ',
+    virtue: '«وَالحَمْدُ للهِ تَمْلأُ المِيزَانَ»',
+    spokenPhrase: 'الحمد لله رب العالمين',
+    audioAsset: 'assets/audio/dhikr/dhikr_alhamdulillah.mp3',
+  ),
+  DhikrReminderItem(
+    id: 'subhanallah',
+    title: '🌸 سبحان الله',
+    text: 'سُبْحَانَ اللهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ',
+    virtue: 'من أعظم صيغ التسبيح والأجور المضاعفة',
+    spokenPhrase: 'سبحان الله',
+    audioAsset: 'assets/audio/dhikr/dhikr_subhanallah.mp3',
   ),
   DhikrReminderItem(
     id: 'baqiyat',

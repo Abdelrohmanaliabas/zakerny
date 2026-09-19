@@ -39,6 +39,14 @@ class AdhkarRepository {
     await _store.setJson(_countsKey, counts);
   }
 
+  Future<void> resetAll(List<DhikrItem> items) async {
+    final counts = _counts();
+    for (final item in items) {
+      counts.remove(item.id);
+    }
+    await _store.setJson(_countsKey, counts);
+  }
+
   Map<String, int> _counts() {
     final json = _store.getJson(_countsKey) ?? const <String, dynamic>{};
     return json.map((key, value) => MapEntry(key, value is int ? value : 0));

@@ -10,4 +10,5 @@ class AdhkarController {
   int countFor(String dhikrId) => repository.countFor(dhikrId);
   Future<int> increment(DhikrItem item) => repository.increment(item);
   Future<void> reset(String dhikrId) => repository.reset(dhikrId);
+  Future<void> resetAll(List<DhikrItem> items) => repository.resetAll(items);
 }

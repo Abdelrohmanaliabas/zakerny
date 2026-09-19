@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../core/widgets/fatimid_decorations.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/zekrni_header.dart';
 import '../application/recitations_controller.dart';
@@ -94,26 +95,69 @@ class _RecitationsScreenState extends State<RecitationsScreen> {
                         itemCount: reciters.length,
                         itemBuilder: (context, index) {
                           final reciter = reciters[index];
-                          return Card(
+                          final isDark = Theme.of(context).brightness == Brightness.dark;
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: isDark ? FatimidColors.obsidianCard : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.28 : 0.2),
+                                width: 1.1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            clipBehavior: Clip.antiAlias,
                             child: ExpansionTile(
+                              shape: const Border(),
+                              collapsedShape: const Border(),
                               leading: ReciterAvatar(
                                 reciter: reciter,
-                                size: 46,
+                                size: 48,
                               ),
                               title: Text(
                                 reciter.name,
                                 style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Cairo',
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
                                 ),
                               ),
-                              subtitle: Text(
-                                'المصحف كامل • ${reciter.surahs.length} سورة',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                ),
+                              subtitle: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: FatimidColors.goldPrimary.withValues(alpha: 0.14),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: const Text(
+                                      'المصحف كامل',
+                                      style: TextStyle(
+                                        fontFamily: 'Cairo',
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: FatimidColors.goldPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${reciter.surahs.length} سورة',
+                                    style: TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 11.5,
+                                      color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF5B7A6F),
+                                    ),
+                                  ),
+                                ],
                               ),
                               children: reciter.surahs.map((surah) {
                                 final download = widget.controller.findDownload(

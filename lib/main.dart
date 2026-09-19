@@ -11,6 +11,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'src/app.dart';
 import 'src/core/notifications/notification_service.dart';
 import 'src/core/storage/app_local_store.dart';
+import 'src/features/dhikr_reminders/application/voice_dhikr_service.dart';
 import 'src/features/prayer_times/application/prayer_controller.dart';
 import 'src/features/prayer_times/data/prayer_repository.dart';
 import 'src/features/prayer_times/overlay/adhan_overlay_widget.dart';
@@ -44,6 +45,8 @@ Future<void> main() async {
 
   final store = SharedPrefsAppLocalStore();
   await store.init();
+
+  VoiceDhikrService.instance.init(store);
 
   final notifications = NotificationService();
   await notifications.initialize();
