@@ -10,6 +10,9 @@ const List<String> defaultEnabledDhikrIds = [
   'hawqala',
   'alhamdulillah',
   'subhanallah',
+  'baqiyat',
+  'sayyid_istighfar',
+  'yunus',
 ];
 
 class PrayerPreferences {

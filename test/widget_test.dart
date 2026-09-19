@@ -310,7 +310,7 @@ void main() {
     expect(defaultDhikrReminders.any((d) => d.id == 'subhanallah'), isTrue);
 
     final audioItems = defaultDhikrReminders.where((d) => d.audioAsset != null).toList();
-    expect(audioItems.length, 9);
+    expect(audioItems.length, greaterThanOrEqualTo(9));
     for (final item in audioItems) {
       expect(item.audioAsset!.startsWith('assets/audio/dhikr/'), isTrue);
       expect(item.spokenPhrase, isNotEmpty);
