@@ -20,6 +20,10 @@ void notificationTapBackground(NotificationResponse response) {
 }
 
 class NotificationService extends ChangeNotifier {
+  static const _appNotificationRawSound = 'zakerny_notification';
+  static const _appNotificationIosSound = 'zakerny_notification.caf';
+  static const _appNotificationChannelVersion = 'v4';
+
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
   String? _pendingRoute;
@@ -206,12 +210,15 @@ class NotificationService extends ChangeNotifier {
       );
 
       final androidDetails = AndroidNotificationDetails(
-        'prayer_times_reminder_v1',
+        'prayer_times_reminder_$_appNotificationChannelVersion',
         'تذكير قبل الأذان',
         channelDescription: 'تنبيهات الاستعداد للصلاة قبل موعد الأذان',
         importance: Importance.high,
         priority: Priority.high,
         icon: 'ic_stat_zekrni',
+        sound: const RawResourceAndroidNotificationSound(
+          _appNotificationRawSound,
+        ),
         playSound: true,
         color: const Color(0xFF0D9488),
         category: AndroidNotificationCategory.reminder,
@@ -227,6 +234,7 @@ class NotificationService extends ChangeNotifier {
       );
 
       const iosDetails = DarwinNotificationDetails(
+        sound: _appNotificationIosSound,
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
@@ -321,6 +329,12 @@ class NotificationService extends ChangeNotifier {
     final rawSoundName = item.rawSoundName;
     final playDhikrSound =
         playVoice && rawSoundName != null && rawSoundName.isNotEmpty;
+    final notificationSoundName = playDhikrSound
+        ? rawSoundName
+        : _appNotificationRawSound;
+    final iosSoundName = playDhikrSound
+        ? '$rawSoundName.caf'
+        : _appNotificationIosSound;
     final bigTextStyle = BigTextStyleInformation(
       '${item.text}\n\n${item.virtue}',
       contentTitle: item.title,
@@ -329,18 +343,16 @@ class NotificationService extends ChangeNotifier {
 
     final androidDetails = AndroidNotificationDetails(
       playDhikrSound
-          ? 'daily_dhikr_${rawSoundName}_v2'
-          : 'daily_dhikr_channel_v2',
+          ? 'daily_dhikr_${rawSoundName}_$_appNotificationChannelVersion'
+          : 'daily_dhikr_notification_$_appNotificationChannelVersion',
       'التذكير بذكر الله والصلاة على النبي',
       channelDescription:
           'تنبيهات الأذكار العائمة والصلاة على النبي ﷺ أثناء اليوم',
       importance: Importance.max,
       priority: Priority.max,
       icon: 'ic_stat_zekrni',
-      sound: playDhikrSound
-          ? RawResourceAndroidNotificationSound(rawSoundName)
-          : null,
-      playSound: playDhikrSound,
+      sound: RawResourceAndroidNotificationSound(notificationSoundName),
+      playSound: playVoice,
       enableVibration: true,
       color: const Color(0xFF0D9488),
       category: AndroidNotificationCategory.reminder,
@@ -365,8 +377,8 @@ class NotificationService extends ChangeNotifier {
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
-      presentSound: playDhikrSound,
-      sound: playDhikrSound ? '$rawSoundName.caf' : null,
+      presentSound: playVoice,
+      sound: playVoice ? iosSoundName : null,
     );
 
     await _plugin.zonedSchedule(
@@ -518,6 +530,12 @@ class NotificationService extends ChangeNotifier {
     final reminder = item ?? defaultDhikrReminders.first;
     final rawSoundName = reminder.rawSoundName;
     final playDhikrSound = rawSoundName != null && rawSoundName.isNotEmpty;
+    final notificationSoundName = playDhikrSound
+        ? rawSoundName
+        : _appNotificationRawSound;
+    final iosSoundName = playDhikrSound
+        ? '$rawSoundName.caf'
+        : _appNotificationIosSound;
 
     if (showOverlay) {
       await AdhanOverlayManager.showDhikrOverlay(
@@ -535,18 +553,16 @@ class NotificationService extends ChangeNotifier {
 
     final androidDetails = AndroidNotificationDetails(
       playDhikrSound
-          ? 'daily_dhikr_${rawSoundName}_v2'
-          : 'daily_dhikr_channel_v2',
+          ? 'daily_dhikr_${rawSoundName}_$_appNotificationChannelVersion'
+          : 'daily_dhikr_notification_$_appNotificationChannelVersion',
       'التذكير بذكر الله والصلاة على النبي',
       channelDescription:
           'تنبيهات الأذكار العائمة والصلاة على النبي ﷺ أثناء اليوم',
       importance: Importance.max,
       priority: Priority.max,
       icon: 'ic_stat_zekrni',
-      sound: playDhikrSound
-          ? RawResourceAndroidNotificationSound(rawSoundName)
-          : null,
-      playSound: playDhikrSound,
+      sound: RawResourceAndroidNotificationSound(notificationSoundName),
+      playSound: true,
       enableVibration: true,
       color: const Color(0xFF0D9488),
       category: AndroidNotificationCategory.reminder,
@@ -577,8 +593,8 @@ class NotificationService extends ChangeNotifier {
         iOS: DarwinNotificationDetails(
           presentAlert: true,
           presentBadge: true,
-          presentSound: playDhikrSound,
-          sound: playDhikrSound ? '$rawSoundName.caf' : null,
+          presentSound: true,
+          sound: iosSoundName,
         ),
       ),
       payload: 'dhikr:${reminder.id}',
