@@ -32,7 +32,7 @@ Future<void> main() async {
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     try {
       await JustAudioBackground.init(
-        androidNotificationChannelId: 'com.example.zakerny.channel.audio',
+        androidNotificationChannelId: 'com.zakerny.app.channel.audio',
         androidNotificationChannelName: 'تلاوات القرآن الكريم',
         androidNotificationOngoing: false,
         androidShowNotificationBadge: true,

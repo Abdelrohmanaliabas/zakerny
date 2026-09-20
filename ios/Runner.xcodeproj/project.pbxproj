@@ -8,6 +8,24 @@
 
 /* Begin PBXBuildFile section */
 		A1B2C3D4E5F60718293A4B5C /* adhan.caf in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5D /* adhan.caf */; };
+		D1000000000000000000001B /* adhan_makkah.caf in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000001F /* adhan_makkah.caf */; };
+		D1000000000000000000002B /* adhan_madinah.caf in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000002F /* adhan_madinah.caf */; };
+		D1000000000000000000003B /* adhan_alafasy.caf in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000003F /* adhan_alafasy.caf */; };
+		D1000000000000000000004B /* adhan_abdulbasit.caf in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000004F /* adhan_abdulbasit.caf */; };
+		D1000000000000000000005B /* adhan_quds.caf in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000005F /* adhan_quds.caf */; };
+		D1000000000000000000006B /* adhan_qatami.caf in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000006F /* adhan_qatami.caf */; };
+		D1000000000000000000007B /* dhikr_salawat.caf in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000007F /* dhikr_salawat.caf */; };
+		D1000000000000000000008B /* dhikr_tahleel.caf in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000008F /* dhikr_tahleel.caf */; };
+		D1000000000000000000009B /* dhikr_thikr.caf in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000009F /* dhikr_thikr.caf */; };
+		D100000000000000000000AB /* dhikr_tasbeeh.caf in Resources */ = {isa = PBXBuildFile; fileRef = D100000000000000000000AF /* dhikr_tasbeeh.caf */; };
+		D100000000000000000000BB /* dhikr_takbeer.caf in Resources */ = {isa = PBXBuildFile; fileRef = D100000000000000000000BF /* dhikr_takbeer.caf */; };
+		D100000000000000000000CB /* dhikr_istighfar.caf in Resources */ = {isa = PBXBuildFile; fileRef = D100000000000000000000CF /* dhikr_istighfar.caf */; };
+		D100000000000000000000DB /* dhikr_hawqala.caf in Resources */ = {isa = PBXBuildFile; fileRef = D100000000000000000000DF /* dhikr_hawqala.caf */; };
+		D100000000000000000000EB /* dhikr_alhamdulillah.caf in Resources */ = {isa = PBXBuildFile; fileRef = D100000000000000000000EF /* dhikr_alhamdulillah.caf */; };
+		D100000000000000000000FB /* dhikr_subhanallah.caf in Resources */ = {isa = PBXBuildFile; fileRef = D100000000000000000000FF /* dhikr_subhanallah.caf */; };
+		D1000000000000000000010B /* dhikr_baqiyat.caf in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000010F /* dhikr_baqiyat.caf */; };
+		D1000000000000000000011B /* dhikr_sayyid_istighfar.caf in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000011F /* dhikr_sayyid_istighfar.caf */; };
+		D1000000000000000000012B /* dhikr_yunus.caf in Resources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000012F /* dhikr_yunus.caf */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
@@ -42,6 +60,24 @@
 
 /* Begin PBXFileReference section */
 		A1B2C3D4E5F60718293A4B5D /* adhan.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = adhan.caf; sourceTree = "<group>"; };
+		D1000000000000000000001F /* adhan_makkah.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = adhan_makkah.caf; sourceTree = "<group>"; };
+		D1000000000000000000002F /* adhan_madinah.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = adhan_madinah.caf; sourceTree = "<group>"; };
+		D1000000000000000000003F /* adhan_alafasy.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = adhan_alafasy.caf; sourceTree = "<group>"; };
+		D1000000000000000000004F /* adhan_abdulbasit.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = adhan_abdulbasit.caf; sourceTree = "<group>"; };
+		D1000000000000000000005F /* adhan_quds.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = adhan_quds.caf; sourceTree = "<group>"; };
+		D1000000000000000000006F /* adhan_qatami.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = adhan_qatami.caf; sourceTree = "<group>"; };
+		D1000000000000000000007F /* dhikr_salawat.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dhikr_salawat.caf; sourceTree = "<group>"; };
+		D1000000000000000000008F /* dhikr_tahleel.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dhikr_tahleel.caf; sourceTree = "<group>"; };
+		D1000000000000000000009F /* dhikr_thikr.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dhikr_thikr.caf; sourceTree = "<group>"; };
+		D100000000000000000000AF /* dhikr_tasbeeh.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dhikr_tasbeeh.caf; sourceTree = "<group>"; };
+		D100000000000000000000BF /* dhikr_takbeer.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dhikr_takbeer.caf; sourceTree = "<group>"; };
+		D100000000000000000000CF /* dhikr_istighfar.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dhikr_istighfar.caf; sourceTree = "<group>"; };
+		D100000000000000000000DF /* dhikr_hawqala.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dhikr_hawqala.caf; sourceTree = "<group>"; };
+		D100000000000000000000EF /* dhikr_alhamdulillah.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dhikr_alhamdulillah.caf; sourceTree = "<group>"; };
+		D100000000000000000000FF /* dhikr_subhanallah.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dhikr_subhanallah.caf; sourceTree = "<group>"; };
+		D1000000000000000000010F /* dhikr_baqiyat.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dhikr_baqiyat.caf; sourceTree = "<group>"; };
+		D1000000000000000000011F /* dhikr_sayyid_istighfar.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dhikr_sayyid_istighfar.caf; sourceTree = "<group>"; };
+		D1000000000000000000012F /* dhikr_yunus.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dhikr_yunus.caf; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
@@ -114,6 +150,24 @@
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
 				A1B2C3D4E5F60718293A4B5D /* adhan.caf */,
+				D1000000000000000000001F /* adhan_makkah.caf */,
+				D1000000000000000000002F /* adhan_madinah.caf */,
+				D1000000000000000000003F /* adhan_alafasy.caf */,
+				D1000000000000000000004F /* adhan_abdulbasit.caf */,
+				D1000000000000000000005F /* adhan_quds.caf */,
+				D1000000000000000000006F /* adhan_qatami.caf */,
+				D1000000000000000000007F /* dhikr_salawat.caf */,
+				D1000000000000000000008F /* dhikr_tahleel.caf */,
+				D1000000000000000000009F /* dhikr_thikr.caf */,
+				D100000000000000000000AF /* dhikr_tasbeeh.caf */,
+				D100000000000000000000BF /* dhikr_takbeer.caf */,
+				D100000000000000000000CF /* dhikr_istighfar.caf */,
+				D100000000000000000000DF /* dhikr_hawqala.caf */,
+				D100000000000000000000EF /* dhikr_alhamdulillah.caf */,
+				D100000000000000000000FF /* dhikr_subhanallah.caf */,
+				D1000000000000000000010F /* dhikr_baqiyat.caf */,
+				D1000000000000000000011F /* dhikr_sayyid_istighfar.caf */,
+				D1000000000000000000012F /* dhikr_yunus.caf */,
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
 				97C147021CF9000F007C117D /* Info.plist */,
 				1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
@@ -217,6 +271,24 @@
 			files = (
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				A1B2C3D4E5F60718293A4B5C /* adhan.caf in Resources */,
+				D1000000000000000000001B /* adhan_makkah.caf in Resources */,
+				D1000000000000000000002B /* adhan_madinah.caf in Resources */,
+				D1000000000000000000003B /* adhan_alafasy.caf in Resources */,
+				D1000000000000000000004B /* adhan_abdulbasit.caf in Resources */,
+				D1000000000000000000005B /* adhan_quds.caf in Resources */,
+				D1000000000000000000006B /* adhan_qatami.caf in Resources */,
+				D1000000000000000000007B /* dhikr_salawat.caf in Resources */,
+				D1000000000000000000008B /* dhikr_tahleel.caf in Resources */,
+				D1000000000000000000009B /* dhikr_thikr.caf in Resources */,
+				D100000000000000000000AB /* dhikr_tasbeeh.caf in Resources */,
+				D100000000000000000000BB /* dhikr_takbeer.caf in Resources */,
+				D100000000000000000000CB /* dhikr_istighfar.caf in Resources */,
+				D100000000000000000000DB /* dhikr_hawqala.caf in Resources */,
+				D100000000000000000000EB /* dhikr_alhamdulillah.caf in Resources */,
+				D100000000000000000000FB /* dhikr_subhanallah.caf in Resources */,
+				D1000000000000000000010B /* dhikr_baqiyat.caf in Resources */,
+				D1000000000000000000011B /* dhikr_sayyid_istighfar.caf in Resources */,
+				D1000000000000000000012B /* dhikr_yunus.caf in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
@@ -372,7 +444,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.zakerny;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zakerny.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -388,7 +460,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.zakerny.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zakerny.app.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -405,7 +477,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.zakerny.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zakerny.app.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -420,7 +492,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.zakerny.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zakerny.app.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -551,7 +623,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.zakerny;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zakerny.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -573,7 +645,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.zakerny;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zakerny.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;

@@ -24,8 +24,7 @@ class NotificationService extends ChangeNotifier {
       FlutterLocalNotificationsPlugin();
   String? _pendingRoute;
 
-  bool get isSupported =>
-      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+  bool get isSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
   String? takePendingRoute() {
     final route = _pendingRoute;
@@ -122,14 +121,16 @@ class NotificationService extends ChangeNotifier {
       final bigTextStyle = BigTextStyleInformation(
         'الله أكبر، الله أكبر ۝ حان الآن موعد أذان صلاة ${prayer.name} حسب توقيت $city.\n'
         '«اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّداً الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَاماً مَحْمُوداً الَّذِي وَعَدْتَهُ»',
-        contentTitle: '🕌 حان موعد أذان ${prayer.name} (${voice.name}) | $formattedTime',
+        contentTitle:
+            '🕌 حان موعد أذان ${prayer.name} (${voice.name}) | $formattedTime',
         summaryText: 'ذكرني • مواقيت الصلاة',
       );
 
       final androidDetails = AndroidNotificationDetails(
         voice.channelId,
         'أذان - ${voice.name}',
-        channelDescription: 'تنبيهات الأذان الكاملة بأعلى أولوية وصوت ${voice.name}',
+        channelDescription:
+            'تنبيهات الأذان الكاملة بأعلى أولوية وصوت ${voice.name}',
         importance: Importance.max,
         priority: Priority.max,
         icon: 'ic_stat_zekrni',
@@ -199,7 +200,8 @@ class NotificationService extends ChangeNotifier {
       final bigTextStyle = BigTextStyleInformation(
         'متبقي $minutesBefore دقيقة على موعد أذان صلاة ${prayer.name} بتوقيت $city.\n'
         'استعد الآن للوضوء وإدراك تكبيرة الإحرام.',
-        contentTitle: '⏳ اقتربت صلاة ${prayer.name} (باقي $minutesBefore دقيقة)',
+        contentTitle:
+            '⏳ اقتربت صلاة ${prayer.name} (باقي $minutesBefore دقيقة)',
         summaryText: 'ذكرني • تذكير قبل الصلاة',
       );
 
@@ -233,7 +235,8 @@ class NotificationService extends ChangeNotifier {
       await _plugin.zonedSchedule(
         id: id,
         title: '⏳ اقتربت صلاة ${prayer.name}',
-        body: 'باقي $minutesBefore دقيقة على موعد صلاة ${prayer.name} • استعد للوضوء',
+        body:
+            'باقي $minutesBefore دقيقة على موعد صلاة ${prayer.name} • استعد للوضوء',
         scheduledDate: tz.TZDateTime.from(scheduled, tz.local),
         notificationDetails: NotificationDetails(
           android: androidDetails,
@@ -265,7 +268,8 @@ class NotificationService extends ChangeNotifier {
   }) async {
     if (!isSupported) return;
     await cancelDhikrNotifications();
-    if (!preferences.dhikrReminderEnabled || preferences.dhikrIntervalMinutes <= 0) {
+    if (!preferences.dhikrReminderEnabled ||
+        preferences.dhikrIntervalMinutes <= 0) {
       return;
     }
 
@@ -277,8 +281,9 @@ class NotificationService extends ChangeNotifier {
     final enabledReminders = defaultDhikrReminders
         .where((r) => preferences.enabledDhikrIds.contains(r.id))
         .toList();
-    final itemsToUse =
-        enabledReminders.isNotEmpty ? enabledReminders : defaultDhikrReminders;
+    final itemsToUse = enabledReminders.isNotEmpty
+        ? enabledReminders
+        : defaultDhikrReminders;
 
     // Schedule across next 3 days during active daytime hours (8:00 AM to 10:30 PM)
     for (int dayOffset = 0; dayOffset < 3; dayOffset++) {
@@ -296,6 +301,7 @@ class NotificationService extends ChangeNotifier {
             id: reminderId++,
             item: item,
             scheduledTime: scheduledTime,
+            playVoice: preferences.dhikrVoiceEnabled,
           );
 
           if (reminderId >= 5200) break;
@@ -310,7 +316,11 @@ class NotificationService extends ChangeNotifier {
     required int id,
     required DhikrReminderItem item,
     required DateTime scheduledTime,
+    required bool playVoice,
   }) async {
+    final rawSoundName = item.rawSoundName;
+    final playDhikrSound =
+        playVoice && rawSoundName != null && rawSoundName.isNotEmpty;
     final bigTextStyle = BigTextStyleInformation(
       '${item.text}\n\n${item.virtue}',
       contentTitle: item.title,
@@ -318,16 +328,23 @@ class NotificationService extends ChangeNotifier {
     );
 
     final androidDetails = AndroidNotificationDetails(
-      'daily_dhikr_channel_v1',
+      playDhikrSound
+          ? 'daily_dhikr_${rawSoundName}_v2'
+          : 'daily_dhikr_channel_v2',
       'التذكير بذكر الله والصلاة على النبي',
-      channelDescription: 'تنبيهات الأذكار العائمة والصلاة على النبي ﷺ أثناء اليوم',
+      channelDescription:
+          'تنبيهات الأذكار العائمة والصلاة على النبي ﷺ أثناء اليوم',
       importance: Importance.max,
       priority: Priority.max,
       icon: 'ic_stat_zekrni',
-      playSound: true,
+      sound: playDhikrSound
+          ? RawResourceAndroidNotificationSound(rawSoundName)
+          : null,
+      playSound: playDhikrSound,
       enableVibration: true,
       color: const Color(0xFF0D9488),
       category: AndroidNotificationCategory.reminder,
+      audioAttributesUsage: AudioAttributesUsage.notification,
       ticker: item.title,
       styleInformation: bigTextStyle,
       actions: const [
@@ -345,10 +362,11 @@ class NotificationService extends ChangeNotifier {
       ],
     );
 
-    const iosDetails = DarwinNotificationDetails(
+    final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
-      presentSound: true,
+      presentSound: playDhikrSound,
+      sound: playDhikrSound ? '$rawSoundName.caf' : null,
     );
 
     await _plugin.zonedSchedule(
@@ -434,14 +452,16 @@ class NotificationService extends ChangeNotifier {
     final bigTextStyle = BigTextStyleInformation(
       'الله أكبر، الله أكبر ۝ حان الآن موعد أذان صلاة $prayerName حسب توقيت $city.\n'
       '«اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّداً الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَاماً مَحْمُوداً الَّذِي وَعَدْتَهُ»',
-      contentTitle: '🕌 تجربة أذان $prayerName (${activeVoice.name}) | $nowTime',
+      contentTitle:
+          '🕌 تجربة أذان $prayerName (${activeVoice.name}) | $nowTime',
       summaryText: 'ذكرني • تجربة الأذان',
     );
 
     final androidDetails = AndroidNotificationDetails(
       activeVoice.channelId,
       'أذان - ${activeVoice.name}',
-      channelDescription: 'تنبيهات الأذان الكاملة بأعلى أولوية وصوت ${activeVoice.name}',
+      channelDescription:
+          'تنبيهات الأذان الكاملة بأعلى أولوية وصوت ${activeVoice.name}',
       importance: Importance.max,
       priority: Priority.max,
       icon: 'ic_stat_zekrni',
@@ -472,7 +492,8 @@ class NotificationService extends ChangeNotifier {
     await _plugin.show(
       id: 999,
       title: '🕌 حان موعد أذان $prayerName',
-      body: 'الله أكبر • تجربة أذان صلاة $prayerName بتوقيت $city (${activeVoice.name})',
+      body:
+          'الله أكبر • تجربة أذان صلاة $prayerName بتوقيت $city (${activeVoice.name})',
       notificationDetails: NotificationDetails(
         android: androidDetails,
         iOS: DarwinNotificationDetails(
@@ -495,6 +516,8 @@ class NotificationService extends ChangeNotifier {
     await requestPermissions();
 
     final reminder = item ?? defaultDhikrReminders.first;
+    final rawSoundName = reminder.rawSoundName;
+    final playDhikrSound = rawSoundName != null && rawSoundName.isNotEmpty;
 
     if (showOverlay) {
       await AdhanOverlayManager.showDhikrOverlay(
@@ -511,16 +534,23 @@ class NotificationService extends ChangeNotifier {
     );
 
     final androidDetails = AndroidNotificationDetails(
-      'daily_dhikr_channel_v1',
+      playDhikrSound
+          ? 'daily_dhikr_${rawSoundName}_v2'
+          : 'daily_dhikr_channel_v2',
       'التذكير بذكر الله والصلاة على النبي',
-      channelDescription: 'تنبيهات الأذكار العائمة والصلاة على النبي ﷺ أثناء اليوم',
+      channelDescription:
+          'تنبيهات الأذكار العائمة والصلاة على النبي ﷺ أثناء اليوم',
       importance: Importance.max,
       priority: Priority.max,
       icon: 'ic_stat_zekrni',
-      playSound: true,
+      sound: playDhikrSound
+          ? RawResourceAndroidNotificationSound(rawSoundName)
+          : null,
+      playSound: playDhikrSound,
       enableVibration: true,
       color: const Color(0xFF0D9488),
       category: AndroidNotificationCategory.reminder,
+      audioAttributesUsage: AudioAttributesUsage.notification,
       ticker: reminder.title,
       styleInformation: bigTextStyle,
       actions: const [
@@ -544,10 +574,11 @@ class NotificationService extends ChangeNotifier {
       body: reminder.text,
       notificationDetails: NotificationDetails(
         android: androidDetails,
-        iOS: const DarwinNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentAlert: true,
           presentBadge: true,
-          presentSound: true,
+          presentSound: playDhikrSound,
+          sound: playDhikrSound ? '$rawSoundName.caf' : null,
         ),
       ),
       payload: 'dhikr:${reminder.id}',
