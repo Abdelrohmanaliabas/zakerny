@@ -1,0 +1,47 @@
+workflows:
+  ios-release:
+    name: iOS Release
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: 3.38.7
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.zakerny.app
+    scripts:
+      - name: Set up code signing settings on Xcode project
+        script: xcode-project use-profiles
+      - name: Get Flutter packages
+        script: flutter packages pub get
+      - name: Install pods
+        script: find . -name "Podfile" -execdir pod install \;
+      - name: Flutter build ipa
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+
+  android-release:
+    name: Android Release
+    max_build_duration: 45
+    instance_type: mac_mini_m2
+    environment:
+      flutter: 3.38.7
+    scripts:
+      - name: Set up local.properties
+        script: |
+          echo "flutter.sdk=$FLUTTER_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Get Flutter packages
+        script: flutter packages pub get
+      - name: Build AAB with Flutter
+        script: |
+          flutter build appbundle --release
+    artifacts:
+      - build/app/outputs/bundle/release/*.aab
