@@ -86,7 +86,7 @@ class _AdhkarScreenState extends State<AdhkarScreen> {
 
                   return Column(
                     children: [
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 14),
 
                       // شريط تبويبات تصنيفات الأذكار الفاطمي
                       SizedBox(
@@ -196,7 +196,7 @@ class _AdhkarScreenState extends State<AdhkarScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
 
                       // لوحة إحصاءات الورد وأزرار التحكم بالخط وإعادة التعيين
                       Padding(

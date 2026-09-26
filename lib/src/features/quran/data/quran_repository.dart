@@ -11,6 +11,7 @@ class QuranRepository {
   static const _bookmarkKey = 'quran_bookmarks';
   static const _lastReadKey = 'quran_last_read';
   final AppLocalStore _store;
+  AppLocalStore get store => _store;
   List<Surah>? _cache;
 
   Future<List<Surah>> loadSurahs() async {

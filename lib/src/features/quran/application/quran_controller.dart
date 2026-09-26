@@ -1,9 +1,15 @@
 import '../data/quran_repository.dart';
+import '../data/tafsir_service.dart';
 import '../domain/quran_models.dart';
 
 class QuranController {
-  QuranController(this.repository);
+  QuranController(this.repository, {TafsirService? tafsirService})
+      : _tafsirService = tafsirService;
   final QuranRepository repository;
+  TafsirService? _tafsirService;
+
+  TafsirService get tafsirService =>
+      _tafsirService ??= TafsirService(repository.store);
 
   Future<List<Surah>> loadSurahs() => repository.loadSurahs();
   Future<Surah?> findSurah(int id) => repository.findSurah(id);

@@ -12,6 +12,7 @@ import '../../recitations/domain/recitation_models.dart';
 import '../../recitations/presentation/widgets/reciter_avatar.dart';
 import '../application/quran_controller.dart';
 import '../domain/quran_models.dart';
+import 'widgets/ayah_tafsir_sheet.dart';
 
 class QuranReaderScreen extends StatefulWidget {
   const QuranReaderScreen({
@@ -376,6 +377,16 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     _showAyahActionSheet(surah, ayah);
   }
 
+  void _openTafsirSheet(Surah surah, Ayah ayah, String displayText) {
+    AyahTafsirSheet.show(
+      context,
+      surah: surah,
+      ayah: ayah,
+      tafsirService: widget.controller.tafsirService,
+      displayText: displayText,
+    );
+  }
+
   void _showAyahActionSheet(Surah surah, Ayah ayah) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -670,6 +681,14 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                             onTap: () async {
                               await _toggleSurahPlay(surah);
                               setSheetState(() {});
+                            },
+                          ),
+                          _ActionButton(
+                            icon: Icons.menu_book_rounded,
+                            label: 'تفسير الآية',
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              _openTafsirSheet(surah, ayah, displayText);
                             },
                           ),
                           _ActionButton(
@@ -1054,6 +1073,8 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                             : null,
                         cardKeys: _cardKeys,
                         onAyahTapped: (ayah) => _onAyahTapped(surah, ayah),
+                        onTafsirTapped: (ayah, text) =>
+                            _openTafsirSheet(surah, ayah, text),
                       ),
                     const SizedBox(height: 24),
                     if (nextSurah != null)
@@ -1382,6 +1403,7 @@ class _AyahByAyahView extends StatelessWidget {
     required this.selectedAyahNumber,
     required this.cardKeys,
     required this.onAyahTapped,
+    this.onTafsirTapped,
   });
 
   final Surah surah;
@@ -1389,6 +1411,7 @@ class _AyahByAyahView extends StatelessWidget {
   final int? selectedAyahNumber;
   final Map<String, GlobalKey> cardKeys;
   final void Function(Ayah ayah) onAyahTapped;
+  final void Function(Ayah ayah, String displayText)? onTafsirTapped;
 
   @override
   Widget build(BuildContext context) {
@@ -1452,6 +1475,17 @@ class _AyahByAyahView extends StatelessWidget {
                                 fontSize: 13,
                               ),
                             ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            icon: Icon(
+                              Icons.menu_book_rounded,
+                              size: 19,
+                              color: colorScheme.primary.withValues(alpha: 0.85),
+                            ),
+                            tooltip: 'تفسير الآية',
+                            onPressed: () => onTafsirTapped?.call(ayah, text),
                           ),
                           const Spacer(),
                           if (ayah.juz != null)

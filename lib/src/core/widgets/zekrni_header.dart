@@ -26,7 +26,7 @@ class ZekrniHeader extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 20),
       decoration: BoxDecoration(
         color: isDark
             ? const Color(0xFF0D1C17).withValues(alpha: 0.94)
@@ -137,7 +137,7 @@ class ZekrniHeader extends StatelessWidget {
             ],
           ),
           if (showSearch) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
@@ -163,7 +163,7 @@ class ZekrniHeader extends StatelessWidget {
                     fontSize: 13,
                     color: color.onSurfaceVariant.withValues(alpha: 0.6),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   fillColor: isDark ? const Color(0xFF132720) : const Color(0xFFF9F6EE),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),

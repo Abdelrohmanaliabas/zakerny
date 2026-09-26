@@ -54,7 +54,7 @@ class _QuranScreenState extends State<QuranScreen> {
                   onSearchChanged: (value) => setState(() => _query = value),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
                   child: Row(
                     children: [
                       Expanded(

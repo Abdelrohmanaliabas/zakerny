@@ -57,8 +57,9 @@ class _HadithScreenState extends State<HadithScreen> {
                   final hadiths = _filterHadiths(allHadiths);
                   return Column(
                     children: [
+                      const SizedBox(height: 14),
                       SizedBox(
-                        height: 52,
+                        height: 48,
                         child: ListView.separated(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           scrollDirection: Axis.horizontal,
@@ -114,15 +115,16 @@ class _HadithScreenState extends State<HadithScreen> {
                           },
                         ),
                       ),
+                      const SizedBox(height: 14),
                       Expanded(
                         child: hadiths.isEmpty
                             ? const EmptyView(message: 'لا توجد نتائج')
                             : ListView.builder(
                                 padding: const EdgeInsets.fromLTRB(
                                   16,
-                                  0,
+                                  4,
                                   16,
-                                  16,
+                                  24,
                                 ),
                                 itemCount: hadiths.length,
                                 itemBuilder: (context, index) {
@@ -329,7 +331,7 @@ class _HadithCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: isDark ? FatimidColors.obsidianCard : Colors.white,
         borderRadius: BorderRadius.circular(20),

@@ -95,10 +95,23 @@ class _InAppAdhanDialogState extends State<InAppAdhanDialog>
   }
 
   Future<void> _toggleAudio() async {
-    if (_player.playing) {
-      await _player.pause();
-    } else {
-      await _player.play();
+    try {
+      if (_isPlaying || _player.playing) {
+        await _player.stop();
+        if (mounted) setState(() => _isPlaying = false);
+      } else {
+        await _player.play();
+        if (mounted) setState(() => _isPlaying = true);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _dismissDialog() async {
+    try {
+      await _player.stop();
+    } catch (_) {}
+    if (mounted) {
+      Navigator.of(context).pop();
     }
   }
 
@@ -198,7 +211,7 @@ class _InAppAdhanDialogState extends State<InAppAdhanDialog>
                         ),
                         IconButton(
                           icon: const Icon(Icons.close, color: Colors.white70),
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed: _dismissDialog,
                         ),
                       ],
                     ),
@@ -361,7 +374,7 @@ class _InAppAdhanDialogState extends State<InAppAdhanDialog>
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
-                            onPressed: () => Navigator.of(context).pop(),
+                            onPressed: _dismissDialog,
                             icon: const Icon(Icons.check_circle_outline, size: 20),
                             label: const Text(
                               'تم الاستماع',

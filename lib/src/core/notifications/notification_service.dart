@@ -13,9 +13,31 @@ import '../../features/prayer_times/domain/prayer_preferences.dart';
 import '../../features/prayer_times/overlay/adhan_overlay_widget.dart';
 
 @pragma('vm:entry-point')
-void notificationTapBackground(NotificationResponse response) {
+void notificationTapBackground(NotificationResponse response) async {
+  WidgetsFlutterBinding.ensureInitialized();
   if (response.actionId == 'stop_adhan') {
-    AdhanOverlayManager.closeOverlay();
+    try {
+      final plugin = FlutterLocalNotificationsPlugin();
+      if (response.id != null) {
+        await plugin.cancel(id: response.id!);
+      }
+      await plugin.cancel(id: 999);
+      final active = await plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.getActiveNotifications();
+      if (active != null) {
+        for (final a in active) {
+          if (a.id != null && (a.id! >= 1000 && a.id! <= 1050 || a.id == 999)) {
+            await plugin.cancel(id: a.id!);
+          }
+        }
+      }
+    } catch (_) {}
+    try {
+      await AdhanOverlayManager.closeOverlay(notificationId: response.id);
+    } catch (_) {}
   }
 }
 
@@ -69,9 +91,29 @@ class NotificationService extends ChangeNotifier {
     } catch (_) {}
   }
 
-  void _handleNotificationResponse(NotificationResponse response) {
+  void _handleNotificationResponse(NotificationResponse response) async {
     if (response.actionId == 'stop_adhan') {
-      AdhanOverlayManager.closeOverlay();
+      try {
+        if (response.id != null) {
+          await _plugin.cancel(id: response.id!);
+        }
+        await _plugin.cancel(id: 999);
+        final active = await _plugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >()
+            ?.getActiveNotifications();
+        if (active != null) {
+          for (final a in active) {
+            if (a.id != null && (a.id! >= 1000 && a.id! <= 1050 || a.id == 999)) {
+              await _plugin.cancel(id: a.id!);
+            }
+          }
+        }
+      } catch (_) {}
+      try {
+        await AdhanOverlayManager.closeOverlay(notificationId: response.id);
+      } catch (_) {}
       return;
     }
     final payload = response.payload;

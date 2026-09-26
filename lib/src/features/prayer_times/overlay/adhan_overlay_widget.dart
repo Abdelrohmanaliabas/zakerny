@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    hide NotificationVisibility;
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 
 class AdhanOverlayManager {
@@ -29,6 +31,7 @@ class AdhanOverlayManager {
     required String prayerName,
     required String time,
     String city = 'مدينتك',
+    int? notificationId,
   }) async {
     if (kIsWeb || !Platform.isAndroid) return;
     try {
@@ -56,6 +59,7 @@ class AdhanOverlayManager {
         'prayerName': prayerName,
         'time': time,
         'city': city,
+        'notificationId': ?notificationId,
       });
       await FlutterOverlayWindow.shareData(data);
     } catch (_) {}
@@ -97,7 +101,26 @@ class AdhanOverlayManager {
     } catch (_) {}
   }
 
-  static Future<void> closeOverlay() async {
+  static Future<void> closeOverlay({int? notificationId}) async {
+    try {
+      final plugin = FlutterLocalNotificationsPlugin();
+      if (notificationId != null) {
+        await plugin.cancel(id: notificationId);
+      }
+      await plugin.cancel(id: 999);
+      final active = await plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.getActiveNotifications();
+      if (active != null) {
+        for (final a in active) {
+          if (a.id != null && (a.id! >= 1000 && a.id! <= 1050 || a.id == 999)) {
+            await plugin.cancel(id: a.id!);
+          }
+        }
+      }
+    } catch (_) {}
     if (kIsWeb || !Platform.isAndroid) return;
     try {
       await FlutterOverlayWindow.closeOverlay();
@@ -118,6 +141,7 @@ class _AdhanOverlayWidgetState extends State<AdhanOverlayWidget>
   String _prayerName = 'الصلاة';
   String _time = '';
   String _city = 'مدينتك';
+  int? _notificationId;
 
   String _dhikrTitle = 'تذكير بذكر الله';
   String _dhikrText = 'اللَّهُمَّ صَلِّ وَسَلِّمْ وَبَارِكْ عَلَى نَبِيِّنَا مُحَمَّدٍ';
@@ -184,6 +208,9 @@ class _AdhanOverlayWidgetState extends State<AdhanOverlayWidget>
           }
           if (map['city'] != null) {
             _city = map['city'].toString();
+          }
+          if (map['notificationId'] != null) {
+            _notificationId = int.tryParse(map['notificationId'].toString());
           }
           _resetTimer(const Duration(minutes: 3));
         }
@@ -584,7 +611,9 @@ class _AdhanOverlayWidgetState extends State<AdhanOverlayWidget>
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    onPressed: () => AdhanOverlayManager.closeOverlay(),
+                    onPressed: () => AdhanOverlayManager.closeOverlay(
+                      notificationId: _notificationId,
+                    ),
                     icon: const Icon(Icons.volume_off, size: 16),
                     label: const Text(
                       'كتم / إغلاق',
