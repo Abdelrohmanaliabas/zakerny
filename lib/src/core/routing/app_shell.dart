@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/recitations/presentation/widgets/recitation_player_bar.dart';
@@ -403,6 +403,60 @@ class _DesktopSidebar extends StatelessWidget {
             ),
           ),
 
+          // Developer & Company Link (Maestro Zone)
+          if (isExpanded)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => context.go('/company'),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? FatimidColors.goldPrimary.withValues(alpha: 0.1)
+                          : FatimidColors.goldPrimary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: FatimidColors.goldPrimary.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.business_rounded,
+                          size: 16,
+                          color: FatimidColors.goldPrimary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'المطور: مايسترو زون',
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? Colors.white70 : const Color(0xFF103024),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 11,
+                          color: FatimidColors.goldPrimary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
           // Bottom dhikr note in Fatimid calligraphy
           if (isExpanded)
             Container(
@@ -440,3 +494,4 @@ class _DesktopSidebar extends StatelessWidget {
     );
   }
 }
+

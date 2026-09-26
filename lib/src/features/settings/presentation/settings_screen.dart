@@ -1,8 +1,9 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/storage/app_local_store.dart';
 import '../../../core/utils/audio_asset_utils.dart';
@@ -1024,6 +1025,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
           ),
+          const SizedBox(height: 24),
+          // بطاقة الشركة المطورة وفريق العمل (مايسترو زون)
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: FatimidColors.goldPrimary.withValues(alpha: 0.35),
+                width: 1.2,
+              ),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              leading: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: FatimidColors.goldGradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.business_rounded,
+                    color: Color(0xFF261800),
+                    size: 24,
+                  ),
+                ),
+              ),
+              title: const Text(
+                'تواصل معنا وفريق العمل (مايسترو زون)',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14.5,
+                ),
+              ),
+              subtitle: const Text(
+                'معرض المشاريع، منصات التواصل، وفريق البرمجة والدعم',
+                style: TextStyle(fontSize: 12),
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+              onTap: () => context.push('/company'),
+            ),
+          ),
         ],
       ),
     );
@@ -1038,3 +1085,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _ => key,
   };
 }
+

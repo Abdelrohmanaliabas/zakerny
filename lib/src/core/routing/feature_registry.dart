@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/adhkar/application/adhkar_controller.dart';
@@ -24,6 +24,7 @@ import '../../features/recitations/data/recitation_repository.dart';
 import '../../features/recitations/data/recitation_service.dart';
 import '../../features/recitations/presentation/recitations_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/company/presentation/screens/company_screen.dart';
 import '../notifications/notification_service.dart';
 import '../storage/app_local_store.dart';
 import 'app_feature.dart';
@@ -165,7 +166,16 @@ List<AppFeature> buildFeatureRegistry({
             onThemeModeChanged: onThemeModeChanged,
           ),
         ),
+        GoRoute(
+          path: '/company',
+          builder: (context, state) => const CompanyScreen(),
+        ),
+        GoRoute(
+          path: '/contact-us',
+          builder: (context, state) => const CompanyScreen(),
+        ),
       ],
     ),
   ];
 }
+
