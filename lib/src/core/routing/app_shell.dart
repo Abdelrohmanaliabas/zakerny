@@ -37,133 +37,184 @@ class AppShell extends StatelessWidget {
           child: IslamicBackground(
             child: Scaffold(
               backgroundColor: Colors.transparent,
-          body: isDesktop
-              ? Row(
-                  children: [
-                    _DesktopSidebar(
-                      navItems: navItems,
-                      selectedIndex: index,
-                      isExpanded: isExpandedSidebar,
-                      onTap: (targetIndex) =>
-                          context.go(navItems[targetIndex].route),
-                    ),
-                    VerticalDivider(
-                      width: 1,
-                      thickness: 1,
-                      color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.25 : 0.2),
-                    ),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Expanded(child: child),
-                          Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 860),
-                              child: const RecitationPlayerBar(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-              : child,
-          bottomNavigationBar: hideBottomNav
-              ? null
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const RecitationPlayerBar(),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF0A1813).withValues(alpha: 0.96)
-                            : Colors.white.withValues(alpha: 0.96),
-                        border: Border(
-                          top: BorderSide(
-                            color: FatimidColors.goldPrimary.withValues(
-                              alpha: isDark ? 0.35 : 0.3,
-                            ),
-                            width: 1.2,
+              body: isDesktop
+                  ? Row(
+                      children: [
+                        _DesktopSidebar(
+                          navItems: navItems,
+                          selectedIndex: index,
+                          isExpanded: isExpandedSidebar,
+                          onTap: (targetIndex) =>
+                              context.go(navItems[targetIndex].route),
+                        ),
+                        VerticalDivider(
+                          width: 1,
+                          thickness: 1,
+                          color: FatimidColors.goldPrimary.withValues(
+                            alpha: isDark ? 0.25 : 0.2,
                           ),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.06),
-                            blurRadius: 16,
-                            offset: const Offset(0, -4),
-                          ),
-                        ],
-                      ),
-                      child: SafeArea(
-                        top: false,
-                        child: SizedBox(
-                          height: 64,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: List.generate(navItems.length, (i) {
-                              final item = navItems[i];
-                              final isSelected = i == index;
-                              return Expanded(
-                                child: InkWell(
-                                  onTap: () => context.go(item.route),
-                                  splashColor: FatimidColors.goldPrimary.withValues(alpha: 0.12),
-                                  highlightColor: Colors.transparent,
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      AnimatedContainer(
-                                        duration: const Duration(milliseconds: 220),
-                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: isSelected
-                                              ? (isDark
-                                                  ? FatimidColors.goldPrimary.withValues(alpha: 0.18)
-                                                  : FatimidColors.goldPrimary.withValues(alpha: 0.15))
-                                              : Colors.transparent,
-                                          borderRadius: BorderRadius.circular(16),
-                                          border: isSelected
-                                              ? Border.all(
-                                                  color: FatimidColors.goldPrimary.withValues(alpha: 0.45),
-                                                  width: 1,
-                                                )
-                                              : null,
-                                        ),
-                                        child: Icon(
-                                          isSelected ? item.activeIcon : item.icon,
-                                          color: isSelected
-                                              ? (isDark
-                                                  ? FatimidColors.goldLight
-                                                  : const Color(0xFF8B670A))
-                                              : (isDark
-                                                  ? const Color(0xFF759187)
-                                                  : const Color(0xFF6B8279)),
-                                          size: 22,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        item.label,
-                                        style: TextStyle(
-                                          fontFamily: 'Cairo',
-                                          fontSize: 11,
-                                          fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                          color: isSelected
-                                              ? (isDark ? FatimidColors.goldLight : const Color(0xFF7A5805))
-                                              : (isDark ? const Color(0xFF759187) : const Color(0xFF6B8279)),
-                                        ),
-                                      ),
-                                    ],
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Expanded(child: child),
+                              Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 860,
                                   ),
+                                  child: const RecitationPlayerBar(),
                                 ),
-                              );
-                            }),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
+                      ],
+                    )
+                  : child,
+              bottomNavigationBar: hideBottomNav
+                  ? null
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const RecitationPlayerBar(),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(
+                                    0xFF0A1813,
+                                  ).withValues(alpha: 0.96)
+                                : Colors.white.withValues(alpha: 0.96),
+                            border: Border(
+                              top: BorderSide(
+                                color: FatimidColors.goldPrimary.withValues(
+                                  alpha: isDark ? 0.35 : 0.3,
+                                ),
+                                width: 1.2,
+                              ),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(
+                                  alpha: isDark ? 0.35 : 0.06,
+                                ),
+                                blurRadius: 16,
+                                offset: const Offset(0, -4),
+                              ),
+                            ],
+                          ),
+                          child: SafeArea(
+                            top: false,
+                            child: SizedBox(
+                              height: 64,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: List.generate(navItems.length, (i) {
+                                  final item = navItems[i];
+                                  final isSelected = i == index;
+                                  return Expanded(
+                                    child: InkWell(
+                                      onTap: () => context.go(item.route),
+                                      splashColor: FatimidColors.goldPrimary
+                                          .withValues(alpha: 0.12),
+                                      highlightColor: Colors.transparent,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          AnimatedContainer(
+                                            duration: const Duration(
+                                              milliseconds: 220,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isSelected
+                                                  ? (isDark
+                                                        ? FatimidColors
+                                                              .goldPrimary
+                                                              .withValues(
+                                                                alpha: 0.18,
+                                                              )
+                                                        : FatimidColors
+                                                              .goldPrimary
+                                                              .withValues(
+                                                                alpha: 0.15,
+                                                              ))
+                                                  : Colors.transparent,
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              border: isSelected
+                                                  ? Border.all(
+                                                      color: FatimidColors
+                                                          .goldPrimary
+                                                          .withValues(
+                                                            alpha: 0.45,
+                                                          ),
+                                                      width: 1,
+                                                    )
+                                                  : null,
+                                            ),
+                                            child: Icon(
+                                              isSelected
+                                                  ? item.activeIcon
+                                                  : item.icon,
+                                              color: isSelected
+                                                  ? (isDark
+                                                        ? FatimidColors
+                                                              .goldLight
+                                                        : const Color(
+                                                            0xFF8B670A,
+                                                          ))
+                                                  : (isDark
+                                                        ? const Color(
+                                                            0xFF759187,
+                                                          )
+                                                        : const Color(
+                                                            0xFF6B8279,
+                                                          )),
+                                              size: 22,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            item.label,
+                                            style: TextStyle(
+                                              fontFamily: 'Cairo',
+                                              fontSize: 11,
+                                              fontWeight: isSelected
+                                                  ? FontWeight.w800
+                                                  : FontWeight.w600,
+                                              color: isSelected
+                                                  ? (isDark
+                                                        ? FatimidColors
+                                                              .goldLight
+                                                        : const Color(
+                                                            0xFF7A5805,
+                                                          ))
+                                                  : (isDark
+                                                        ? const Color(
+                                                            0xFF759187,
+                                                          )
+                                                        : const Color(
+                                                            0xFF6B8279,
+                                                          )),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
             ),
           ),
         );
@@ -237,7 +288,9 @@ class _DesktopSidebar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: FatimidColors.goldPrimary.withValues(alpha: 0.35),
+                        color: FatimidColors.goldPrimary.withValues(
+                          alpha: 0.35,
+                        ),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -268,7 +321,9 @@ class _DesktopSidebar extends StatelessWidget {
                             fontFamily: 'Cairo',
                             fontWeight: FontWeight.w900,
                             letterSpacing: -0.3,
-                            color: isDark ? Colors.white : const Color(0xFF0E2E23),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0E2E23),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -296,7 +351,9 @@ class _DesktopSidebar extends StatelessWidget {
             height: 1,
             indent: 16,
             endIndent: 16,
-            color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.25 : 0.2),
+            color: FatimidColors.goldPrimary.withValues(
+              alpha: isDark ? 0.25 : 0.2,
+            ),
           ),
           const SizedBox(height: 12),
 
@@ -324,7 +381,9 @@ class _DesktopSidebar extends StatelessWidget {
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            gradient: isSelected ? FatimidColors.goldGradient : null,
+                            gradient: isSelected
+                                ? FatimidColors.goldGradient
+                                : null,
                             color: isSelected ? null : Colors.transparent,
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -332,7 +391,9 @@ class _DesktopSidebar extends StatelessWidget {
                             isSelected ? item.activeIcon : item.icon,
                             color: isSelected
                                 ? const Color(0xFF261800)
-                                : (isDark ? const Color(0xFF86A398) : const Color(0xFF5E796F)),
+                                : (isDark
+                                      ? const Color(0xFF86A398)
+                                      : const Color(0xFF5E796F)),
                             size: 22,
                           ),
                         ),
@@ -356,13 +417,19 @@ class _DesktopSidebar extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? (isDark
-                                  ? FatimidColors.goldPrimary.withValues(alpha: 0.18)
-                                  : FatimidColors.goldPrimary.withValues(alpha: 0.12))
+                                    ? FatimidColors.goldPrimary.withValues(
+                                        alpha: 0.18,
+                                      )
+                                    : FatimidColors.goldPrimary.withValues(
+                                        alpha: 0.12,
+                                      ))
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(14),
                           border: isSelected
                               ? Border.all(
-                                  color: FatimidColors.goldPrimary.withValues(alpha: 0.45),
+                                  color: FatimidColors.goldPrimary.withValues(
+                                    alpha: 0.45,
+                                  ),
                                   width: 1,
                                 )
                               : null,
@@ -372,8 +439,12 @@ class _DesktopSidebar extends StatelessWidget {
                             Icon(
                               isSelected ? item.activeIcon : item.icon,
                               color: isSelected
-                                  ? (isDark ? FatimidColors.goldLight : const Color(0xFF825F05))
-                                  : (isDark ? const Color(0xFF86A398) : const Color(0xFF5E796F)),
+                                  ? (isDark
+                                        ? FatimidColors.goldLight
+                                        : const Color(0xFF825F05))
+                                  : (isDark
+                                        ? const Color(0xFF86A398)
+                                        : const Color(0xFF5E796F)),
                               size: 22,
                             ),
                             const SizedBox(width: 14),
@@ -387,8 +458,12 @@ class _DesktopSidebar extends StatelessWidget {
                                       ? FontWeight.w800
                                       : FontWeight.w600,
                                   color: isSelected
-                                      ? (isDark ? Colors.white : const Color(0xFF103024))
-                                      : (isDark ? const Color(0xFF9CB8AE) : const Color(0xFF5E796F)),
+                                      ? (isDark
+                                            ? Colors.white
+                                            : const Color(0xFF103024))
+                                      : (isDark
+                                            ? const Color(0xFF9CB8AE)
+                                            : const Color(0xFF5E796F)),
                                 ),
                               ),
                             ),
@@ -411,7 +486,7 @@ class _DesktopSidebar extends StatelessWidget {
             ),
           ),
 
-          // Developer & Company Link (Maestro Zone)
+          // Developer & Company Link (COMMIT_)
           if (isExpanded)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -421,7 +496,10 @@ class _DesktopSidebar extends StatelessWidget {
                   onTap: () => context.go('/company'),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: isDark
                           ? FatimidColors.goldPrimary.withValues(alpha: 0.1)
@@ -442,12 +520,14 @@ class _DesktopSidebar extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'المطور: مايسترو زون',
+                            'المطور: COMMIT_',
                             style: TextStyle(
                               fontFamily: 'Cairo',
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.white70 : const Color(0xFF103024),
+                              color: isDark
+                                  ? Colors.white70
+                                  : const Color(0xFF103024),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -469,12 +549,11 @@ class _DesktopSidebar extends StatelessWidget {
           if (isExpanded)
             Container(
               margin: const EdgeInsets.all(12),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF12241F) : const Color(0xFFF9F5EA),
+                color: isDark
+                    ? const Color(0xFF12241F)
+                    : const Color(0xFFF9F5EA),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: FatimidColors.goldPrimary.withValues(alpha: 0.3),
@@ -502,4 +581,3 @@ class _DesktopSidebar extends StatelessWidget {
     );
   }
 }
-

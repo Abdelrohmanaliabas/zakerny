@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -55,7 +55,7 @@ class _CompanyScreenState extends State<CompanyScreen> {
       final uri = Uri(
         scheme: 'mailto',
         path: clean,
-        query: 'subject=استفسار بخصوص تطبيق ذكرني / مايسترو زون',
+        query: 'subject=استفسار بخصوص تطبيق ذكرني / COMMIT_',
       );
       final launched = await launchUrl(
         uri,
@@ -85,10 +85,7 @@ class _CompanyScreenState extends State<CompanyScreen> {
       appBar: AppBar(
         title: const Text(
           'تواصل معنا وفريق العمل',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-            fontSize: 18,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
         ),
       ),
       body: ListView(
@@ -121,7 +118,8 @@ class _CompanyScreenState extends State<CompanyScreen> {
                     context,
                     icon: Icons.share_rounded,
                     title: 'صفحاتنا على وسائل التواصل',
-                    subtitle: 'تواصل معنا وتابع جديد مشاريعنا على منصاتنا الرسمية',
+                    subtitle:
+                        'تواصل معنا وتابع جديد مشاريعنا على منصاتنا الرسمية',
                   ),
                   const SizedBox(height: 10),
                   _buildSocialGrid(context, isDark),
@@ -170,7 +168,9 @@ class _CompanyScreenState extends State<CompanyScreen> {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.18 : 0.12),
+            color: FatimidColors.goldPrimary.withValues(
+              alpha: isDark ? 0.18 : 0.12,
+            ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: FatimidColors.goldPrimary.withValues(alpha: 0.35),
@@ -198,7 +198,9 @@ class _CompanyScreenState extends State<CompanyScreen> {
                 subtitle,
                 style: TextStyle(
                   fontSize: 12,
-                  color: isDark ? const Color(0xFF9CB8AE) : const Color(0xFF6B7280),
+                  color: isDark
+                      ? const Color(0xFF9CB8AE)
+                      : const Color(0xFF6B7280),
                 ),
               ),
             ],
@@ -338,10 +340,7 @@ class _CompanyScreenState extends State<CompanyScreen> {
               const SizedBox(width: 8),
               const Text(
                 'معرض المشاريع والأنظمة',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 15,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
               ),
             ],
           ),
@@ -359,12 +358,19 @@ class _CompanyScreenState extends State<CompanyScreen> {
             runSpacing: 8,
             children: _info.projects.map((p) {
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF132821) : const Color(0xFFF6F8F6),
+                  color: isDark
+                      ? const Color(0xFF132821)
+                      : const Color(0xFFF6F8F6),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.35 : 0.25),
+                    color: FatimidColors.goldPrimary.withValues(
+                      alpha: isDark ? 0.35 : 0.25,
+                    ),
                   ),
                 ),
                 child: Row(
@@ -459,9 +465,7 @@ class _CompanyScreenState extends State<CompanyScreen> {
                   decoration: BoxDecoration(
                     color: c.color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: c.color.withValues(alpha: 0.35),
-                    ),
+                    border: Border.all(color: c.color.withValues(alpha: 0.35)),
                   ),
                   child: Icon(c.icon, color: c.color, size: 22),
                 ),
@@ -487,8 +491,12 @@ class _CompanyScreenState extends State<CompanyScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: isConfigured
-                                  ? const Color(0xFF10B981).withValues(alpha: 0.15)
-                                  : FatimidColors.goldPrimary.withValues(alpha: 0.15),
+                                  ? const Color(
+                                      0xFF10B981,
+                                    ).withValues(alpha: 0.15)
+                                  : FatimidColors.goldPrimary.withValues(
+                                      alpha: 0.15,
+                                    ),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -509,18 +517,24 @@ class _CompanyScreenState extends State<CompanyScreen> {
                         c.subtitle,
                         style: TextStyle(
                           fontSize: 11,
-                          color: isDark ? const Color(0xFF9CB8AE) : const Color(0xFF6B7280),
+                          color: isDark
+                              ? const Color(0xFF9CB8AE)
+                              : const Color(0xFF6B7280),
                         ),
                       ),
                     ],
                   ),
                 ),
                 Icon(
-                  isConfigured ? Icons.open_in_new_rounded : Icons.schedule_rounded,
+                  isConfigured
+                      ? Icons.open_in_new_rounded
+                      : Icons.schedule_rounded,
                   size: 18,
                   color: isConfigured
                       ? const Color(0xFF10B981)
-                      : (isDark ? const Color(0xFF86A398) : const Color(0xFF9CA3AF)),
+                      : (isDark
+                            ? const Color(0xFF86A398)
+                            : const Color(0xFF9CA3AF)),
                 ),
               ],
             ),
@@ -531,9 +545,7 @@ class _CompanyScreenState extends State<CompanyScreen> {
   }
 
   Widget _buildDevTeamCard(BuildContext context, bool isDark) {
-    final dev = _info.developers.isNotEmpty
-        ? _info.developers.first
-        : null;
+    final dev = _info.developers.isNotEmpty ? _info.developers.first : null;
 
     if (dev == null) return const SizedBox.shrink();
 
@@ -611,7 +623,9 @@ class _CompanyScreenState extends State<CompanyScreen> {
                   icon: const Icon(Icons.email_outlined, size: 16),
                   label: const Text('إيميل المطور'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: isDark ? Colors.white : const Color(0xFF0F3A2E),
+                    foregroundColor: isDark
+                        ? Colors.white
+                        : const Color(0xFF0F3A2E),
                     side: BorderSide(
                       color: FatimidColors.goldPrimary.withValues(alpha: 0.4),
                     ),
@@ -623,7 +637,9 @@ class _CompanyScreenState extends State<CompanyScreen> {
                   icon: const Icon(Icons.link_rounded, size: 16),
                   label: const Text('الملف التعريفي'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: isDark ? Colors.white : const Color(0xFF0F3A2E),
+                    foregroundColor: isDark
+                        ? Colors.white
+                        : const Color(0xFF0F3A2E),
                     side: BorderSide(
                       color: FatimidColors.goldPrimary.withValues(alpha: 0.4),
                     ),
@@ -674,10 +690,7 @@ class _CompanyScreenState extends State<CompanyScreen> {
                     ),
                     Text(
                       'نحن هنا للإجابة عن أسئلتكم ومساعدتكم على مدار الساعة',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF6B7280),
-                      ),
+                      style: TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
                     ),
                   ],
                 ),

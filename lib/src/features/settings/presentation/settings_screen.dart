@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -61,7 +61,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     };
 
     _audioPlayer.playerStateStream.listen((state) {
-      if (mounted && !state.playing && state.processingState == ProcessingState.completed) {
+      if (mounted &&
+          !state.playing &&
+          state.processingState == ProcessingState.completed) {
         setState(() => _playingVoiceId = null);
       }
     });
@@ -116,7 +118,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() => _prefs = saved);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('تم حفظ الإعدادات وإعادة جدولة التنبيهات والأذكار بنجاح'),
+          content: Text(
+            'تم حفظ الإعدادات وإعادة جدولة التنبيهات والأذكار بنجاح',
+          ),
           backgroundColor: Color(0xFF0D9488),
         ),
       );
@@ -282,10 +286,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         title: const Text(
           'الإعدادات والأذان',
-          style: TextStyle(
-            fontFamily: 'Cairo',
-            fontWeight: FontWeight.w900,
-          ),
+          style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.w900),
         ),
       ),
       body: ListView(
@@ -379,7 +380,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0D9488).withValues(alpha: 0.15),
+                          color: const Color(
+                            0xFF0D9488,
+                          ).withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -422,12 +425,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? const Color(0xFF0D9488).withValues(alpha: 0.08)
-                            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                            : colorScheme.surfaceContainerHighest.withValues(
+                                alpha: 0.3,
+                              ),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                           color: isSelected
                               ? const Color(0xFF0D9488)
-                              : colorScheme.outlineVariant.withValues(alpha: 0.6),
+                              : colorScheme.outlineVariant.withValues(
+                                  alpha: 0.6,
+                                ),
                           width: isSelected ? 1.5 : 1,
                         ),
                       ),
@@ -448,7 +455,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: Text(
                           voice.name,
                           style: TextStyle(
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w500,
                             color: isSelected ? const Color(0xFF0D9488) : null,
                           ),
                         ),
@@ -460,13 +469,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: IconButton.styleFrom(
                             backgroundColor: isPlaying
                                 ? const Color(0xFF0D9488)
-                                : const Color(0xFF0D9488).withValues(alpha: 0.15),
+                                : const Color(
+                                    0xFF0D9488,
+                                  ).withValues(alpha: 0.15),
                             foregroundColor: isPlaying
                                 ? Colors.white
                                 : const Color(0xFF0D9488),
                           ),
                           icon: Icon(
-                            isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                            isPlaying
+                                ? Icons.stop_rounded
+                                : Icons.play_arrow_rounded,
                             size: 20,
                           ),
                           tooltip: isPlaying ? 'إيقاف' : 'استماع',
@@ -544,7 +557,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: _testAdhanNotification,
-                          icon: const Icon(Icons.notifications_active, size: 18),
+                          icon: const Icon(
+                            Icons.notifications_active,
+                            size: 18,
+                          ),
                           label: const Text(
                             'تجربة إشعار الأذان',
                             style: TextStyle(fontSize: 12),
@@ -619,7 +635,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       secondary: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD4AF37).withValues(alpha: 0.15),
+                          color: const Color(
+                            0xFFD4AF37,
+                          ).withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -656,33 +674,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: [
-                        {'label': 'كل 5 دقائق', 'val': 5},
-                        {'label': 'كل 10 دقائق', 'val': 10},
-                        {'label': 'كل 15 دقيقة', 'val': 15},
-                        {'label': 'كل 30 دقيقة', 'val': 30},
-                        {'label': 'كل ساعة', 'val': 60},
-                        {'label': 'كل ساعتين', 'val': 120},
-                      ].map((opt) {
-                        final val = opt['val'] as int;
-                        final isSelected = _prefs.dhikrIntervalMinutes == val;
-                        return ChoiceChip(
-                          label: Text(opt['label'] as String),
-                          selected: isSelected,
-                          onSelected: (_) {
-                            setState(() {
-                              _prefs = _prefs.copyWith(dhikrIntervalMinutes: val);
-                            });
-                            _save(_prefs);
-                          },
-                        );
-                      }).toList(),
+                      children:
+                          [
+                            {'label': 'كل 5 دقائق', 'val': 5},
+                            {'label': 'كل 10 دقائق', 'val': 10},
+                            {'label': 'كل 15 دقيقة', 'val': 15},
+                            {'label': 'كل 30 دقيقة', 'val': 30},
+                            {'label': 'كل ساعة', 'val': 60},
+                            {'label': 'كل ساعتين', 'val': 120},
+                          ].map((opt) {
+                            final val = opt['val'] as int;
+                            final isSelected =
+                                _prefs.dhikrIntervalMinutes == val;
+                            return ChoiceChip(
+                              label: Text(opt['label'] as String),
+                              selected: isSelected,
+                              onSelected: (_) {
+                                setState(() {
+                                  _prefs = _prefs.copyWith(
+                                    dhikrIntervalMinutes: val,
+                                  );
+                                });
+                                _save(_prefs);
+                              },
+                            );
+                          }).toList(),
                     ),
                     const SizedBox(height: 18),
                     // قسم تحديد الأذكار المقروءة وسماع أصواتها
                     Row(
                       children: [
-                        const Icon(Icons.checklist_rounded, size: 20, color: Color(0xFF0D9488)),
+                        const Icon(
+                          Icons.checklist_rounded,
+                          size: 20,
+                          color: Color(0xFF0D9488),
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'تحديد الأذكار المفعلة وسماع أصواتها:',
@@ -703,107 +729,141 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    ...defaultDhikrReminders.where((item) => item.audioAsset != null).map((item) {
-                      final isEnabled = _prefs.enabledDhikrIds.contains(item.id);
-                      return ValueListenableBuilder<String?>(
-                        valueListenable: VoiceDhikrService.instance.currentlyPlayingId,
-                        builder: (context, playingId, _) {
-                          final isItemPlaying = playingId == item.id;
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isItemPlaying
-                                  ? const Color(0xFFD4AF37).withValues(alpha: 0.12)
-                                  : (isEnabled
-                                      ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
-                                      : colorScheme.surfaceContainerHighest.withValues(alpha: 0.15)),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: isItemPlaying
-                                    ? const Color(0xFFD4AF37)
-                                    : (isEnabled
-                                        ? const Color(0xFF0D9488).withValues(alpha: 0.3)
-                                        : Colors.transparent),
-                                width: isItemPlaying ? 1.5 : 1,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Checkbox(
-                                  value: isEnabled,
-                                  activeColor: const Color(0xFF0D9488),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  onChanged: (checked) {
-                                    final current = List<String>.from(_prefs.enabledDhikrIds);
-                                    if (checked == true) {
-                                      if (!current.contains(item.id)) current.add(item.id);
-                                    } else {
-                                      current.remove(item.id);
-                                    }
-                                    setState(() {
-                                      _prefs = _prefs.copyWith(enabledDhikrIds: current);
-                                    });
-                                    _save(_prefs);
-                                  },
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.title,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
-                                          color: isEnabled
-                                              ? colorScheme.onSurface
-                                              : colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                                        ),
-                                      ),
-                                      if (item.spokenPhrase != null)
-                                        Text(
-                                          'الصوت: "${item.spokenPhrase}"',
-                                          style: const TextStyle(
-                                            fontSize: 11,
-                                            color: Color(0xFF0D9488),
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                IconButton.filledTonal(
-                                  tooltip: isItemPlaying ? 'إيقاف' : 'استماع لصوت الذكر',
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: isItemPlaying
-                                        ? const Color(0xFFD4AF37)
-                                        : const Color(0xFF0D9488).withValues(alpha: 0.15),
-                                    foregroundColor: isItemPlaying
-                                        ? const Color(0xFF332000)
-                                        : const Color(0xFF0D9488),
-                                  ),
-                                  icon: Icon(
-                                    isItemPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
-                                    size: 20,
-                                  ),
-                                  onPressed: () => VoiceDhikrService.instance.previewOrToggle(item),
-                                ),
-                              ],
-                            ),
+                    ...defaultDhikrReminders
+                        .where((item) => item.audioAsset != null)
+                        .map((item) {
+                          final isEnabled = _prefs.enabledDhikrIds.contains(
+                            item.id,
                           );
-                        },
-                      );
-                    }),
+                          return ValueListenableBuilder<String?>(
+                            valueListenable:
+                                VoiceDhikrService.instance.currentlyPlayingId,
+                            builder: (context, playingId, _) {
+                              final isItemPlaying = playingId == item.id;
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isItemPlaying
+                                      ? const Color(
+                                          0xFFD4AF37,
+                                        ).withValues(alpha: 0.12)
+                                      : (isEnabled
+                                            ? colorScheme
+                                                  .surfaceContainerHighest
+                                                  .withValues(alpha: 0.4)
+                                            : colorScheme
+                                                  .surfaceContainerHighest
+                                                  .withValues(alpha: 0.15)),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isItemPlaying
+                                        ? const Color(0xFFD4AF37)
+                                        : (isEnabled
+                                              ? const Color(
+                                                  0xFF0D9488,
+                                                ).withValues(alpha: 0.3)
+                                              : Colors.transparent),
+                                    width: isItemPlaying ? 1.5 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Checkbox(
+                                      value: isEnabled,
+                                      activeColor: const Color(0xFF0D9488),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(5),
+                                      ),
+                                      onChanged: (checked) {
+                                        final current = List<String>.from(
+                                          _prefs.enabledDhikrIds,
+                                        );
+                                        if (checked == true) {
+                                          if (!current.contains(item.id)) {
+                                            current.add(item.id);
+                                          }
+                                        } else {
+                                          current.remove(item.id);
+                                        }
+                                        setState(() {
+                                          _prefs = _prefs.copyWith(
+                                            enabledDhikrIds: current,
+                                          );
+                                        });
+                                        _save(_prefs);
+                                      },
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item.title,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                              color: isEnabled
+                                                  ? colorScheme.onSurface
+                                                  : colorScheme.onSurfaceVariant
+                                                        .withValues(alpha: 0.6),
+                                            ),
+                                          ),
+                                          if (item.spokenPhrase != null)
+                                            Text(
+                                              'الصوت: "${item.spokenPhrase}"',
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                color: Color(0xFF0D9488),
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton.filledTonal(
+                                      tooltip: isItemPlaying
+                                          ? 'إيقاف'
+                                          : 'استماع لصوت الذكر',
+                                      style: IconButton.styleFrom(
+                                        backgroundColor: isItemPlaying
+                                            ? const Color(0xFFD4AF37)
+                                            : const Color(
+                                                0xFF0D9488,
+                                              ).withValues(alpha: 0.15),
+                                        foregroundColor: isItemPlaying
+                                            ? const Color(0xFF332000)
+                                            : const Color(0xFF0D9488),
+                                      ),
+                                      icon: Icon(
+                                        isItemPlaying
+                                            ? Icons.stop_rounded
+                                            : Icons.play_arrow_rounded,
+                                        size: 20,
+                                      ),
+                                      onPressed: () => VoiceDhikrService
+                                          .instance
+                                          .previewOrToggle(item),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        }),
                     const SizedBox(height: 10),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       secondary: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD4AF37).withValues(alpha: 0.15),
+                          color: const Color(
+                            0xFFD4AF37,
+                          ).withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -814,7 +874,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       title: const Text(
                         'نافذة إسلامية عائمة عند التذكير',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
                       subtitle: const Text(
                         'ظهور بطاقة ذكر أنيقة فوق التطبيقات أثناء تصفح الهاتف تُغلق تلقائياً بعد ثوانٍ معدودة.',
@@ -834,25 +897,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       runSpacing: 8,
                       children: [
                         FilledButton.icon(
-                          onPressed: () => VoiceDhikrService.instance.testRandomActiveDhikr(),
+                          onPressed: () => VoiceDhikrService.instance
+                              .testRandomActiveDhikr(),
                           icon: const Icon(Icons.volume_up_rounded, size: 18),
-                          label: const Text('تجربة التذكير الصوتي الآن', style: TextStyle(fontSize: 12)),
+                          label: const Text(
+                            'تجربة التذكير الصوتي الآن',
+                            style: TextStyle(fontSize: 12),
+                          ),
                           style: FilledButton.styleFrom(
                             backgroundColor: const Color(0xFF0D9488),
                             foregroundColor: Colors.white,
                           ),
                         ),
                         OutlinedButton.icon(
-                          onPressed: () => _testDhikrNotification(overlay: false),
-                          icon: const Icon(Icons.notifications_active_outlined, size: 18),
+                          onPressed: () =>
+                              _testDhikrNotification(overlay: false),
+                          icon: const Icon(
+                            Icons.notifications_active_outlined,
+                            size: 18,
+                          ),
                           label: const Text(
                             'تجربة إشعار الذكر',
                             style: TextStyle(fontSize: 12),
                           ),
                         ),
                         OutlinedButton.icon(
-                          onPressed: () => _testDhikrNotification(overlay: true),
-                          icon: const Icon(Icons.open_in_browser_rounded, size: 18),
+                          onPressed: () =>
+                              _testDhikrNotification(overlay: true),
+                          icon: const Icon(
+                            Icons.open_in_browser_rounded,
+                            size: 18,
+                          ),
                           label: const Text(
                             'تجربة النافذة العائمة',
                             style: TextStyle(fontSize: 12),
@@ -867,7 +942,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           const SizedBox(height: 20),
-          Text('مواقيت الصلاة والموقع', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'مواقيت الصلاة والموقع',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 10),
           TextField(
             controller: _city,
@@ -1021,12 +1099,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     );
                   },
             child: Text(
-              _saving ? 'جار الحفظ والجدولة...' : 'حفظ الإعدادات وجدولة الأذان والتنبيهات',
+              _saving
+                  ? 'جار الحفظ والجدولة...'
+                  : 'حفظ الإعدادات وجدولة الأذان والتنبيهات',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
           ),
           const SizedBox(height: 24),
-          // بطاقة الشركة المطورة وفريق العمل (مايسترو زون)
+          // بطاقة الشركة المطورة وفريق العمل (COMMIT_)
           Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -1057,11 +1137,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               title: const Text(
-                'تواصل معنا وفريق العمل (مايسترو زون)',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14.5,
-                ),
+                'تواصل معنا وفريق العمل (COMMIT_)',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5),
               ),
               subtitle: const Text(
                 'معرض المشاريع، منصات التواصل، وفريق البرمجة والدعم',
@@ -1085,4 +1162,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _ => key,
   };
 }
-

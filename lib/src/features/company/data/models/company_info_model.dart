@@ -1,4 +1,4 @@
-﻿class CompanyInfoModel {
+class CompanyInfoModel {
   const CompanyInfoModel({
     required this.companyName,
     this.companyNameEn = 'Maestro Zone',
@@ -39,37 +39,43 @@
           : 'مايسترو زون',
       companyNameEn:
           (json['company_name_en'] as String?)?.trim().isNotEmpty == true
-              ? (json['company_name_en'] as String).trim()
-              : 'Maestro Zone',
+          ? (json['company_name_en'] as String).trim()
+          : 'Maestro Zone',
       taglineAr: (json['tagline_ar'] as String?)?.trim().isNotEmpty == true
           ? (json['tagline_ar'] as String).trim()
-          : 'حلول برمجية متكاملة للأنظمة والتطبيقات السحابية',
+          : 'نلتزم. نبني. نطلق.',
       taglineEn: (json['tagline_en'] as String?)?.trim().isNotEmpty == true
           ? (json['tagline_en'] as String).trim()
-          : 'Comprehensive Digital Solutions & Cloud Platforms',
+          : 'We commit. We build. We ship.',
       aboutAr: (json['about_ar'] as String?)?.trim().isNotEmpty == true
           ? (json['about_ar'] as String).trim()
-          : 'نبتكر ونطور منصات وتطبيقات ذكية تربط الخدمات والأنظمة في منظومة تقنية واحدة متكاملة وسريعة.',
+          : 'كوميت استوديو هندسة برمجيات متخصص في بناء تطبيقات موبايل ومنصات ويب وأنظمة أعمال موثوقة وقابلة للتوسع.',
       aboutEn: (json['about_en'] as String?)?.trim().isNotEmpty == true
           ? (json['about_en'] as String).trim()
-          : 'We innovate and develop smart platforms and applications connecting services in a unified digital ecosystem.',
-      portfolioUrl: (json['portfolio_url'] as String?)?.trim() ?? 'https://zonesc.cloud/',
+          : 'COMMIT_ is a software engineering studio building reliable mobile apps, web platforms, and scalable business systems.',
+      portfolioUrl:
+          (json['portfolio_url'] as String?)?.trim() ?? 'https://zonesc.cloud/',
       socialLinks: SocialLinksModel.fromJson(
         (json['social_links'] as Map?)?.cast<String, dynamic>() ?? {},
       ),
       support: SupportContactModel.fromJson(
         (json['support'] as Map?)?.cast<String, dynamic>() ?? {},
       ),
-      developers: (json['developers'] as List?)
+      developers:
+          (json['developers'] as List?)
               ?.whereType<Map>()
-              .map((item) =>
-                  DeveloperModel.fromJson(item.cast<String, dynamic>()))
+              .map(
+                (item) => DeveloperModel.fromJson(item.cast<String, dynamic>()),
+              )
               .toList() ??
           const [],
-      projects: (json['projects'] as List?)
+      projects:
+          (json['projects'] as List?)
               ?.whereType<Map>()
-              .map((item) =>
-                  ProjectShowcaseModel.fromJson(item.cast<String, dynamic>()))
+              .map(
+                (item) =>
+                    ProjectShowcaseModel.fromJson(item.cast<String, dynamic>()),
+              )
               .toList() ??
           const [],
     );
@@ -82,15 +88,15 @@
       taglineAr: 'حلول برمجية متكاملة للأنظمة والتطبيقات السحابية',
       taglineEn: 'Comprehensive Digital Solutions & Cloud Platforms',
       aboutAr:
-          'نبتكر ونطور منصات وتطبيقات ذكية تربط الخدمات والأنظمة في منظومة تقنية متكاملة وسريعة.',
+          'كوميت استوديو هندسة برمجيات متخصص في بناء تطبيقات موبايل ومنصات ويب وأنظمة أعمال موثوقة وقابلة للتوسع، من التخطيط المعماري حتى الإطلاق المستقر.',
       aboutEn:
-          'We innovate and develop smart platforms and applications connecting services in a unified digital ecosystem.',
+          'COMMIT_ is a software engineering studio building reliable mobile apps, web platforms, and scalable business systems, from architecture to stable production releases.',
       portfolioUrl: 'https://zonesc.cloud/',
       socialLinks: SocialLinksModel(
-        facebook: '',
-        instagram: '',
+        facebook: 'https://www.facebook.com/profile.php?id=61594574024377',
+        instagram: 'https://www.instagram.com/commit_tech/',
         tiktok: '',
-        linkedin: '',
+        linkedin: 'https://www.linkedin.com/in/abdelrahmanabas23',
         website: 'https://zonesc.cloud/',
       ),
       support: SupportContactModel(
@@ -107,12 +113,13 @@
           phone: '',
           whatsapp: '',
           email: 'dev@zonesc.cloud',
-          linkedinUrl: '',
+          linkedinUrl: 'https://www.linkedin.com/in/abdelrahmanabas23',
           githubUrl: '',
-          portfolioUrl: '',
-          bio: 'هندسة وبرمجة تطبيقات الهواتف والأنظمة السحابية بأحدث المعايير الاحترافية.',
+          portfolioUrl: 'https://zonesc.cloud/',
+          bio:
+              'نبني تطبيقات موبايل ومنصات ويب وأنظمة أعمال بأولوية واضحة للجودة، الأداء، والاعتمادية.',
           bioEn:
-              'Architecting high-performance mobile apps and scalable cloud ecosystems.',
+              'Building mobile apps, web platforms, and business systems with a strong focus on quality, performance, and reliability.',
         ),
       ],
       projects: [
@@ -127,18 +134,16 @@
           projectUrl: 'https://zonesc.cloud/',
         ),
         ProjectShowcaseModel(
-          titleAr: 'منصة وتطبيق مايسترو زون',
-          titleEn: 'Maestro Zone App & Platform',
-          descriptionAr:
-              'تطبيق ومنصة متطورة للخدمات والطلب مع شبكة ربط ذكية.',
-          descriptionEn:
-              'All-in-one mobile app and cloud logistics platform.',
+          titleAr: 'منصة وتطبيق Zone',
+          titleEn: 'Zone App & Platform',
+          descriptionAr: 'تطبيق ومنصة متطورة للخدمات والطلب مع شبكة ربط ذكية.',
+          descriptionEn: 'All-in-one mobile app and cloud logistics platform.',
           category: 'Mobile App',
           projectUrl: 'https://zonesc.cloud/',
         ),
         ProjectShowcaseModel(
-          titleAr: 'بوابات مايسترو زون لإدارة التجار ونقاط البيع',
-          titleEn: 'Maestro Zone Merchant & POS Gateways',
+          titleAr: 'أنظمة التجارة ونقاط البيع',
+          titleEn: 'Commerce & POS Systems',
           descriptionAr:
               'لوحة تحكم إدارية وتشغيلية متقدمة لإدارة الفروع، المخازن، ونقاط البيع.',
           descriptionEn:
@@ -147,8 +152,8 @@
           projectUrl: 'https://zonesc.cloud/',
         ),
         ProjectShowcaseModel(
-          titleAr: 'سحابة مايسترو زون والخدمات الرقمية',
-          titleEn: 'Maestro Zone Cloud & Digital Services',
+          titleAr: 'المنصات السحابية والخدمات الرقمية',
+          titleEn: 'Cloud Platforms & Digital Services',
           descriptionAr:
               'بنية تحتية سحابية متقدمة لربط الخدمات والتطبيقات الرقمية وتوفير أعلى موثوقية.',
           descriptionEn:
@@ -253,17 +258,14 @@ class DeveloperModel {
   bool get hasGithub => githubUrl.trim().isNotEmpty;
   bool get hasPortfolio => portfolioUrl.trim().isNotEmpty;
 
-  String localizedName(bool isArabic) => isArabic
-      ? name
-      : (nameEn.isNotEmpty ? nameEn : name);
+  String localizedName(bool isArabic) =>
+      isArabic ? name : (nameEn.isNotEmpty ? nameEn : name);
 
-  String localizedRole(bool isArabic) => isArabic
-      ? role
-      : (roleEn.isNotEmpty ? roleEn : role);
+  String localizedRole(bool isArabic) =>
+      isArabic ? role : (roleEn.isNotEmpty ? roleEn : role);
 
-  String localizedBio(bool isArabic) => isArabic
-      ? bio
-      : (bioEn.isNotEmpty ? bioEn : bio);
+  String localizedBio(bool isArabic) =>
+      isArabic ? bio : (bioEn.isNotEmpty ? bioEn : bio);
 
   factory DeveloperModel.fromJson(Map<String, dynamic> json) {
     return DeveloperModel(
@@ -302,9 +304,8 @@ class ProjectShowcaseModel {
 
   bool get hasUrl => projectUrl.trim().isNotEmpty;
 
-  String localizedTitle(bool isArabic) => isArabic
-      ? titleAr
-      : (titleEn.isNotEmpty ? titleEn : titleAr);
+  String localizedTitle(bool isArabic) =>
+      isArabic ? titleAr : (titleEn.isNotEmpty ? titleEn : titleAr);
 
   String localizedDescription(bool isArabic) => isArabic
       ? descriptionAr
