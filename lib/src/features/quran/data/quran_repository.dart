@@ -71,5 +71,15 @@ class QuranRepository {
       _store.getString(_reciterIdKey) ?? 'alafasy';
   Future<void> setPreferredReciterId(String id) =>
       _store.setString(_reciterIdKey, id);
+
+  static const _autoScrollSpeedKey = 'quran_auto_scroll_speed';
+
+  double getAutoScrollSpeed() {
+    final speed = _store.getDouble(_autoScrollSpeedKey);
+    if (speed == null || speed == 40.0) return 65.0;
+    return speed.clamp(20.0, 220.0);
+  }
+  Future<void> setAutoScrollSpeed(double speed) =>
+      _store.setDouble(_autoScrollSpeedKey, speed);
 }
 

@@ -45,5 +45,9 @@ class QuranController {
   String getPreferredReciterId() => repository.getPreferredReciterId();
   Future<void> setPreferredReciterId(String id) =>
       repository.setPreferredReciterId(id);
+
+  double getAutoScrollSpeed() => repository.getAutoScrollSpeed();
+  Future<void> setAutoScrollSpeed(double speed) =>
+      repository.setAutoScrollSpeed(speed);
 }
 

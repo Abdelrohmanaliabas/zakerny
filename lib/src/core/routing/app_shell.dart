@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/recitations/presentation/widgets/recitation_player_bar.dart';
+import '../ui/app_fullscreen_state.dart';
 import '../widgets/fatimid_decorations.dart';
 import '../widgets/islamic_background.dart';
 import 'app_feature.dart';
@@ -21,16 +22,21 @@ class AppShell extends StatelessWidget {
     final isExpandedSidebar = width >= 1024;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return PopScope(
-      canPop: !_isTopLevelRoute(location) || location == '/',
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && location != '/') {
-          context.go('/');
-        }
-      },
-      child: IslamicBackground(
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppFullscreenState.isFullscreenNotifier,
+      builder: (context, isFullscreen, _) {
+        final bool hideBottomNav = isDesktop || isFullscreen;
+
+        return PopScope(
+          canPop: !_isTopLevelRoute(location) || location == '/',
+          onPopInvokedWithResult: (didPop, result) {
+            if (!didPop && location != '/') {
+              context.go('/');
+            }
+          },
+          child: IslamicBackground(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
           body: isDesktop
               ? Row(
                   children: [
@@ -62,7 +68,7 @@ class AppShell extends StatelessWidget {
                   ],
                 )
               : child,
-          bottomNavigationBar: isDesktop
+          bottomNavigationBar: hideBottomNav
               ? null
               : Column(
                   mainAxisSize: MainAxisSize.min,
@@ -158,8 +164,10 @@ class AppShell extends StatelessWidget {
                     ),
                   ],
                 ),
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../core/ui/app_fullscreen_state.dart';
 import '../../../core/widgets/fatimid_decorations.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../recitations/application/recitations_controller.dart';
@@ -13,6 +15,7 @@ import '../../recitations/presentation/widgets/reciter_avatar.dart';
 import '../application/quran_controller.dart';
 import '../domain/quran_models.dart';
 import 'widgets/ayah_tafsir_sheet.dart';
+import 'widgets/quran_auto_scroll_dock.dart';
 
 class QuranReaderScreen extends StatefulWidget {
   const QuranReaderScreen({
@@ -32,7 +35,8 @@ class QuranReaderScreen extends StatefulWidget {
   State<QuranReaderScreen> createState() => _QuranReaderScreenState();
 }
 
-class _QuranReaderScreenState extends State<QuranReaderScreen> {
+class _QuranReaderScreenState extends State<QuranReaderScreen>
+    with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   final Map<String, GlobalKey> _pageKeys = {};
   final Map<String, GlobalKey> _cardKeys = {};
@@ -54,6 +58,30 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   List<Reciter> _availableReciters = [];
   Reciter? _selectedReciter;
 
+  Ticker? _scrollTicker;
+  Duration _lastElapsed = Duration.zero;
+  bool _isFullScreenAutoScroll = false;
+  bool _isAutoScrolling = false;
+  bool _isAutoScrollPaused = false;
+  bool _isContentHovered = false;
+  bool _isHudHovered = false;
+  bool _isHoverPaused = false;
+  bool _isUserDragging = false;
+  bool _pauseOnHover = true;
+  bool _isHudCollapsed = false;
+  late double _scrollSpeed;
+  DateTime _lastTitleUpdate = DateTime.now();
+
+  static const List<double> _speedPresets = [
+    30.0, // 0.5x بطيء
+    45.0, // 0.7x هادئ
+    65.0, // 1.0x متوازن
+    90.0, // 1.4x متوسط
+    120.0, // 1.8x سريع
+    160.0, // 2.5x سريع جداً
+    200.0, // 3.0x أقصى سرعة
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -61,6 +89,8 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     _isMushafMode = widget.controller.getMushafMode();
     _selectedAyahNumber = widget.initialAyahNumber;
     _selectedSurahId = widget.surahId;
+    _scrollSpeed = widget.controller.getAutoScrollSpeed();
+    _scrollTicker = createTicker(_onScrollTick);
 
     _loadData();
     _loadReciters();
@@ -78,12 +108,379 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
 
   @override
   void dispose() {
+    AppFullscreenState.setFullscreen(false);
+    _scrollTicker?.dispose();
+    if (_isFullScreenAutoScroll) {
+      try {
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      } catch (_) {}
+    }
     _audioSub?.cancel();
     widget.recitationsController?.activeRecitationNotifier
         .removeListener(_onAudioNotifierChanged);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScrollTick(Duration elapsed) {
+    if (!_isAutoScrolling ||
+        _isAutoScrollPaused ||
+        (_pauseOnHover && _isHoverPaused) ||
+        _isUserDragging) {
+      _lastElapsed = elapsed;
+      return;
+    }
+    if (_lastElapsed == Duration.zero) {
+      _lastElapsed = elapsed;
+      return;
+    }
+    final dt = (elapsed - _lastElapsed).inMicroseconds / 1000000.0;
+    _lastElapsed = elapsed;
+    if (dt <= 0 || dt > 0.04) return;
+
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    final maxExtent = position.maxScrollExtent;
+    final current = position.pixels;
+
+    if (current >= maxExtent) {
+      final lastDisplayed = _displayedSurahs.lastOrNull;
+      if (lastDisplayed != null && lastDisplayed.id < 114) {
+        _appendNextSurah();
+      } else {
+        _togglePauseAutoScroll();
+      }
+      return;
+    }
+
+    final delta = _scrollSpeed * dt;
+    final nextPos = (current + delta).clamp(0.0, maxExtent);
+    _scrollController.jumpTo(nextPos);
+  }
+
+  void _updateHoverState() {
+    final shouldPause = _isContentHovered || _isHudHovered;
+    if (_isHoverPaused != shouldPause) {
+      setState(() {
+        _isHoverPaused = shouldPause;
+      });
+    }
+  }
+
+  void _startAutoScroll() {
+    AppFullscreenState.setFullscreen(true);
+    setState(() {
+      _isFullScreenAutoScroll = true;
+      _isAutoScrolling = true;
+      _isAutoScrollPaused = false;
+      _isContentHovered = false;
+      _isHudHovered = false;
+      _isHoverPaused = false;
+      _isHudCollapsed = false;
+      _lastElapsed = Duration.zero;
+    });
+    if (!(_scrollTicker?.isTicking ?? false)) {
+      _scrollTicker?.start();
+    }
+    try {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    } catch (_) {}
+  }
+
+  void _stopAutoScroll() {
+    AppFullscreenState.setFullscreen(false);
+    setState(() {
+      _isFullScreenAutoScroll = false;
+      _isAutoScrolling = false;
+      _isAutoScrollPaused = false;
+      _isContentHovered = false;
+      _isHudHovered = false;
+      _isHoverPaused = false;
+      _isHudCollapsed = false;
+    });
+    if (_scrollTicker?.isTicking ?? false) {
+      _scrollTicker?.stop();
+    }
+    try {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    } catch (_) {}
+  }
+
+  void _togglePauseAutoScroll() {
+    final nextPaused = !_isAutoScrollPaused;
+    AppFullscreenState.setFullscreen(!nextPaused && _isFullScreenAutoScroll);
+    setState(() {
+      _isAutoScrollPaused = nextPaused;
+      _lastElapsed = Duration.zero;
+    });
+  }
+
+  void _setSpeed(double newSpeed) {
+    setState(() {
+      _scrollSpeed = newSpeed.clamp(20.0, 220.0);
+    });
+    widget.controller.setAutoScrollSpeed(_scrollSpeed);
+  }
+
+  void _increaseSpeed() {
+    final next = _speedPresets.firstWhere(
+      (s) => s > _scrollSpeed + 2,
+      orElse: () => (_scrollSpeed + 20.0).clamp(20.0, 220.0),
+    );
+    _setSpeed(next);
+  }
+
+  void _decreaseSpeed() {
+    final prev = _speedPresets.lastWhere(
+      (s) => s < _scrollSpeed - 2,
+      orElse: () => (_scrollSpeed - 20.0).clamp(20.0, 220.0),
+    );
+    _setSpeed(prev);
+  }
+
+  String get _speedLabel {
+    final ratio = _scrollSpeed / 65.0;
+    return '${ratio.toStringAsFixed(1)}x';
+  }
+
+  Future<T?> _pauseDuring<T>(Future<T?> Function() action) async {
+    final wasScrolling = _isAutoScrolling && !_isAutoScrollPaused;
+    if (wasScrolling) {
+      _isAutoScrollPaused = true;
+    }
+    try {
+      return await action();
+    } finally {
+      if (wasScrolling && mounted) {
+        setState(() {
+          _isAutoScrollPaused = false;
+          _lastElapsed = Duration.zero;
+        });
+      }
+    }
+  }
+
+  void _showAutoScrollSettingsDialog() {
+    _pauseDuring(() async {
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (bottomSheetContext) {
+          return StatefulBuilder(
+            builder: (context, setModalState) {
+              final theme = Theme.of(context);
+              final colorScheme = theme.colorScheme;
+              final ratio = _scrollSpeed / 65.0;
+
+              return SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 44,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: colorScheme.outlineVariant,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.speed_rounded,
+                            color: colorScheme.primary,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'إعدادات التمرير التلقائي',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${ratio.toStringAsFixed(1)}x • ${_scrollSpeed.round()} px/s',
+                              style: TextStyle(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'سرعة التمرير',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: _scrollSpeed > 20.0
+                                ? () {
+                                    _decreaseSpeed();
+                                    setModalState(() {});
+                                  }
+                                : null,
+                          ),
+                          Expanded(
+                            child: Slider(
+                              value: _scrollSpeed.clamp(20.0, 220.0),
+                              min: 20.0,
+                              max: 220.0,
+                              divisions: 20,
+                              label: '${(_scrollSpeed / 65.0).toStringAsFixed(1)}x',
+                              onChanged: (val) {
+                                _setSpeed(val);
+                                setModalState(() {});
+                              },
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline),
+                            onPressed: _scrollSpeed < 220.0
+                                ? () {
+                                    _increaseSpeed();
+                                    setModalState(() {});
+                                  }
+                                : null,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          SpeedPresetChip(
+                            label: '0.5x بطيء',
+                            selected: (_scrollSpeed - 30.0).abs() < 3,
+                            onTap: () {
+                              _setSpeed(30.0);
+                              setModalState(() {});
+                            },
+                          ),
+                          SpeedPresetChip(
+                            label: '0.7x هادئ',
+                            selected: (_scrollSpeed - 45.0).abs() < 3,
+                            onTap: () {
+                              _setSpeed(45.0);
+                              setModalState(() {});
+                            },
+                          ),
+                          SpeedPresetChip(
+                            label: '1.0x متوازن',
+                            selected: (_scrollSpeed - 65.0).abs() < 3,
+                            onTap: () {
+                              _setSpeed(65.0);
+                              setModalState(() {});
+                            },
+                          ),
+                          SpeedPresetChip(
+                            label: '1.4x متوسط',
+                            selected: (_scrollSpeed - 90.0).abs() < 3,
+                            onTap: () {
+                              _setSpeed(90.0);
+                              setModalState(() {});
+                            },
+                          ),
+                          SpeedPresetChip(
+                            label: '1.8x سريع',
+                            selected: (_scrollSpeed - 120.0).abs() < 3,
+                            onTap: () {
+                              _setSpeed(120.0);
+                              setModalState(() {});
+                            },
+                          ),
+                          SpeedPresetChip(
+                            label: '2.5x سريع جداً',
+                            selected: (_scrollSpeed - 160.0).abs() < 3,
+                            onTap: () {
+                              _setSpeed(160.0);
+                              setModalState(() {});
+                            },
+                          ),
+                          SpeedPresetChip(
+                            label: '3.0x أقصى سرعة',
+                            selected: (_scrollSpeed - 200.0).abs() < 3,
+                            onTap: () {
+                              _setSpeed(200.0);
+                              setModalState(() {});
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text(
+                          'إيقاف مؤقت عند التمرير بالفأرة (Hover)',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        subtitle: const Text(
+                          'يوقف التمرير تلقائياً عند وضع مؤشر الفأرة فوق الآيات لاستيعاب القراءة، ويُستأنف فور إبعاد المؤشر.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        value: _pauseOnHover,
+                        onChanged: (val) {
+                          setState(() => _pauseOnHover = val);
+                          setModalState(() {});
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      if (!_isFullScreenAutoScroll)
+                        FilledButton.icon(
+                          icon: const Icon(Icons.fullscreen_rounded),
+                          label: const Text('بدء التمرير بملء الشاشة'),
+                          onPressed: () {
+                            Navigator.pop(bottomSheetContext);
+                            _startAutoScroll();
+                          },
+                        )
+                      else
+                        FilledButton(
+                          onPressed: () => Navigator.pop(bottomSheetContext),
+                          child: const Text('تم'),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      );
+    });
   }
 
   Future<void> _loadData() async {
@@ -130,7 +527,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   }
 
   void _showReciterPicker({VoidCallback? onSelected}) {
-    showModalBottomSheet(
+    _pauseDuring(() => showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -235,7 +632,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           ),
         );
       },
-    );
+    ));
   }
 
   Future<void> _toggleSurahPlay(Surah surah) async {
@@ -303,7 +700,17 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     }
 
     // 2. Track which surah is currently visible in viewport to update AppBar title
-    _updateVisibleSurahTitle();
+    // During active auto-scroll, throttle this check to once every 1200ms
+    // to avoid calling expensive localToGlobal coordinate traversals on every frame!
+    if (!_isAutoScrolling) {
+      _updateVisibleSurahTitle();
+    } else {
+      final now = DateTime.now();
+      if (now.difference(_lastTitleUpdate).inMilliseconds >= 1200) {
+        _lastTitleUpdate = now;
+        _updateVisibleSurahTitle();
+      }
+    }
   }
 
   void _appendNextSurah() {
@@ -369,6 +776,10 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   }
 
   void _onAyahTapped(Surah surah, Ayah ayah) {
+    if (_isFullScreenAutoScroll) {
+      _togglePauseAutoScroll();
+      return;
+    }
     setState(() {
       _selectedSurahId = surah.id;
       _selectedAyahNumber = ayah.number;
@@ -378,13 +789,13 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   }
 
   void _openTafsirSheet(Surah surah, Ayah ayah, String displayText) {
-    AyahTafsirSheet.show(
+    _pauseDuring(() => AyahTafsirSheet.show(
       context,
       surah: surah,
       ayah: ayah,
       tafsirService: widget.controller.tafsirService,
       displayText: displayText,
-    );
+    ));
   }
 
   void _showAyahActionSheet(Surah surah, Ayah ayah) {
@@ -392,7 +803,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     final colorScheme = theme.colorScheme;
     final displayText = _getAyahTextWithoutBasmalah(surah.id, ayah.number, ayah.text);
 
-    showModalBottomSheet(
+    _pauseDuring(() => showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -752,11 +1163,11 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           },
         );
       },
-    );
+    ));
   }
 
   void _showFontSizeDialog() {
-    showModalBottomSheet(
+    _pauseDuring(() => showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -843,11 +1254,11 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           },
         );
       },
-    );
+    ));
   }
 
   void _showSurahJumpPicker() {
-    showModalBottomSheet(
+    _pauseDuring(() => showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -930,7 +1341,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           },
         );
       },
-    );
+    ));
   }
 
   void _jumpToSurah(Surah surah) {
@@ -963,133 +1374,307 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _currentVisibleSurah.name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            tooltip: (widget.recitationsController
-                        ?.isSurahPlaying(_currentVisibleSurah.id) ??
-                    false)
-                ? 'إيقاف التلاوة'
-                : 'استماع لسورة ${_currentVisibleSurah.name}',
-            icon: Icon(
-              (widget.recitationsController
-                          ?.isSurahPlaying(_currentVisibleSurah.id) ??
-                      false)
-                  ? Icons.pause_circle_filled_rounded
-                  : Icons.play_circle_outline_rounded,
-              color: (widget.recitationsController
-                          ?.isSurahPlaying(_currentVisibleSurah.id) ??
-                      false)
-                  ? Theme.of(context).colorScheme.primary
-                  : null,
-            ),
-            onPressed: () => _toggleSurahPlay(_currentVisibleSurah),
-          ),
-          IconButton(
-            tooltip: 'الانتقال إلى سورة',
-            icon: const Icon(Icons.menu_book_outlined),
-            onPressed: _showSurahJumpPicker,
-          ),
-          IconButton(
-            tooltip: _isMushafMode ? 'عرض الآيات كبطاقات' : 'عرض المصحف المتصل',
-            icon: Icon(
-              _isMushafMode
-                  ? Icons.view_agenda_outlined
-                  : Icons.auto_stories_outlined,
-            ),
-            onPressed: () {
-              final newMode = !_isMushafMode;
-              setState(() => _isMushafMode = newMode);
-              widget.controller.setMushafMode(newMode);
-            },
-          ),
-          IconButton(
-            tooltip: 'حجم الخط',
-            icon: const Icon(Icons.format_size_rounded),
-            onPressed: _showFontSizeDialog,
-          ),
-        ],
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 860),
-          child: ListView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 110),
-            itemCount: _displayedSurahs.length,
-            itemBuilder: (context, index) {
-              final surah = _displayedSurahs[index];
-              final surahKey = _surahKeys.putIfAbsent(surah.id, GlobalKey.new);
-              final isLastDisplayed = index == _displayedSurahs.length - 1;
-              final hasNextSurah =
-                  _allSurahs.indexWhere((s) => s.id == surah.id) + 1 <
-                  _allSurahs.length;
-              final nextSurah = hasNextSurah
-                  ? _allSurahs[
-                      _allSurahs.indexWhere((s) => s.id == surah.id) + 1]
-                  : null;
+    final isFullscreen = _isFullScreenAutoScroll;
+    final showControls = isFullscreen && _isAutoScrollPaused;
 
-              return KeyedSubtree(
-                key: surahKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (index > 0) const SizedBox(height: 36),
-                    _SurahHeader(
-                      surah: surah,
-                      isPlaying: widget.recitationsController
-                              ?.isSurahPlaying(surah.id) ??
-                          false,
-                      reciterName: _selectedReciter?.name,
-                      onPlaySurah: () => _toggleSurahPlay(surah),
-                      onChangeReciter: () => _showReciterPicker(),
-                    ),
-                    const SizedBox(height: 14),
-                    if (surah.id != 9 && surah.id != 1) ...[
-                      const _BasmalahBanner(),
-                      const SizedBox(height: 14),
-                    ],
-                    if (_isMushafMode)
-                      _MushafContinuousView(
-                        surah: surah,
-                        fontSize: _fontSize,
-                        selectedAyahNumber: _selectedSurahId == surah.id
-                            ? _selectedAyahNumber
+    return PopScope(
+      canPop: !isFullscreen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && isFullscreen) {
+          _stopAutoScroll();
+        }
+      },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          child: AnimatedSlide(
+            duration: const Duration(milliseconds: 380),
+            curve: Curves.easeInOutCubic,
+            offset: isFullscreen ? const Offset(0, -1.2) : Offset.zero,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeInOut,
+              opacity: isFullscreen ? 0.0 : 1.0,
+              child: IgnorePointer(
+                ignoring: isFullscreen,
+                child: AppBar(
+                  elevation: 0,
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.95),
+                  title: Text(
+                    _currentVisibleSurah.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  actions: [
+                    IconButton(
+                      tooltip: (widget.recitationsController
+                                  ?.isSurahPlaying(_currentVisibleSurah.id) ??
+                              false)
+                          ? 'إيقاف التلاوة'
+                          : 'استماع لسورة ${_currentVisibleSurah.name}',
+                      icon: Icon(
+                        (widget.recitationsController
+                                    ?.isSurahPlaying(_currentVisibleSurah.id) ??
+                                false)
+                            ? Icons.pause_circle_filled_rounded
+                            : Icons.play_circle_outline_rounded,
+                        color: (widget.recitationsController
+                                    ?.isSurahPlaying(_currentVisibleSurah.id) ??
+                                false)
+                            ? Theme.of(context).colorScheme.primary
                             : null,
-                        pageKeys: _pageKeys,
-                        onAyahTapped: (ayah) => _onAyahTapped(surah, ayah),
-                      )
-                    else
-                      _AyahByAyahView(
-                        surah: surah,
-                        fontSize: _fontSize,
-                        selectedAyahNumber: _selectedSurahId == surah.id
-                            ? _selectedAyahNumber
-                            : null,
-                        cardKeys: _cardKeys,
-                        onAyahTapped: (ayah) => _onAyahTapped(surah, ayah),
-                        onTafsirTapped: (ayah, text) =>
-                            _openTafsirSheet(surah, ayah, text),
                       ),
-                    const SizedBox(height: 24),
-                    if (nextSurah != null)
-                      _SurahTransitionBanner(
-                        currentSurah: surah,
-                        nextSurah: nextSurah,
-                        onContinueTap: isLastDisplayed ? _appendNextSurah : null,
-                      )
-                    else if (surah.id == 114)
-                      const _KhatmQuranCard(),
+                      onPressed: () => _toggleSurahPlay(_currentVisibleSurah),
+                    ),
+                    IconButton(
+                      tooltip: 'الانتقال إلى سورة',
+                      icon: const Icon(Icons.menu_book_outlined),
+                      onPressed: _showSurahJumpPicker,
+                    ),
+                    IconButton(
+                      tooltip: 'التمرير التلقائي (ملء الشاشة)',
+                      icon: const Icon(Icons.keyboard_double_arrow_down_rounded),
+                      onPressed: _startAutoScroll,
+                    ),
+                    IconButton(
+                      tooltip: _isMushafMode ? 'عرض الآيات كبطاقات' : 'عرض المصحف المتصل',
+                      icon: Icon(
+                        _isMushafMode
+                            ? Icons.view_agenda_outlined
+                            : Icons.auto_stories_outlined,
+                      ),
+                      onPressed: () {
+                        final newMode = !_isMushafMode;
+                        setState(() => _isMushafMode = newMode);
+                        widget.controller.setMushafMode(newMode);
+                      },
+                    ),
+                    IconButton(
+                      tooltip: 'حجم الخط',
+                      icon: const Icon(Icons.format_size_rounded),
+                      onPressed: _showFontSizeDialog,
+                    ),
                   ],
                 ),
-              );
-            },
+              ),
+            ),
           ),
+        ),
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: MouseRegion(
+                onEnter: (_) {
+                  _isContentHovered = true;
+                  _updateHoverState();
+                },
+                onExit: (_) {
+                  _isContentHovered = false;
+                  _updateHoverState();
+                },
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: isFullscreen ? _togglePauseAutoScroll : null,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 860),
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (notification) {
+                          if (notification is ScrollStartNotification &&
+                              notification.dragDetails != null) {
+                            _isUserDragging = true;
+                          } else if (notification is ScrollEndNotification) {
+                            _isUserDragging = false;
+                          }
+                          return false;
+                        },
+                        child: AnimatedPadding(
+                          duration: const Duration(milliseconds: 380),
+                          curve: Curves.easeInOutCubic,
+                          padding: EdgeInsets.fromLTRB(
+                            14,
+                            isFullscreen
+                                ? (MediaQuery.of(context).padding.top + 8)
+                                : (kToolbarHeight + MediaQuery.of(context).padding.top + 8),
+                            14,
+                            isFullscreen ? 24 : 100,
+                          ),
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            padding: EdgeInsets.zero,
+                        itemCount: _displayedSurahs.length,
+                        itemBuilder: (context, index) {
+                          final surah = _displayedSurahs[index];
+                          final surahKey =
+                              _surahKeys.putIfAbsent(surah.id, GlobalKey.new);
+                          final isLastDisplayed =
+                              index == _displayedSurahs.length - 1;
+                          final hasNextSurah =
+                              _allSurahs.indexWhere((s) => s.id == surah.id) + 1 <
+                                  _allSurahs.length;
+                          final nextSurah = hasNextSurah
+                              ? _allSurahs[
+                                  _allSurahs.indexWhere((s) => s.id == surah.id) +
+                                      1]
+                              : null;
+
+                          return KeyedSubtree(
+                            key: surahKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (index > 0) const SizedBox(height: 36),
+                                _SurahHeader(
+                                  surah: surah,
+                                  isPlaying: widget.recitationsController
+                                          ?.isSurahPlaying(surah.id) ??
+                                      false,
+                                  reciterName: _selectedReciter?.name,
+                                  onPlaySurah: () => _toggleSurahPlay(surah),
+                                  onChangeReciter: () => _showReciterPicker(),
+                                ),
+                                const SizedBox(height: 14),
+                                if (surah.id != 9 && surah.id != 1) ...[
+                                  const _BasmalahBanner(),
+                                  const SizedBox(height: 14),
+                                ],
+                                if (_isMushafMode)
+                                  _MushafContinuousView(
+                                    surah: surah,
+                                    fontSize: _fontSize,
+                                    selectedAyahNumber:
+                                        _selectedSurahId == surah.id
+                                            ? _selectedAyahNumber
+                                            : null,
+                                    pageKeys: _pageKeys,
+                                    onAyahTapped: (ayah) =>
+                                        _onAyahTapped(surah, ayah),
+                                  )
+                                else
+                                  _AyahByAyahView(
+                                    surah: surah,
+                                    fontSize: _fontSize,
+                                    selectedAyahNumber:
+                                        _selectedSurahId == surah.id
+                                            ? _selectedAyahNumber
+                                            : null,
+                                    cardKeys: _cardKeys,
+                                    onAyahTapped: (ayah) =>
+                                        _onAyahTapped(surah, ayah),
+                                    onTafsirTapped: (ayah, text) =>
+                                        _openTafsirSheet(surah, ayah, text),
+                                  ),
+                                const SizedBox(height: 24),
+                                if (nextSurah != null)
+                                  _SurahTransitionBanner(
+                                    currentSurah: surah,
+                                    nextSurah: nextSurah,
+                                    onContinueTap:
+                                        isLastDisplayed ? _appendNextSurah : null,
+                                  )
+                                else if (surah.id == 114)
+                                  const _KhatmQuranCard(),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Floating minimal top bar with smooth slide & fade animation
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: AnimatedSlide(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutCubic,
+                offset: showControls ? Offset.zero : const Offset(0, -1.4),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  opacity: showControls ? 1.0 : 0.0,
+                  child: IgnorePointer(
+                    ignoring: !showControls,
+                    child: SafeArea(
+                      bottom: false,
+                      child: FullscreenTopBar(
+                        surahName: _currentVisibleSurah.name,
+                        isMushafMode: _isMushafMode,
+                        isPlayingSurah: widget.recitationsController
+                                ?.isSurahPlaying(_currentVisibleSurah.id) ??
+                            false,
+                        onToggleMushafMode: () {
+                          final newMode = !_isMushafMode;
+                          setState(() => _isMushafMode = newMode);
+                          widget.controller.setMushafMode(newMode);
+                        },
+                        onTogglePlaySurah: () =>
+                            _toggleSurahPlay(_currentVisibleSurah),
+                        onShowFontSize: _showFontSizeDialog,
+                        onExitFullscreen: _stopAutoScroll,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Floating Bottom HUD Dock with smooth spring slide & fade animation
+            Positioned(
+              bottom: 20,
+              left: 0,
+              right: 0,
+              child: AnimatedSlide(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutBack,
+                offset: showControls ? Offset.zero : const Offset(0, 1.5),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  opacity: showControls ? 1.0 : 0.0,
+                  child: IgnorePointer(
+                    ignoring: !showControls,
+                    child: SafeArea(
+                      top: false,
+                      child: Center(
+                        child: MouseRegion(
+                          onEnter: (_) {
+                            _isHudHovered = true;
+                            _updateHoverState();
+                          },
+                          onExit: (_) {
+                            _isHudHovered = false;
+                            _updateHoverState();
+                          },
+                          child: AutoScrollDock(
+                            isPaused: _isAutoScrollPaused,
+                            isHoverPaused: _pauseOnHover && _isHoverPaused,
+                            pauseOnHover: _pauseOnHover,
+                            speed: _scrollSpeed,
+                            speedLabel: _speedLabel,
+                            isCollapsed: _isHudCollapsed,
+                            onTogglePause: _togglePauseAutoScroll,
+                            onDecreaseSpeed: _decreaseSpeed,
+                            onIncreaseSpeed: _increaseSpeed,
+                            onOpenSettings: _showAutoScrollSettingsDialog,
+                            onToggleCollapse: () => setState(
+                              () => _isHudCollapsed = !_isHudCollapsed,
+                            ),
+                            onExit: _stopAutoScroll,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

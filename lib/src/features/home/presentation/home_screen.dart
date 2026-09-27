@@ -617,14 +617,18 @@ class _FatimidPrayerMihrab extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              totalSeconds <= 0
-                                  ? '• حان موعد الأذان'
-                                  : '• متبقي $hours س و $minutes د و $seconds ث',
-                              style: TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 12,
-                                color: Colors.white.withValues(alpha: 0.85),
+                            Expanded(
+                              child: Text(
+                                totalSeconds <= 0
+                                    ? '• حان موعد الأذان'
+                                    : '• متبقي $hours س و $minutes د و $seconds ث',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                ),
                               ),
                             ),
                           ],

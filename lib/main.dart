@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:just_audio_background/just_audio_background.dart';
-import 'package:timezone/data/latest_all.dart' as tz_data;
+import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'src/app.dart';
@@ -29,38 +29,72 @@ void overlayMain() {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-    try {
-      await JustAudioBackground.init(
-        androidNotificationChannelId: 'com.zakerny.app.channel.audio',
-        androidNotificationChannelName: 'تلاوات القرآن الكريم',
-        androidNotificationOngoing: false,
-        androidShowNotificationBadge: true,
-      );
-    } catch (_) {}
-  }
-  await initializeDateFormatting('ar');
-  tz_data.initializeTimeZones();
-  await _configureLocalTimezone();
 
+  // 1. Parallel lightweight initialization of local storage & Arabic date formatting (~15-25ms)
   final store = SharedPrefsAppLocalStore();
-  await store.init();
-
-  VoiceDhikrService.instance.init(store);
+  await Future.wait([
+    store.init(),
+    initializeDateFormatting('ar', null).catchError((_) {}),
+  ]);
 
   final notifications = NotificationService();
-  await notifications.initialize();
-  await _scheduleStartupPrayerNotifications(store, notifications);
 
+  // 2. Launch UI immediately so the user never sees a stalled white screen!
   runApp(ZekrniApp(store: store, notifications: notifications));
+
+  // 3. Initialize background services asynchronously without blocking the UI
+  _initBackgroundServices(store, notifications);
+}
+
+void _initBackgroundServices(
+  AppLocalStore store,
+  NotificationService notifications,
+) {
+  Future.microtask(() async {
+    // A. Timezone configuration (fast with safe timeout & fallback)
+    try {
+      tz_data.initializeTimeZones();
+      await _configureLocalTimezone();
+    } catch (_) {}
+
+    // B. Background audio service for recitations
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      try {
+        await JustAudioBackground.init(
+          androidNotificationChannelId: 'com.zakerny.app.channel.audio',
+          androidNotificationChannelName: 'تلاوات القرآن الكريم',
+          androidNotificationOngoing: false,
+          androidShowNotificationBadge: true,
+        );
+      } catch (_) {}
+    }
+
+    // C. Voice Dhikr Service
+    try {
+      VoiceDhikrService.instance.init(store);
+    } catch (_) {}
+
+    // D. Local notifications & startup prayer notifications
+    try {
+      await notifications.initialize();
+      await _scheduleStartupPrayerNotifications(store, notifications);
+    } catch (_) {}
+  });
 }
 
 Future<void> _configureLocalTimezone() async {
   try {
-    final timezone = await FlutterTimezone.getLocalTimezone();
+    final timezone = await FlutterTimezone.getLocalTimezone()
+        .timeout(const Duration(seconds: 2));
     tz.setLocalLocation(tz.getLocation(timezone.identifier));
   } catch (_) {
-    tz.setLocalLocation(tz.getLocation('Africa/Cairo'));
+    try {
+      tz.setLocalLocation(tz.getLocation('Africa/Cairo'));
+    } catch (_) {
+      try {
+        tz.setLocalLocation(tz.UTC);
+      } catch (_) {}
+    }
   }
 }
 
@@ -78,3 +112,4 @@ Future<void> _scheduleStartupPrayerNotifications(
     // Notification permissions can be denied; app startup should continue.
   }
 }
+

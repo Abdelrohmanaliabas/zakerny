@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 import 'core/notifications/notification_service.dart';
 import 'core/routing/app_router.dart';
@@ -22,21 +23,21 @@ class ZekrniApp extends StatefulWidget {
 
 class _ZekrniAppState extends State<ZekrniApp> {
   late ThemeMode _themeMode;
+  late final GoRouter _router;
 
   @override
   void initState() {
     super.initState();
     _themeMode = _readThemeMode();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final router = buildRouter(
+    _router = buildRouter(
       store: widget.store,
       notifications: widget.notifications,
       onThemeModeChanged: _setThemeMode,
     );
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'ذكرني',
       debugShowCheckedModeBanner: false,
@@ -50,7 +51,7 @@ class _ZekrniAppState extends State<ZekrniApp> {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: _themeMode,
-      routerConfig: router,
+      routerConfig: _router,
       builder: (context, child) {
         return Directionality(
           textDirection: TextDirection.rtl,
