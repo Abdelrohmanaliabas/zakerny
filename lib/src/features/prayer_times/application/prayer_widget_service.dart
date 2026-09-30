@@ -24,7 +24,6 @@ class PrayerWidgetService {
       final currentNow = now ?? DateTime.now();
       final nextPrayer = day.nextPrayer(currentNow, tomorrow: tomorrow);
       final timeFormatter = DateFormat('hh:mm a', 'ar');
-      final shortTimeFormatter = DateFormat('h:mm', 'ar');
 
       PrayerMoment? findPrayer(String key) {
         try {
@@ -46,12 +45,12 @@ class PrayerWidgetService {
         'next_prayer_name': nextPrayer.name,
         'next_prayer_time': timeFormatter.format(nextPrayer.time),
         'active_prayer_key': nextPrayer.key,
-        'fajr': fajr != null ? shortTimeFormatter.format(fajr.time) : '04:30',
-        'sunrise': sunrise != null ? shortTimeFormatter.format(sunrise.time) : '05:55',
-        'dhuhr': dhuhr != null ? shortTimeFormatter.format(dhuhr.time) : '11:53',
-        'asr': asr != null ? shortTimeFormatter.format(asr.time) : '03:18',
-        'maghrib': maghrib != null ? shortTimeFormatter.format(maghrib.time) : '05:42',
-        'isha': isha != null ? shortTimeFormatter.format(isha.time) : '07:00',
+        'fajr': fajr != null ? timeFormatter.format(fajr.time) : '٠٥:٢٤ ص',
+        'sunrise': sunrise != null ? timeFormatter.format(sunrise.time) : '٠٦:٥١ ص',
+        'dhuhr': dhuhr != null ? timeFormatter.format(dhuhr.time) : '١٢:٤٩ م',
+        'asr': asr != null ? timeFormatter.format(asr.time) : '٠٤:١٠ م',
+        'maghrib': maghrib != null ? timeFormatter.format(maghrib.time) : '٠٦:٤٣ م',
+        'isha': isha != null ? timeFormatter.format(isha.time) : '٠٨:٠١ م',
       };
 
       await _channel.invokeMethod('updateWidget', data);

@@ -20,103 +20,187 @@ class QuranScreen extends StatefulWidget {
 class _QuranScreenState extends State<QuranScreen> {
   String _query = '';
   int _tab = 0;
+  int _searchTab = 0;
+  late final Future<List<Surah>> _surahsFuture;
+  List<Surah>? _allSurahs;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _surahsFuture = widget.controller.loadSurahs();
+    _surahsFuture.then((surahs) {
+      if (mounted) {
+        setState(() {
+          _allSurahs = surahs;
+        });
+      }
+    }).catchError((error) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = error.toString();
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: FutureBuilder<List<Surah>>(
-          future: widget.controller.loadSurahs(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const LoadingView();
-            }
-            if (snapshot.hasError) {
-              return ErrorStateView(message: snapshot.error.toString());
-            }
-            final allSurahs = snapshot.data ?? const [];
-            final cleanQuery = _query.trim();
+    if (_errorMessage != null) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: ErrorStateView(message: _errorMessage!),
+        ),
+      );
+    }
+
+    if (_allSurahs == null) {
+      return const Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: LoadingView(),
+        ),
+      );
+    }
+
+    final allSurahs = _allSurahs!;
+    final cleanQuery = _query.trim();
+    final isSearching = cleanQuery.isNotEmpty;
+
             final surahs = allSurahs
                 .where((surah) =>
-                    cleanQuery.isEmpty ||
+                    !isSearching ||
                     ArabicTextUtils.contains(surah.name, cleanQuery) ||
                     (surah.englishName?.toLowerCase().contains(cleanQuery.toLowerCase()) ?? false) ||
                     surah.id.toString() == cleanQuery)
                 .toList();
 
-            return Column(
-              children: [
+            final matchingAyahs = <_QuranTarget>[];
+            if (isSearching) {
+              final normalizedQuery = ArabicTextUtils.normalize(cleanQuery);
+              for (final surah in allSurahs) {
+                for (final ayah in surah.ayahs) {
+                  if (ayah.matches(normalizedQuery)) {
+                    matchingAyahs.add(_QuranTarget(surah: surah, ayah: ayah));
+                  }
+                }
+              }
+            }
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        child: Column(
+          children: [
                 ZekrniHeader(
                   title: 'المصحف الشريف',
-                  subtitle: 'المصحف الكامل • ${allSurahs.length} سورة كريمة',
+                  subtitle: isSearching
+                      ? 'نتائج البحث: ${matchingAyahs.length} آية • ${surahs.length} سورة'
+                      : 'المصحف الكامل • ${allSurahs.length} سورة كريمة',
                   showSearch: true,
-                  onSearchChanged: (value) => setState(() => _query = value),
+                  onSearchChanged: (value) => setState(() {
+                    _query = value;
+                    if (value.trim().isEmpty) {
+                      _searchTab = 0;
+                    }
+                  }),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _FatimidTabPill(
-                          label: 'السور',
-                          selected: _tab == 0,
-                          onTap: () => setState(() => _tab = 0),
+                if (isSearching) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _FatimidTabPill(
+                            label: 'الآيات (${matchingAyahs.length})',
+                            selected: _searchTab == 0,
+                            onTap: () => setState(() => _searchTab = 0),
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: _FatimidTabPill(
-                          label: 'الأجزاء',
-                          selected: _tab == 1,
-                          onTap: () => setState(() => _tab = 1),
+                        Expanded(
+                          child: _FatimidTabPill(
+                            label: 'السور (${surahs.length})',
+                            selected: _searchTab == 1,
+                            onTap: () => setState(() => _searchTab = 1),
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: _FatimidTabPill(
-                          label: 'الأحزاب',
-                          selected: _tab == 2,
-                          onTap: () => setState(() => _tab = 2),
-                        ),
-                      ),
-                      Expanded(
-                        child: _FatimidTabPill(
-                          label: 'الصفحات',
-                          selected: _tab == 3,
-                          onTap: () => setState(() => _tab = 3),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: switch (_tab) {
-                    0 => _SurahList(surahs: surahs),
-                    1 => _NumberGrid(
-                        surahs: allSurahs,
-                        count: 30,
-                        label: 'جزء',
-                        type: _QuranIndexType.juz,
-                      ),
-                    2 => _NumberGrid(
-                        surahs: allSurahs,
-                        count: 60,
-                        label: 'حزب',
-                        type: _QuranIndexType.hizb,
-                      ),
-                    _ => _NumberGrid(
-                        surahs: allSurahs,
-                        count: 604,
-                        label: 'صفحة',
-                        type: _QuranIndexType.page,
-                      ),
-                  },
-                ),
+                  Expanded(
+                    child: _searchTab == 0
+                        ? _AyahSearchResultsList(
+                            query: cleanQuery,
+                            results: matchingAyahs,
+                            surahMatchesCount: surahs.length,
+                            onSwitchToSurahs: () => setState(() => _searchTab = 1),
+                          )
+                        : _SurahList(surahs: surahs),
+                  ),
+                ] else ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _FatimidTabPill(
+                            label: 'السور',
+                            selected: _tab == 0,
+                            onTap: () => setState(() => _tab = 0),
+                          ),
+                        ),
+                        Expanded(
+                          child: _FatimidTabPill(
+                            label: 'الأجزاء',
+                            selected: _tab == 1,
+                            onTap: () => setState(() => _tab = 1),
+                          ),
+                        ),
+                        Expanded(
+                          child: _FatimidTabPill(
+                            label: 'الأحزاب',
+                            selected: _tab == 2,
+                            onTap: () => setState(() => _tab = 2),
+                          ),
+                        ),
+                        Expanded(
+                          child: _FatimidTabPill(
+                            label: 'الصفحات',
+                            selected: _tab == 3,
+                            onTap: () => setState(() => _tab = 3),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: switch (_tab) {
+                      0 => _SurahList(surahs: surahs),
+                      1 => _NumberGrid(
+                          surahs: allSurahs,
+                          count: 30,
+                          label: 'جزء',
+                          type: _QuranIndexType.juz,
+                        ),
+                      2 => _NumberGrid(
+                          surahs: allSurahs,
+                          count: 60,
+                          label: 'حزب',
+                          type: _QuranIndexType.hizb,
+                        ),
+                      _ => _NumberGrid(
+                          surahs: allSurahs,
+                          count: 604,
+                          label: 'صفحة',
+                          type: _QuranIndexType.page,
+                        ),
+                    },
+                  ),
+                ],
               ],
-            );
-          },
-        ),
-      ),
-      floatingActionButton: Builder(
+            ),
+          ),
+          floatingActionButton: Builder(
         builder: (context) {
           final last = widget.controller.lastRead();
           if (last == null) {
@@ -155,6 +239,283 @@ class _QuranScreenState extends State<QuranScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+class _AyahSearchResultsList extends StatelessWidget {
+  const _AyahSearchResultsList({
+    required this.query,
+    required this.results,
+    this.surahMatchesCount = 0,
+    this.onSwitchToSurahs,
+  });
+
+  final String query;
+  final List<_QuranTarget> results;
+  final int surahMatchesCount;
+  final VoidCallback? onSwitchToSurahs;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (results.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.search_off_rounded,
+                size: 54,
+                color: FatimidColors.goldPrimary.withValues(alpha: 0.6),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'لا توجد آيات مطابقة للبحث',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white70 : const Color(0xFF2C3E35),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'جرّب البحث بكلمة أخرى أو تصفح السور',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 12.5,
+                  color: isDark ? Colors.white38 : Colors.black45,
+                ),
+              ),
+              if (surahMatchesCount > 0 && onSwitchToSurahs != null) ...[
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: onSwitchToSurahs,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: FatimidColors.goldPrimary.withValues(alpha: 0.18),
+                    foregroundColor: isDark ? FatimidColors.goldLight : FatimidColors.goldDark,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: BorderSide(
+                        color: FatimidColors.goldPrimary.withValues(alpha: 0.4),
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.menu_book_rounded, size: 18),
+                  label: Text(
+                    'عرض السور المطابقة ($surahMatchesCount)',
+                    style: const TextStyle(
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 88),
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        final item = results[index];
+        final surah = item.surah;
+        final ayah = item.ayah;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: isDark ? FatimidColors.obsidianCard : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.22 : 0.18),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: () => context.push('/quran/surah/${surah.id}?ayah=${ayah.number}'),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        FatimidStarBadge(
+                          number: ayah.number,
+                          size: 36,
+                          isGold: true,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'سورة ${surah.name}',
+                                style: const TextStyle(
+                                  fontFamily: 'Amiri',
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'الآية ${ayah.number} • جزء ${ayah.juz ?? '-'} • صفحة ${ayah.page ?? '-'}',
+                                style: TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4E7062),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: FatimidColors.goldPrimary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: FatimidColors.goldPrimary.withValues(alpha: 0.25),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'فتح',
+                                style: TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? FatimidColors.goldLight : FatimidColors.goldDark,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 11,
+                                color: isDark ? FatimidColors.goldLight : FatimidColors.goldDark,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.black.withValues(alpha: 0.28)
+                            : FatimidColors.parchmentLight,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.12 : 0.1),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: _HighlightedAyahText(
+                        text: ayah.text,
+                        query: query,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _HighlightedAyahText extends StatelessWidget {
+  const _HighlightedAyahText({
+    required this.text,
+    required this.query,
+  });
+
+  final String text;
+  final String query;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cleanQuery = ArabicTextUtils.normalize(query);
+
+    final normalStyle = TextStyle(
+      fontFamily: 'Amiri',
+      fontSize: 16.5,
+      height: 1.8,
+      color: isDark ? Colors.white.withValues(alpha: 0.92) : const Color(0xFF1E2922),
+    );
+
+    final highlightStyle = TextStyle(
+      fontFamily: 'Amiri',
+      fontSize: 16.5,
+      height: 1.8,
+      fontWeight: FontWeight.bold,
+      color: isDark ? const Color(0xFFFFDF7D) : const Color(0xFF8B5E00),
+      backgroundColor: isDark
+          ? FatimidColors.goldPrimary.withValues(alpha: 0.35)
+          : FatimidColors.goldPrimary.withValues(alpha: 0.25),
+    );
+
+    if (cleanQuery.isEmpty) {
+      return Text(
+        text,
+        style: normalStyle,
+        textDirection: TextDirection.rtl,
+      );
+    }
+
+    final words = text.split(' ');
+    final queryWords = cleanQuery.split(' ').where((w) => w.isNotEmpty).toList();
+    final spans = <TextSpan>[];
+
+    for (int i = 0; i < words.length; i++) {
+      final word = words[i];
+      final isMatch = queryWords.any((qw) => ArabicTextUtils.contains(word, qw)) ||
+          ArabicTextUtils.contains(word, cleanQuery);
+
+      spans.add(
+        TextSpan(
+          text: word,
+          style: isMatch ? highlightStyle : normalStyle,
+        ),
+      );
+
+      if (i < words.length - 1) {
+        spans.add(TextSpan(text: ' ', style: normalStyle));
+      }
+    }
+
+    return Text.rich(
+      TextSpan(children: spans),
+      textDirection: TextDirection.rtl,
     );
   }
 }

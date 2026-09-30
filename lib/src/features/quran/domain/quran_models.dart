@@ -1,3 +1,5 @@
+import '../../../core/utils/arabic_text_utils.dart';
+
 class Ayah {
   const Ayah({
     required this.number,
@@ -6,6 +8,7 @@ class Ayah {
     this.juz,
     this.page,
     this.hizbQuarter,
+    this.normalizedText,
   });
 
   final int number;
@@ -14,15 +17,26 @@ class Ayah {
   final int? juz;
   final int? page;
   final int? hizbQuarter;
+  final String? normalizedText;
 
-  factory Ayah.fromJson(Map<String, dynamic> json) => Ayah(
-    number: json['number'] as int,
-    text: json['text'] as String,
-    globalNumber: json['globalNumber'] as int?,
-    juz: json['juz'] as int?,
-    page: json['page'] as int?,
-    hizbQuarter: json['hizbQuarter'] as int?,
-  );
+  bool matches(String query) {
+    final cleanQuery = ArabicTextUtils.normalize(query);
+    final clean = normalizedText ?? ArabicTextUtils.normalize(text);
+    return ArabicTextUtils.containsNormalized(clean, cleanQuery);
+  }
+
+  factory Ayah.fromJson(Map<String, dynamic> json) {
+    final text = json['text'] as String;
+    return Ayah(
+      number: json['number'] as int,
+      text: text,
+      globalNumber: json['globalNumber'] as int?,
+      juz: json['juz'] as int?,
+      page: json['page'] as int?,
+      hizbQuarter: json['hizbQuarter'] as int?,
+      normalizedText: ArabicTextUtils.normalize(text),
+    );
+  }
 }
 
 class Surah {
