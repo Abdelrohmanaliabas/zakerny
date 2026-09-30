@@ -115,7 +115,7 @@ class AdhanOverlayManager {
           ?.getActiveNotifications();
       if (active != null) {
         for (final a in active) {
-          if (a.id != null && (a.id! >= 1000 && a.id! <= 1050 || a.id == 999)) {
+          if (a.id != null && ((a.id! >= 1000 && a.id! < 3000) || a.id == 999)) {
             await plugin.cancel(id: a.id!);
           }
         }

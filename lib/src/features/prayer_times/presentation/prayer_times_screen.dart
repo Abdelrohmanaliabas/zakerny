@@ -28,6 +28,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
   void initState() {
     super.initState();
     _prefs = widget.controller.loadPreferences();
+    widget.controller.updateWidget(_prefs);
     _timer = Timer.periodic(
       const Duration(seconds: 1),
       (_) {

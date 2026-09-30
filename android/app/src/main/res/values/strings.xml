@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ذكرني</string>
+    <string name="widget_prayer_title">ذكرني • مواقيت الصلاة</string>
+    <string name="widget_prayer_description">عرض مواقيت الصلاة اليومية والصلاة القادمة مباشرة على الشاشة الرئيسية</string>
+</resources>

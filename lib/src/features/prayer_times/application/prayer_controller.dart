@@ -3,6 +3,7 @@ import '../../dhikr_reminders/application/voice_dhikr_service.dart';
 import '../data/prayer_repository.dart';
 import '../domain/prayer_day.dart';
 import '../domain/prayer_preferences.dart';
+import 'prayer_widget_service.dart';
 
 class PrayerController {
   PrayerController(this.repository, this.notifications);
@@ -34,13 +35,33 @@ class PrayerController {
 
   Future<void> reschedule(PrayerPreferences prefs) => _reschedule(prefs);
 
-  Future<void> _reschedule(PrayerPreferences prefs) {
+  Future<void> updateWidget(PrayerPreferences prefs) async {
+    final now = DateTime.now();
+    final todayDay = today(prefs);
+    final tomorrowDay = tomorrow(prefs);
+    await PrayerWidgetService.updatePrayerWidget(
+      day: todayDay,
+      preferences: prefs,
+      tomorrow: tomorrowDay,
+      now: now,
+    );
+  }
+
+  Future<void> _reschedule(PrayerPreferences prefs) async {
     final today = DateTime.now();
     final days = List.generate(
       7,
       (i) => repository.timesFor(today.add(Duration(days: i)), prefs),
     );
-    return notifications.rescheduleAllPrayerNotifications(
+    if (days.isNotEmpty) {
+      final tomorrow = days.length > 1 ? days[1] : null;
+      await PrayerWidgetService.updatePrayerWidget(
+        day: days.first,
+        preferences: prefs,
+        tomorrow: tomorrow,
+      );
+    }
+    await notifications.rescheduleAllPrayerNotifications(
       days: days,
       preferences: prefs,
     );
