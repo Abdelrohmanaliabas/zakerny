@@ -12,14 +12,14 @@ class PrayerWidgetService {
   static const MethodChannel _channel =
       MethodChannel('com.zakerny.app/prayer_widget');
 
-  /// Updates the Android Home Screen Widget with current prayer times.
+  /// Updates the Android & iOS Home Screen Widget with current prayer times.
   static Future<void> updatePrayerWidget({
     required PrayerDay day,
     required PrayerPreferences preferences,
     PrayerDay? tomorrow,
     DateTime? now,
   }) async {
-    if (kIsWeb || !Platform.isAndroid) return;
+    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) return;
 
     try {
       final currentNow = now ?? DateTime.now();
@@ -105,6 +105,27 @@ class PrayerWidgetService {
       factor = 0.2 * (1.0 - (t - 18) / 6.0);
     }
     return (minT + (maxT - minT) * factor).round();
+  }
+
+  /// Retrieves initial route if the app was launched from the widget
+  static Future<String?> getInitialRoute() async {
+    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) return null;
+    try {
+      final route = await _channel.invokeMethod<String>('getInitialRoute');
+      return route;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Sets up listener for incoming widget clicks while app is open or in background
+  static void listenForDeepLinks(void Function(String route) onRoute) {
+    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) return;
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'onDeepLink' && call.arguments is String) {
+        onRoute(call.arguments as String);
+      }
+    });
   }
 }
 

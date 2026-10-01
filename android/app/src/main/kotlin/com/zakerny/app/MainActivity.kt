@@ -12,24 +12,45 @@ class MainActivity : AudioServiceActivity() {
         super.configureFlutterEngine(flutterEngine)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, WIDGET_CHANNEL).setMethodCallHandler { call, result ->
-            if (call.method == "updateWidget") {
-                val data = call.arguments as? Map<*, *>
-                if (data != null) {
-                    val prefs = getSharedPreferences(PrayerWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE)
-                    val editor = prefs.edit()
-                    for ((key, value) in data) {
-                        if (key is String && value is String) {
-                            editor.putString(key, value)
+            when (call.method) {
+                "updateWidget" -> {
+                    val data = call.arguments as? Map<*, *>
+                    if (data != null) {
+                        val prefs = getSharedPreferences(PrayerWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE)
+                        val editor = prefs.edit()
+                        for ((key, value) in data) {
+                            if (key is String && value is String) {
+                                editor.putString(key, value)
+                            }
                         }
+                        editor.apply()
+                        PrayerWidgetProvider.updateAllWidgets(this)
+                        result.success(true)
+                    } else {
+                        result.error("INVALID_ARGS", "Widget data is null", null)
                     }
-                    editor.apply()
-                    PrayerWidgetProvider.updateAllWidgets(this)
-                    result.success(true)
-                } else {
-                    result.error("INVALID_ARGS", "Widget data is null", null)
                 }
-            } else {
-                result.notImplemented()
+                "getInitialRoute" -> {
+                    val route = intent?.getStringExtra("route")
+                    intent?.removeExtra("route")
+                    result.success(route)
+                }
+                else -> {
+                    result.notImplemented()
+                }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val route = intent.getStringExtra("route")
+        if (route != null) {
+            intent.removeExtra("route")
+            val engine = flutterEngine
+            if (engine != null) {
+                MethodChannel(engine.dartExecutor.binaryMessenger, WIDGET_CHANNEL).invokeMethod("onDeepLink", route)
             }
         }
     }

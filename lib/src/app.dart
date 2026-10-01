@@ -6,6 +6,7 @@ import 'core/notifications/notification_service.dart';
 import 'core/routing/app_router.dart';
 import 'core/storage/app_local_store.dart';
 import 'core/theme/app_theme.dart';
+import 'features/prayer_times/application/prayer_widget_service.dart';
 
 class ZekrniApp extends StatefulWidget {
   const ZekrniApp({
@@ -34,6 +35,20 @@ class _ZekrniAppState extends State<ZekrniApp> {
       notifications: widget.notifications,
       onThemeModeChanged: _setThemeMode,
     );
+
+    // Navigate to prayer clock if app was launched or opened from widget
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PrayerWidgetService.getInitialRoute().then((route) {
+        if (route != null && mounted) {
+          _router.push(route);
+        }
+      });
+      PrayerWidgetService.listenForDeepLinks((route) {
+        if (mounted) {
+          _router.push(route);
+        }
+      });
+    });
   }
 
   @override
