@@ -28,6 +28,13 @@ import '../../features/company/presentation/screens/company_screen.dart';
 import '../../features/calendar/presentation/calendar_screen.dart';
 import '../../features/occasions/presentation/occasions_screen.dart';
 import '../../features/prayer_times/presentation/prayer_clock_screen.dart';
+import '../../features/khatmah/application/khatmah_controller.dart';
+import '../../features/khatmah/data/khatmah_repository.dart';
+import '../../features/khatmah/presentation/khatmah_screen.dart';
+import '../../features/card_designer/presentation/card_designer_screen.dart';
+import '../../features/ibadah_tracker/application/ibadah_controller.dart';
+import '../../features/ibadah_tracker/data/ibadah_repository.dart';
+import '../../features/ibadah_tracker/presentation/ibadah_tracker_screen.dart';
 import '../notifications/notification_service.dart';
 import '../storage/app_local_store.dart';
 import 'app_feature.dart';
@@ -46,6 +53,8 @@ List<AppFeature> buildFeatureRegistry({
     RecitationRepository(store),
     RecitationService(),
   );
+  final khatmah = KhatmahController(KhatmahRepository(store));
+  final ibadah = IbadahController(IbadahRepository(store));
 
   return [
     AppFeature(
@@ -85,6 +94,25 @@ List<AppFeature> buildFeatureRegistry({
         GoRoute(
           path: '/prayer-clock',
           builder: (context, state) => PrayerClockScreen(controller: prayer),
+        ),
+        GoRoute(
+          path: '/khatmah',
+          builder: (context, state) => KhatmahScreen(controller: khatmah),
+        ),
+        GoRoute(
+          path: '/card-designer',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return CardDesignerScreen(
+              initialText: extra?['text'] as String?,
+              initialReference: extra?['reference'] as String?,
+              isQuran: extra?['isQuran'] as bool? ?? true,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/ibadah-tracker',
+          builder: (context, state) => IbadahTrackerScreen(controller: ibadah),
         ),
       ],
     ),

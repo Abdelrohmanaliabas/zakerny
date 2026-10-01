@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/utils/arabic_text_utils.dart';
 import '../../../core/widgets/fatimid_decorations.dart';
@@ -308,6 +309,29 @@ class _HadithScreenState extends State<HadithScreen> {
                   },
                   icon: const Icon(Icons.copy_rounded),
                   label: const Text('نسخ الحديث'),
+                ),
+                const SizedBox(width: 10),
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: FatimidColors.goldPrimary,
+                    foregroundColor: const Color(0xFF1B2A1E),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.push(
+                      '/card-designer',
+                      extra: {
+                        'text': hadith.text,
+                        'reference': hadith.narrator ?? hadith.collection,
+                        'isQuran': false,
+                      },
+                    );
+                  },
+                  icon: const Icon(Icons.palette_rounded, size: 18),
+                  label: const Text(
+                    'تصميم بطاقة 🖼️',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
