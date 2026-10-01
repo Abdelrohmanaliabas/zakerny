@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 
 import '../domain/prayer_day.dart';
@@ -24,6 +25,8 @@ class PrayerWidgetService {
       final currentNow = now ?? DateTime.now();
       final nextPrayer = day.nextPrayer(currentNow, tomorrow: tomorrow);
       final timeFormatter = DateFormat('hh:mm a', 'ar');
+      final clockTimeFormatter = DateFormat('hh:mm', 'ar');
+      final gregDateFormatter = DateFormat('dd MMM yyyy', 'en');
 
       PrayerMoment? findPrayer(String key) {
         try {
@@ -40,11 +43,21 @@ class PrayerWidgetService {
       final maghrib = findPrayer('maghrib');
       final isha = findPrayer('isha');
 
+      HijriCalendar.setLocal('ar');
+      final hijriNow = HijriCalendar.fromDate(currentNow);
+      final hijriStr = '${hijriNow.hDay} ${hijriNow.longMonthName} ${hijriNow.hYear}';
+      final gregStr = gregDateFormatter.format(currentNow).toUpperCase();
+
       final data = <String, String>{
         'city': preferences.city,
         'next_prayer_name': nextPrayer.name,
         'next_prayer_time': timeFormatter.format(nextPrayer.time),
         'active_prayer_key': nextPrayer.key,
+        'current_time': clockTimeFormatter.format(currentNow),
+        'hijri_date': hijriStr,
+        'greg_date': gregStr,
+        'temp': '28°C',
+        'iqamah': '15 د',
         'fajr': fajr != null ? timeFormatter.format(fajr.time) : '٠٥:٢٤ ص',
         'sunrise': sunrise != null ? timeFormatter.format(sunrise.time) : '٠٦:٥١ ص',
         'dhuhr': dhuhr != null ? timeFormatter.format(dhuhr.time) : '١٢:٤٩ م',

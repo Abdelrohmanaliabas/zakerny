@@ -107,5 +107,14 @@ void main() {
       expect(ArabicTextUtils.contains(masad, 'تبت يدا ابي لهب'), isTrue);
       expect(ArabicTextUtils.contains(masad, 'ابي لهب'), isTrue);
     });
+
+    test('toArabicDigits converts English numerals to Eastern Arabic numerals', () {
+      expect(ArabicTextUtils.toArabicDigits(0), '٠');
+      expect(ArabicTextUtils.toArabicDigits(2), '٢');
+      expect(ArabicTextUtils.toArabicDigits(43), '٤٣');
+      expect(ArabicTextUtils.toArabicDigits(57), '٥٧');
+      expect(ArabicTextUtils.toArabicDigits('2 ساعة و 43 دقيقة و 57 ثانية'),
+          '٢ ساعة و ٤٣ دقيقة و ٥٧ ثانية');
+    });
   });
 }

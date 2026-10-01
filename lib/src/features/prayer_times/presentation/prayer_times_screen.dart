@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
+import '../../../core/utils/arabic_text_utils.dart';
 
 import '../../../core/widgets/fatimid_decorations.dart';
 import '../../../core/widgets/zekrni_header.dart';
@@ -73,7 +76,40 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                     isNext: activePrayer.key == next.key,
                     nextTime: next.key == activePrayer.key ? next.time : activePrayer.time,
                   ),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 14),
+
+                  // أزرار سريعة: ساعة الحرمين، التقويم، المناسبات
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ToolShortcutButton(
+                          icon: Icons.access_alarm_rounded,
+                          label: 'ساعة الحرمين',
+                          badge: 'رقمية',
+                          onTap: () => context.push('/prayer-clock'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _ToolShortcutButton(
+                          icon: Icons.calendar_month_rounded,
+                          label: 'التقويم',
+                          badge: 'هجري/ميلادي',
+                          onTap: () => context.push('/calendar'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _ToolShortcutButton(
+                          icon: Icons.event_available_rounded,
+                          label: 'المناسبات',
+                          badge: 'إجازات',
+                          onTap: () => context.push('/occasions'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
 
                   Row(
                     children: [
@@ -294,6 +330,10 @@ class _FatimidNextPrayerCard extends StatelessWidget {
     final minutes = (totalSeconds % 3600) ~/ 60;
     final seconds = totalSeconds % 60;
 
+    final hoursAr = ArabicTextUtils.toArabicDigits(hours);
+    final minutesAr = ArabicTextUtils.toArabicDigits(minutes);
+    final secondsAr = ArabicTextUtils.toArabicDigits(seconds);
+
     final badgeText = isNext
         ? 'الصلاة القادمة'
         : (isPast ? 'صلاة مضت' : 'صلاة مختارة');
@@ -301,10 +341,14 @@ class _FatimidNextPrayerCard extends StatelessWidget {
     final countdownText = isNext
         ? (totalSeconds <= 0
             ? 'حان موعد الأذان الآن'
-            : 'متبقي $hours ساعة و $minutes دقيقة و $seconds ثانية حتى الأذان')
+            : (hours > 0
+                ? 'متبقي $hoursAr ساعة و $minutesAr دقيقة و $secondsAr ثانية حتى الأذان'
+                : 'متبقي $minutesAr دقيقة و $secondsAr ثانية حتى الأذان'))
         : (isPast
             ? 'تم أداء الصلاة لهذا اليوم'
-            : 'متبقي $hours ساعة و $minutes دقيقة و $seconds ثانية');
+            : (hours > 0
+                ? 'متبقي $hoursAr ساعة و $minutesAr دقيقة و $secondsAr ثانية'
+                : 'متبقي $minutesAr دقيقة و $secondsAr ثانية'));
 
     return Container(
       decoration: BoxDecoration(
@@ -513,3 +557,79 @@ class _PrayerChip extends StatelessWidget {
     );
   }
 }
+
+class _ToolShortcutButton extends StatelessWidget {
+  const _ToolShortcutButton({
+    required this.icon,
+    required this.label,
+    required this.badge,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String badge;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF141E19) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark ? const Color(0xFF1F3327) : const Color(0xFFE2E8F0),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 20, color: FatimidColors.goldPrimary),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+                color: isDark ? Colors.white : const Color(0xFF0F2C22),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: FatimidColors.goldPrimary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                badge,
+                style: const TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  color: FatimidColors.goldPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

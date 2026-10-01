@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/adhkar/application/adhkar_controller.dart';
@@ -25,6 +25,9 @@ import '../../features/recitations/data/recitation_service.dart';
 import '../../features/recitations/presentation/recitations_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/company/presentation/screens/company_screen.dart';
+import '../../features/calendar/presentation/calendar_screen.dart';
+import '../../features/occasions/presentation/occasions_screen.dart';
+import '../../features/prayer_times/presentation/prayer_clock_screen.dart';
 import '../notifications/notification_service.dart';
 import '../storage/app_local_store.dart';
 import 'app_feature.dart';
@@ -70,6 +73,18 @@ List<AppFeature> buildFeatureRegistry({
         GoRoute(
           path: '/adhkar',
           builder: (context, state) => AdhkarScreen(controller: adhkar),
+        ),
+        GoRoute(
+          path: '/calendar',
+          builder: (context, state) => const CalendarScreen(),
+        ),
+        GoRoute(
+          path: '/occasions',
+          builder: (context, state) => const OccasionsScreen(),
+        ),
+        GoRoute(
+          path: '/prayer-clock',
+          builder: (context, state) => PrayerClockScreen(controller: prayer),
         ),
       ],
     ),

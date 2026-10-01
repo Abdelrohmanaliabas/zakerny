@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/utils/arabic_text_utils.dart';
+
 import '../../../core/widgets/fatimid_decorations.dart';
 import '../../../core/widgets/zekrni_header.dart';
 import '../../hadith/application/hadith_controller.dart';
@@ -172,6 +174,39 @@ class _HomeScreenState extends State<HomeScreen> {
                               end: Alignment.bottomRight,
                             ),
                             onTap: () => context.go('/recitations'),
+                          ),
+                          _QuickAction(
+                            icon: Icons.calendar_month_rounded,
+                            label: 'التقويم',
+                            badge: 'هجري/ميلادي',
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () => context.push('/calendar'),
+                          ),
+                          _QuickAction(
+                            icon: Icons.event_available_rounded,
+                            label: 'المناسبات',
+                            badge: 'إجازات',
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFEA580C), Color(0xFFC2410C)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () => context.push('/occasions'),
+                          ),
+                          _QuickAction(
+                            icon: Icons.access_alarm_rounded,
+                            label: 'ساعة الحرمين',
+                            badge: 'رقمية',
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFD97706), Color(0xFF92400E)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () => context.push('/prayer-clock'),
                           ),
                         ],
                       ),
@@ -477,6 +512,10 @@ class _FatimidPrayerMihrab extends StatelessWidget {
     final minutes = (totalSeconds % 3600) ~/ 60;
     final seconds = totalSeconds % 60;
 
+    final hoursAr = ArabicTextUtils.toArabicDigits(hours);
+    final minutesAr = ArabicTextUtils.toArabicDigits(minutes);
+    final secondsAr = ArabicTextUtils.toArabicDigits(seconds);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(24),
@@ -621,7 +660,9 @@ class _FatimidPrayerMihrab extends StatelessWidget {
                               child: Text(
                                 totalSeconds <= 0
                                     ? '• حان موعد الأذان'
-                                    : '• متبقي $hours س و $minutes د و $seconds ث',
+                                    : (hours > 0
+                                        ? '• متبقي $hoursAr س و $minutesAr د و $secondsAr ث'
+                                        : '• متبقي $minutesAr د و $secondsAr ث'),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(

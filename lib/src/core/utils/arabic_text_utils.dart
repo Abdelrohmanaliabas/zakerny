@@ -114,4 +114,18 @@ class ArabicTextUtils {
     final cleanSource = normalize(source);
     return containsNormalized(cleanSource, cleanQuery);
   }
+
+  /// تحويل الأرقام الإنجليزية (0-9) إلى الأرقام العربية المشرقية (٠-٩)
+  static String toArabicDigits(dynamic input) {
+    if (input == null) return '';
+    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+
+    var str = input.toString();
+    for (int i = 0; i < english.length; i++) {
+      str = str.replaceAll(english[i], arabic[i]);
+    }
+    return str;
+  }
 }
+
