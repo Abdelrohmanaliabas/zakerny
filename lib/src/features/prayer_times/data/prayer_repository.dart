@@ -1,6 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../../core/location/city_detector.dart';
 import '../../../core/storage/app_local_store.dart';
 import '../domain/prayer_day.dart';
 import '../domain/prayer_preferences.dart';
@@ -33,8 +34,12 @@ class PrayerRepository {
       throw Exception('لم يتم منح إذن الموقع');
     }
     final position = await Geolocator.getCurrentPosition();
+    final detectedCity = await CityDetector.detectCity(
+      position.latitude,
+      position.longitude,
+    );
     return current.copyWith(
-      city: 'موقعي الحالي',
+      city: detectedCity,
       latitude: position.latitude,
       longitude: position.longitude,
       useCurrentLocation: true,

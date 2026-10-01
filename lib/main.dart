@@ -107,6 +107,7 @@ Future<void> _scheduleStartupPrayerNotifications(
   }
   try {
     final controller = PrayerController(PrayerRepository(store), notifications);
+    await controller.autoSyncLocationIfPermitted();
     await controller.reschedule(controller.loadPreferences());
   } catch (_) {
     // Notification permissions can be denied; app startup should continue.

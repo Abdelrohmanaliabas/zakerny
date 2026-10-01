@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:geolocator/geolocator.dart';
 
+import '../../../core/location/city_detector.dart';
 import '../../../core/storage/app_local_store.dart';
 import '../../prayer_times/data/prayer_repository.dart';
 import '../domain/qibla_direction.dart';
@@ -34,8 +35,27 @@ class QiblaRepository {
       throw Exception('لم يتم منح إذن الموقع');
     }
     final position = await Geolocator.getCurrentPosition();
+    final detectedCity = await CityDetector.detectCity(
+      position.latitude,
+      position.longitude,
+    );
+
+    // Sync newly detected city and coordinates to prayer preferences
+    try {
+      final prayerRepo = PrayerRepository(_store);
+      final currentPrefs = prayerRepo.getPreferences();
+      await prayerRepo.savePreferences(
+        currentPrefs.copyWith(
+          city: detectedCity,
+          latitude: position.latitude,
+          longitude: position.longitude,
+          useCurrentLocation: true,
+        ),
+      );
+    } catch (_) {}
+
     return _calculate(
-      city: 'موقعي الحالي',
+      city: detectedCity,
       latitude: position.latitude,
       longitude: position.longitude,
     );

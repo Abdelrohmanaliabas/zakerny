@@ -16,6 +16,7 @@ import 'package:zakerny/src/features/prayer_times/domain/adhan_voice.dart';
 import 'package:zakerny/src/features/dhikr_reminders/domain/dhikr_reminder_item.dart';
 import 'package:zakerny/src/features/prayer_times/overlay/adhan_overlay_widget.dart';
 import 'package:zakerny/src/features/prayer_times/presentation/in_app_adhan_dialog.dart';
+import 'package:zakerny/src/core/location/city_detector.dart';
 import 'package:zakerny/src/core/widgets/zekrni_header.dart';
 
 void main() {
@@ -413,6 +414,34 @@ void main() {
 
     await repo.resetAll(morning.items);
     expect(repo.countFor(kursi.id), 0);
+  });
+
+  test('CityDetector accurately detects Sadat City Monufia from GPS coordinates', () {
+    // Sadat City center coordinates
+    final sadatCity = CityDetector.findNearestCity(30.3800, 30.5100);
+    expect(sadatCity, 'مدينة السادات، المنوفية');
+
+    // Shebin El-Kom Monufia coordinates
+    final shebin = CityDetector.findNearestCity(30.5520, 31.0090);
+    expect(shebin, 'شبين الكوم، المنوفية');
+
+    // Cairo coordinates
+    final cairo = CityDetector.findNearestCity(30.0444, 31.2357);
+    expect(cairo, 'القاهرة، القاهرة');
+  });
+
+  test('PrayerPreferences serializes and deserializes fastingReminderEnabled', () {
+    final defaults = PrayerPreferences.defaults();
+    expect(defaults.fastingReminderEnabled, isTrue);
+
+    final modified = defaults.copyWith(fastingReminderEnabled: false);
+    expect(modified.fastingReminderEnabled, isFalse);
+
+    final json = modified.toJson();
+    expect(json['fastingReminderEnabled'], isFalse);
+
+    final restored = PrayerPreferences.fromJson(json);
+    expect(restored.fastingReminderEnabled, isFalse);
   });
 }
 

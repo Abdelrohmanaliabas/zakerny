@@ -943,6 +943,85 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 20),
           Text(
+            'تذكير صيام السُّنّة النبوية',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 10),
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: BorderSide(
+                color: _prefs.fastingReminderEnabled
+                    ? const Color(0xFFD4AF37)
+                    : colorScheme.outlineVariant,
+                width: _prefs.fastingReminderEnabled ? 1.5 : 1,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD4AF37).withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.nightlight_round,
+                        color: Color(0xFFD4AF37),
+                      ),
+                    ),
+                    title: const Text(
+                      'تنبيهات صيام الإثنين والخميس والأيام البيض',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text(
+                      'إشعار مبارك بعد مغرب يوم الأحد للتذكير بصيام الإثنين، وبعد مغرب يوم الأربعاء للتذكير بصيام الخميس، وقبل الأيام البيض (13، 14، 15 من الشهر الهجري).',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: _prefs.fastingReminderEnabled,
+                    onChanged: (val) {
+                      setState(() {
+                        _prefs = _prefs.copyWith(fastingReminderEnabled: val);
+                      });
+                      _save(_prefs);
+                    },
+                  ),
+                  if (_prefs.fastingReminderEnabled) ...[
+                    const Divider(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            await widget.prayer.notifications.showTestFastingNotification();
+                            if (!mounted) return;
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text('تم إرسال إشعار تجريبي لتذكير صيام السُنّة'),
+                                backgroundColor: Color(0xFF0D9488),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.notifications_active_outlined, size: 18),
+                          label: const Text('تجربة إشعار الصيام', style: TextStyle(fontSize: 12)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+          Text(
             'مواقيت الصلاة والموقع',
             style: Theme.of(context).textTheme.titleLarge,
           ),
@@ -950,6 +1029,98 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextField(
             controller: _city,
             decoration: const InputDecoration(labelText: 'المدينة'),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              ActionChip(
+                avatar: const Icon(Icons.location_on, size: 16, color: Color(0xFFD4AF37)),
+                label: const Text('مدينة السادات (المنوفية)'),
+                onPressed: () {
+                  setState(() {
+                    _city.text = 'مدينة السادات، المنوفية';
+                    _lat.text = '30.3800';
+                    _lng.text = '30.5100';
+                    _prefs = _prefs.copyWith(
+                      city: 'مدينة السادات، المنوفية',
+                      latitude: 30.3800,
+                      longitude: 30.5100,
+                    );
+                  });
+                  _save(_prefs);
+                },
+              ),
+              ActionChip(
+                avatar: const Icon(Icons.location_on, size: 16),
+                label: const Text('شبين الكوم (المنوفية)'),
+                onPressed: () {
+                  setState(() {
+                    _city.text = 'شبين الكوم، المنوفية';
+                    _lat.text = '30.5520';
+                    _lng.text = '31.0090';
+                    _prefs = _prefs.copyWith(
+                      city: 'شبين الكوم، المنوفية',
+                      latitude: 30.5520,
+                      longitude: 31.0090,
+                    );
+                  });
+                  _save(_prefs);
+                },
+              ),
+              ActionChip(
+                avatar: const Icon(Icons.location_on, size: 16),
+                label: const Text('القاهرة'),
+                onPressed: () {
+                  setState(() {
+                    _city.text = 'القاهرة';
+                    _lat.text = '30.0444';
+                    _lng.text = '31.2357';
+                    _prefs = _prefs.copyWith(
+                      city: 'القاهرة',
+                      latitude: 30.0444,
+                      longitude: 31.2357,
+                    );
+                  });
+                  _save(_prefs);
+                },
+              ),
+              ActionChip(
+                avatar: const Icon(Icons.location_on, size: 16),
+                label: const Text('الإسكندرية'),
+                onPressed: () {
+                  setState(() {
+                    _city.text = 'الإسكندرية';
+                    _lat.text = '31.2001';
+                    _lng.text = '29.9187';
+                    _prefs = _prefs.copyWith(
+                      city: 'الإسكندرية',
+                      latitude: 31.2001,
+                      longitude: 29.9187,
+                    );
+                  });
+                  _save(_prefs);
+                },
+              ),
+              ActionChip(
+                avatar: const Icon(Icons.location_on, size: 16),
+                label: const Text('طنطا'),
+                onPressed: () {
+                  setState(() {
+                    _city.text = 'طنطا، الغربية';
+                    _lat.text = '30.7865';
+                    _lng.text = '31.0004';
+                    _prefs = _prefs.copyWith(
+                      city: 'طنطا، الغربية',
+                      latitude: 30.7865,
+                      longitude: 31.0004,
+                    );
+                  });
+                  _save(_prefs);
+                },
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Row(

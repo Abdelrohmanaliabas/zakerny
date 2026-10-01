@@ -32,6 +32,7 @@ class PrayerPreferences {
     this.dhikrOverlayEnabled = true,
     this.dhikrVoiceEnabled = true,
     this.enabledDhikrIds = defaultEnabledDhikrIds,
+    this.fastingReminderEnabled = true,
   });
 
   factory PrayerPreferences.defaults() => const PrayerPreferences(
@@ -56,6 +57,7 @@ class PrayerPreferences {
     dhikrOverlayEnabled: true,
     dhikrVoiceEnabled: true,
     enabledDhikrIds: defaultEnabledDhikrIds,
+    fastingReminderEnabled: true,
   );
 
   final String city;
@@ -73,6 +75,7 @@ class PrayerPreferences {
   final bool dhikrOverlayEnabled;
   final bool dhikrVoiceEnabled;
   final List<String> enabledDhikrIds;
+  final bool fastingReminderEnabled;
 
   AdhanVoice get selectedVoice => getAdhanVoiceById(adhanVoice);
 
@@ -92,6 +95,7 @@ class PrayerPreferences {
     bool? dhikrOverlayEnabled,
     bool? dhikrVoiceEnabled,
     List<String>? enabledDhikrIds,
+    bool? fastingReminderEnabled,
   }) {
     return PrayerPreferences(
       city: city ?? this.city,
@@ -109,6 +113,7 @@ class PrayerPreferences {
       dhikrOverlayEnabled: dhikrOverlayEnabled ?? this.dhikrOverlayEnabled,
       dhikrVoiceEnabled: dhikrVoiceEnabled ?? this.dhikrVoiceEnabled,
       enabledDhikrIds: enabledDhikrIds ?? this.enabledDhikrIds,
+      fastingReminderEnabled: fastingReminderEnabled ?? this.fastingReminderEnabled,
     );
   }
 
@@ -146,6 +151,8 @@ class PrayerPreferences {
               ?.map((e) => e.toString())
               .toList() ??
           defaults.enabledDhikrIds,
+      fastingReminderEnabled:
+          json['fastingReminderEnabled'] as bool? ?? defaults.fastingReminderEnabled,
     );
   }
 
@@ -165,5 +172,6 @@ class PrayerPreferences {
     'dhikrOverlayEnabled': dhikrOverlayEnabled,
     'dhikrVoiceEnabled': dhikrVoiceEnabled,
     'enabledDhikrIds': enabledDhikrIds,
+    'fastingReminderEnabled': fastingReminderEnabled,
   };
 }

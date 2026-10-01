@@ -1,3 +1,6 @@
+import 'package:geolocator/geolocator.dart';
+
+import '../../../core/location/city_detector.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../dhikr_reminders/application/voice_dhikr_service.dart';
 import '../data/prayer_repository.dart';
@@ -31,6 +34,38 @@ class PrayerController {
   ) async {
     final next = await repository.useCurrentLocation(current);
     return save(next);
+  }
+
+  Future<void> autoSyncLocationIfPermitted() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse) {
+        final position = await Geolocator.getLastKnownPosition() ??
+            await Geolocator.getCurrentPosition(
+              locationSettings: const LocationSettings(
+                timeLimit: Duration(seconds: 4),
+              ),
+            );
+        final prefs = loadPreferences();
+        final detectedCity = await CityDetector.detectCity(
+          position.latitude,
+          position.longitude,
+        );
+        if (prefs.city != detectedCity ||
+            (prefs.latitude - position.latitude).abs() > 0.03 ||
+            (prefs.longitude - position.longitude).abs() > 0.03) {
+          await save(
+            prefs.copyWith(
+              city: detectedCity,
+              latitude: position.latitude,
+              longitude: position.longitude,
+              useCurrentLocation: true,
+            ),
+          );
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> reschedule(PrayerPreferences prefs) => _reschedule(prefs);

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -90,6 +91,8 @@ class NotificationService extends ChangeNotifier {
             _setPendingRoute('/prayers');
           } else if (payload.startsWith('dhikr:')) {
             _setPendingRoute('/adhkar');
+          } else if (payload.startsWith('fasting:')) {
+            _setPendingRoute('/occasions');
           } else {
             _setPendingRoute(payload);
           }
@@ -136,6 +139,8 @@ class NotificationService extends ChangeNotifier {
         _setPendingRoute('/prayers');
       } else if (payload.startsWith('dhikr:')) {
         _setPendingRoute('/adhkar');
+      } else if (payload.startsWith('fasting:')) {
+        _setPendingRoute('/occasions');
       } else {
         _setPendingRoute(payload);
       }
@@ -504,6 +509,9 @@ class NotificationService extends ChangeNotifier {
 
     // 3. Schedule Periodic Daytime Dhikr Reminders:
     await schedulePeriodicDhikrNotifications(preferences: preferences);
+
+    // 4. Schedule Fasting Reminders (Monday, Thursday, and White Days):
+    await scheduleFastingNotifications(days: days, preferences: preferences);
   }
 
   /// Immediate test notification to verify audio, aesthetics, and actions
@@ -654,6 +662,192 @@ class NotificationService extends ChangeNotifier {
         ),
       ),
       payload: 'dhikr:${reminder.id}',
+    );
+  }
+
+  /// Cancels scheduled Sunnah fasting notifications
+  Future<void> cancelFastingNotifications() async {
+    if (!isSupported) return;
+    try {
+      for (int id = 6000; id < 6050; id++) {
+        await _plugin.cancel(id: id);
+      }
+    } catch (_) {}
+  }
+
+  /// Schedules Sunnah fasting reminders:
+  /// - Sunday evening after Maghrib: Reminder for Monday fasting
+  /// - Wednesday evening after Maghrib: Reminder for Thursday fasting
+  /// - Evenings of 12th, 13th, 14th Hijri: Reminder for White Days fasting
+  Future<void> scheduleFastingNotifications({
+    required List<PrayerDay> days,
+    required PrayerPreferences preferences,
+  }) async {
+    if (!isSupported) return;
+    await cancelFastingNotifications();
+    if (!preferences.fastingReminderEnabled) return;
+
+    var fastingId = 6000;
+    HijriCalendar.setLocal('ar');
+
+    for (final day in days) {
+      final maghrib = day.prayers.where((p) => p.key == 'maghrib').firstOrNull;
+      if (maghrib == null) continue;
+
+      // Scheduled 20 minutes after Maghrib (when the next Islamic day begins)
+      final triggerTime = maghrib.time.add(const Duration(minutes: 20));
+      if (triggerTime.isBefore(DateTime.now())) continue;
+
+      // Tomorrow date (the day to be fasted)
+      final tomorrow = maghrib.time.add(const Duration(days: 1));
+      final tomorrowHijri = HijriCalendar.fromDate(tomorrow);
+
+      String? title;
+      String? body;
+      String? payload;
+
+      // Check if tomorrow is Monday (maghrib on Sunday)
+      if (maghrib.time.weekday == DateTime.sunday) {
+        title = '🌙 تذكير: صيام غداً الإثنين سُنّة نبوية';
+        body =
+            '«تُعرض الأعمال يوم الإثنين والخميس، فأحب أن يُعرض عملي وأنا صائم» • لا تنسَ نية صيام الغد.';
+        payload = 'fasting:monday';
+      }
+      // Check if tomorrow is Thursday (maghrib on Wednesday)
+      else if (maghrib.time.weekday == DateTime.wednesday) {
+        title = '🌙 تذكير: صيام غداً الخميس سُنّة نبوية';
+        body =
+            '«تُعرض الأعمال يوم الإثنين والخميس، فأحب أن يُعرض عملي وأنا صائم» • هنيئاً لمن نوى الصيام.';
+        payload = 'fasting:thursday';
+      }
+      // Check if tomorrow is one of the White Days (13, 14, 15 Hijri, not in Ramadan)
+      else if ((tomorrowHijri.hDay == 13 ||
+              tomorrowHijri.hDay == 14 ||
+              tomorrowHijri.hDay == 15) &&
+          tomorrowHijri.hMonth != 9) {
+        final dayLabel = tomorrowHijri.hDay == 13
+            ? 'أول الأيام البيض (13)'
+            : tomorrowHijri.hDay == 14
+                ? 'ثاني الأيام البيض (14)'
+                : 'ثالث الأيام البيض (15)';
+        title = '🌕 تذكير: صيام $dayLabel لشهر ${tomorrowHijri.longMonthName}';
+        body =
+            '«صيام ثلاثة أيام من كل شهر صيام الدهر» • اغتنم صيام الأيام البيض المباركة غداً.';
+        payload = 'fasting:white_days';
+      }
+
+      if (title != null && body != null) {
+        final bigTextStyle = BigTextStyleInformation(
+          body,
+          contentTitle: title,
+          summaryText: 'ذكرني • تذكير صيام السُنّة',
+        );
+
+        final androidDetails = AndroidNotificationDetails(
+          'fasting_reminders_$_appNotificationChannelVersion',
+          'تذكيرات صيام السُنّة النبوية',
+          channelDescription:
+              'تنبيهات مغرب الأحد والأربعاء وقبل الأيام البيض للتذكير بصيام السُنّة',
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: 'ic_stat_zekrni',
+          sound: const RawResourceAndroidNotificationSound(
+            _appNotificationRawSound,
+          ),
+          playSound: true,
+          color: const Color(0xFFD4AF37),
+          category: AndroidNotificationCategory.reminder,
+          ticker: title,
+          styleInformation: bigTextStyle,
+          actions: const [
+            AndroidNotificationAction(
+              'open_fasting',
+              '🌙 فتح التطبيق',
+              showsUserInterface: true,
+            ),
+          ],
+        );
+
+        const iosDetails = DarwinNotificationDetails(
+          sound: _appNotificationIosSound,
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        );
+
+        await _plugin.zonedSchedule(
+          id: fastingId++,
+          title: title,
+          body: body,
+          scheduledDate: tz.TZDateTime.from(triggerTime, tz.local),
+          notificationDetails: NotificationDetails(
+            android: androidDetails,
+            iOS: iosDetails,
+          ),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          payload: payload,
+        );
+
+        if (fastingId >= 6050) break;
+      }
+    }
+  }
+
+  /// Immediate test fasting reminder notification
+  Future<void> showTestFastingNotification() async {
+    if (!isSupported) return;
+    await requestPermissions();
+
+    const title = '🌙 تذكير: صيام غداً الإثنين سُنّة نبوية';
+    const body =
+        '«تُعرض الأعمال يوم الإثنين والخميس، فأحب أن يُعرض عملي وأنا صائم» • لا تنسَ تبييت نية الصيام تقرباً إلى الله تعالى.';
+
+    const bigTextStyle = BigTextStyleInformation(
+      body,
+      contentTitle: title,
+      summaryText: 'ذكرني • تجربة تذكير صيام السُنّة',
+    );
+
+    final androidDetails = AndroidNotificationDetails(
+      'fasting_reminders_$_appNotificationChannelVersion',
+      'تذكيرات صيام السُنّة النبوية',
+      channelDescription:
+          'تنبيهات مغرب الأحد والأربعاء وقبل الأيام البيض للتذكير بصيام السُنّة',
+      importance: Importance.max,
+      priority: Priority.max,
+      icon: 'ic_stat_zekrni',
+      sound: const RawResourceAndroidNotificationSound(
+        _appNotificationRawSound,
+      ),
+      playSound: true,
+      enableVibration: true,
+      color: const Color(0xFFD4AF37),
+      category: AndroidNotificationCategory.reminder,
+      ticker: title,
+      styleInformation: bigTextStyle,
+      actions: const [
+        AndroidNotificationAction(
+          'open_fasting',
+          '🌙 فتح التطبيق',
+          showsUserInterface: true,
+        ),
+      ],
+    );
+
+    await _plugin.show(
+      id: 5999,
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
+        android: androidDetails,
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          sound: _appNotificationIosSound,
+        ),
+      ),
+      payload: 'fasting:test',
     );
   }
 

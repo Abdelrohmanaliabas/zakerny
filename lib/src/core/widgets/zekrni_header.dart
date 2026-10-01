@@ -99,7 +99,6 @@ class ZekrniHeader extends StatelessWidget {
                     if (subtitle != null) ...[
                       const SizedBox(height: 2),
                       Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.location_on_outlined,
@@ -107,15 +106,19 @@ class ZekrniHeader extends StatelessWidget {
                             color: FatimidColors.goldPrimary,
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            subtitle!,
-                            style: TextStyle(
-                              fontFamily: 'Cairo',
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? const Color(0xFFA5C4B8)
-                                  : const Color(0xFF5B7A6F),
+                          Expanded(
+                            child: Text(
+                              subtitle!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? const Color(0xFFA5C4B8)
+                                    : const Color(0xFF5B7A6F),
+                              ),
                             ),
                           ),
                         ],
