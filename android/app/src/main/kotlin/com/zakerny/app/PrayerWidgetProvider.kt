@@ -137,62 +137,57 @@ class PrayerWidgetProvider : AppWidgetProvider() {
             val canvas = Canvas(bitmap)
 
             val redColor = Color.parseColor("#FF2222")
+            val amberColor = Color.parseColor("#FFA028")
+            val cityColor = Color.parseColor("#7A4F18")
 
-            // 1. Main Time Clock (huge red digits inside the glossy central bezel)
+            // 1. Main Time Clock (dead center inside the glossy central bezel: x=394, y=460)
             val mainTimePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = redColor
                 typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
                 textAlign = Paint.Align.CENTER
-                textSize = 34f
+                textSize = 72f
             }
-            drawCenteredText(canvas, mainTime, 188f, 174f, mainTimePaint)
+            drawCenteredText(canvas, mainTime, 394f, 460f, mainTimePaint)
 
-            // 2. Date Matrix
+            // 2. Date Matrix (centered at x=394, y=578)
             val datePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = redColor
+                color = amberColor
                 typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
                 textAlign = Paint.Align.CENTER
-                textSize = 14f
+                textSize = 26f
             }
             val displayDate = if (gregDate.length > 20) gregDate.substring(0, 20) else gregDate
-            drawCenteredText(canvas, displayDate, 183f, 224f, datePaint)
+            drawCenteredText(canvas, displayDate, 394f, 578f, datePaint)
 
-            // 3. Temp & Iqamah Gauges
-            val gaugePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = redColor
-                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-                textAlign = Paint.Align.CENTER
-                textSize = 14f
-            }
-            drawCenteredText(canvas, temp, 152f, 120f, gaugePaint)
-            drawCenteredText(canvas, iqamah, 223f, 120f, gaugePaint)
-
-            // 4. City Name (under the crescent logo)
+            // 3. City Name (under date display, above Fajr: x=392, y=633)
             val cityPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.parseColor("#805A18")
+                color = cityColor
                 typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                 textAlign = Paint.Align.CENTER
-                textSize = 9.5f
+                textSize = 22f
             }
-            val shortCity = if (city.length > 24) city.substring(0, 24) else city
-            drawCenteredText(canvas, "ساعة الحرمين • $shortCity", 180f, 96f, cityPaint)
+            val shortCity = if (city.length > 20) city.substring(0, 20) else city
+            drawCenteredText(canvas, shortCity, 392f, 633f, cityPaint)
 
-            // 5. 6 Prayer Times (inside individual black bezels)
+            // 4. 6 Prayer Times (inside individual bezels: x=392, y = 685, 773, 861, 949, 1036, 1123)
             val prayerTimePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = redColor
                 typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
                 textAlign = Paint.Align.CENTER
-                textSize = 15f
+                textSize = 38f
             }
 
-            val activeDotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.parseColor("#FF1A1A")
+            val activeDotPaintGlow = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.parseColor("#99FF4444")
                 style = Paint.Style.FILL
             }
-            val activeDotGlow = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.parseColor("#FFAAAA")
-                style = Paint.Style.STROKE
-                strokeWidth = 1.6f
+            val activeDotPaintCore = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.parseColor("#FFFF2222")
+                style = Paint.Style.FILL
+            }
+            val activeDotPaintHighlight = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.parseColor("#FFFFE0E0")
+                style = Paint.Style.FILL
             }
 
             val prayerList = listOf(
@@ -203,24 +198,25 @@ class PrayerWidgetProvider : AppWidgetProvider() {
                 Pair("maghrib", maghrib),
                 Pair("isha", isha)
             )
-            val prayerY = listOf(256f, 288f, 320f, 352f, 384f, 416f)
+            val prayerY = listOf(685f, 773f, 861f, 949f, 1036f, 1123f)
 
             for (i in prayerList.indices) {
                 val (key, time) = prayerList[i]
-                val yTop = prayerY[i]
-                drawCenteredText(canvas, time, 186f, yTop + 11.5f, prayerTimePaint)
+                val cy = prayerY[i]
+                drawCenteredText(canvas, time, 392f, cy, prayerTimePaint)
 
                 // Active red LED indicator dot
                 val isRowActive = key.equals(activeKey, ignoreCase = true)
                 if (isRowActive) {
-                    val dotCx = 241f
-                    val dotCy = yTop + 11.5f
-                    canvas.drawCircle(dotCx, dotCy, 5.5f, activeDotPaint)
-                    canvas.drawCircle(dotCx, dotCy, 6.2f, activeDotGlow)
+                    val dotCx = 496f
+                    canvas.drawCircle(dotCx, cy, 10f, activeDotPaintGlow)
+                    canvas.drawCircle(dotCx, cy, 7f, activeDotPaintCore)
+                    canvas.drawCircle(dotCx - 2f, cy - 2f, 2.5f, activeDotPaintHighlight)
                 }
             }
 
-            return bitmap
+            // Downscale to 384x644 for optimal Android RemoteViews memory and crystal clarity
+            return Bitmap.createScaledBitmap(bitmap, 384, 644, true)
         }
 
         private fun drawCenteredText(canvas: Canvas, text: String, cx: Float, cy: Float, paint: Paint) {

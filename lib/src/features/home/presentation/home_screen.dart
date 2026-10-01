@@ -1,13 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/utils/arabic_text_utils.dart';
 
 import '../../../core/widgets/fatimid_decorations.dart';
 import '../../../core/widgets/zekrni_header.dart';
+import '../../calendar/domain/calendar_models.dart';
 import '../../hadith/application/hadith_controller.dart';
 import '../../hadith/domain/hadith_models.dart';
 import '../../prayer_times/application/prayer_controller.dart';
@@ -34,6 +37,16 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   Timer? _ticker;
+  int _tasbeehCount = 0;
+  final int _tasbeehTarget = 33;
+  int _selectedDhikrIndex = 0;
+  static const List<String> _dhikrList = [
+    'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',
+    'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ',
+    'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ',
+    'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
+    'اللَّهُمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ',
+  ];
 
   @override
   void initState() {
@@ -86,6 +99,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         time: timeFormat.format(next.time),
                         remaining: remaining,
                         onTap: () => context.go('/prayers'),
+                      ),
+
+                      // بطاقة سُنّة الصيام والتقويم الإسلامي
+                      _SunnahFastingBanner(isDark: isDark),
+
+                      // بطاقة ساعة الحرمين الرقمية الفاخرة
+                      _AlFajiaClockHeroCard(
+                        city: prefs.city,
+                        isDark: isDark,
+                        onTap: () => context.push('/prayer-clock'),
                       ),
                       const SizedBox(height: 22),
 
@@ -207,6 +230,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               end: Alignment.bottomRight,
                             ),
                             onTap: () => context.push('/prayer-clock'),
+                          ),
+                          _QuickAction(
+                            icon: Icons.fingerprint_rounded,
+                            label: 'السبحة',
+                            badge: 'تسبيح',
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () => context.push('/adhkar'),
                           ),
                         ],
                       ),
@@ -478,6 +512,61 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
+                      ),
+                      const SizedBox(height: 22),
+
+                      // 4. الذكر والتسبيح السريع
+                      Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              gradient: FatimidColors.goldGradient,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'الذكر والتسبيح السريع',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontFamily: 'Cairo',
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? Colors.white : const Color(0xFF0F2C22),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      _QuickHomeTasbeeh(
+                        count: _tasbeehCount,
+                        target: _tasbeehTarget,
+                        selectedPhrase: _dhikrList[_selectedDhikrIndex],
+                        isDark: isDark,
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          setState(() {
+                            if (_tasbeehCount < _tasbeehTarget) {
+                              _tasbeehCount++;
+                            } else {
+                              HapticFeedback.mediumImpact();
+                              _tasbeehCount = 1;
+                              _selectedDhikrIndex = (_selectedDhikrIndex + 1) % _dhikrList.length;
+                            }
+                          });
+                        },
+                        onReset: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _tasbeehCount = 0);
+                        },
+                        onSelectNextPhrase: () {
+                          HapticFeedback.selectionClick();
+                          setState(() {
+                            _selectedDhikrIndex = (_selectedDhikrIndex + 1) % _dhikrList.length;
+                            _tasbeehCount = 0;
+                          });
+                        },
                       ),
                     ],
                   ),
@@ -773,3 +862,486 @@ class _QuickAction extends StatelessWidget {
     );
   }
 }
+
+/// بطاقة تذكير صيام السُّنّة والأيام البيض والمناسبات الإسلامية
+class _SunnahFastingBanner extends StatelessWidget {
+  const _SunnahFastingBanner({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final hijri = HijriCalendar.fromDate(now);
+    final weekday = now.weekday;
+    final hour = now.hour;
+
+    String title;
+    String subtitle;
+    String badge = 'سُنّة نبوية';
+    IconData icon = Icons.nights_stay_rounded;
+
+    if (weekday == DateTime.monday) {
+      title = 'اليوم الإثنين • سُنّة الصيام';
+      subtitle = 'تقبّل الله صيامكم وطاعتكم • موعد الإفطار مع أذان المغرب';
+      badge = 'صيام اليوم';
+      icon = Icons.wb_sunny_rounded;
+    } else if (weekday == DateTime.thursday) {
+      title = 'اليوم الخميس • سُنّة الصيام';
+      subtitle = 'تقبّل الله صيامكم وطاعتكم • موعد الإفطار مع أذان المغرب';
+      badge = 'صيام اليوم';
+      icon = Icons.wb_sunny_rounded;
+    } else if (weekday == DateTime.sunday && hour >= 16) {
+      title = 'تذكير سُنّة الصيام: غداً الإثنين 🌙';
+      subtitle = '«تُعرض الأعمال يوم الإثنين والخميس فأحب أن يُعرض عملي وأنا صائم»';
+      badge = 'صيام الغد';
+    } else if (weekday == DateTime.wednesday && hour >= 16) {
+      title = 'تذكير سُنّة الصيام: غداً الخميس 🌙';
+      subtitle = '«تُعرض الأعمال يوم الإثنين والخميس فأحب أن يُعرض عملي وأنا صائم»';
+      badge = 'صيام الغد';
+    } else if (CalendarUtils.isWhiteDay(hijri.hDay)) {
+      title = 'صيام الأيام البيض لشهر ${hijri.longMonthName}';
+      subtitle = 'اليوم ${hijri.hDay} من الأيام البيض • صيام ثلاثة أيام كصيام الدهر';
+      badge = 'الأيام البيض';
+      icon = Icons.brightness_2_rounded;
+    } else {
+      final currentEvent = CalendarUtils.getEventForHijri(hijri.hMonth, hijri.hDay);
+      if (currentEvent != null) {
+        title = currentEvent.title;
+        subtitle = currentEvent.description;
+        badge = currentEvent.isHoliday ? 'إجازة رسمية' : 'مناسبة إسلامية';
+        icon = Icons.stars_rounded;
+      } else {
+        title = '${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear} هـ';
+        subtitle = '«أَحَبُّ الأَعْمَالِ إِلَى اللَّهِ أَدْوَمُهَا وَإِنْ قَلَّ» • تقويم ومناسبات اليوم';
+        badge = 'التقويم الهجري';
+        icon = Icons.calendar_today_rounded;
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF13241C) : const Color(0xFFFBF8EE),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.35 : 0.4),
+          width: 1.1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              gradient: FatimidColors.goldGradient,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: const Color(0xFF1B2A1E), size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        color: isDark ? Colors.white : const Color(0xFF0F2C22),
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: FatimidColors.goldPrimary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        badge,
+                        style: const TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: FatimidColors.goldPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 11,
+                    color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4A6B5F),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// بطاقة عرض ساعة الحرمين الفاخرة على الشاشة الرئيسية
+class _AlFajiaClockHeroCard extends StatelessWidget {
+  const _AlFajiaClockHeroCard({
+    required this.city,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  final String city;
+  final VoidCallback onTap;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final timeStr = DateFormat('hh:mm').format(now);
+    final amPmStr = DateFormat('a', 'ar').format(now);
+    final hijri = HijriCalendar.fromDate(now);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        margin: const EdgeInsets.only(top: 14),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF14191F) : const Color(0xFFFAF7EE),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.45 : 0.4),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFC5A059), Color(0xFF8A6D3B)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFC5A059).withValues(alpha: 0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.access_alarm_rounded,
+                color: Colors.white,
+                size: 26,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'ساعة الحرمين الرقمية',
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          color: isDark ? Colors.white : const Color(0xFF0F2C22),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF2222).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: const Color(0xFFFF2222).withValues(alpha: 0.3),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: const Text(
+                          'LED حي',
+                          style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFFF2222),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'ساعة الفجر الجدارية الفاخرة • $city • ${hijri.hDay} ${hijri.longMonthName}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 11.5,
+                      color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4A6B5F),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0B0C0E),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFF2E333D), width: 1),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    timeStr,
+                    style: const TextStyle(
+                      color: Color(0xFFFF2222),
+                      fontFamily: 'Courier',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                  Text(
+                    amPmStr,
+                    style: const TextStyle(
+                      color: Color(0xFFFFA028),
+                      fontFamily: 'Cairo',
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// السبحة الإلكترونية التفاعلية المدمجة في الشاشة الرئيسية
+class _QuickHomeTasbeeh extends StatelessWidget {
+  const _QuickHomeTasbeeh({
+    required this.count,
+    required this.target,
+    required this.selectedPhrase,
+    required this.onTap,
+    required this.onReset,
+    required this.onSelectNextPhrase,
+    required this.isDark,
+  });
+
+  final int count;
+  final int target;
+  final String selectedPhrase;
+  final VoidCallback onTap;
+  final VoidCallback onReset;
+  final VoidCallback onSelectNextPhrase;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = (count / target).clamp(0.0, 1.0);
+
+    return FatimidCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.fingerprint_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'السبحة الإلكترونية السريعة',
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: isDark ? Colors.white : const Color(0xFF0F2C22),
+                    ),
+                  ),
+                  Text(
+                    'اضغط للتسبيح • الورد اليومي',
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 11,
+                      color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4A6B5F),
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              if (count > 0)
+                IconButton(
+                  icon: const Icon(Icons.refresh_rounded, size: 20),
+                  color: FatimidColors.goldPrimary,
+                  tooltip: 'إعادة تصفير',
+                  onPressed: onReset,
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          InkWell(
+            onTap: onSelectNextPhrase,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF1A2620)
+                    : FatimidColors.emeraldPrimary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: FatimidColors.emeraldPrimary.withValues(alpha: isDark ? 0.3 : 0.2),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      selectedPhrase,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Amiri',
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF047857),
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.swap_horiz_rounded,
+                    color: FatimidColors.goldPrimary.withValues(alpha: 0.7),
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(50),
+              child: SizedBox(
+                width: 96,
+                height: 96,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 96,
+                      height: 96,
+                      child: CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 5,
+                        backgroundColor: FatimidColors.goldPrimary.withValues(alpha: 0.15),
+                        valueColor: const AlwaysStoppedAnimation<Color>(FatimidColors.goldPrimary),
+                      ),
+                    ),
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        gradient: FatimidColors.goldGradient,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: FatimidColors.goldPrimary.withValues(alpha: 0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            ArabicTextUtils.toArabicDigits(count),
+                            style: const TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF14241B),
+                              height: 1.1,
+                            ),
+                          ),
+                          Text(
+                            '/ ${ArabicTextUtils.toArabicDigits(target)}',
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF14241B).withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
