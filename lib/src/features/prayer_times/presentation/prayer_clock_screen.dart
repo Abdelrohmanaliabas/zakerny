@@ -6,8 +6,8 @@ import 'package:intl/intl.dart';
 import '../application/prayer_controller.dart';
 import '../domain/prayer_day.dart';
 
-/// Screen replicating the classic Golden Islamic Azan Wall/Desk Clock
-/// (ساعة المسجد / ساعة الفجر والحرمين الرقمية)
+/// Screen replicating the physical AL-FAJIA luxury Islamic Azan Wall/Desk Clock
+/// (ساعة الفجر والحرمين الرقمية الفاخرة ذات القبة والأعمدة الجانبية)
 class PrayerClockScreen extends StatefulWidget {
   const PrayerClockScreen({super.key, required this.controller});
 
@@ -69,7 +69,7 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
             Icon(Icons.access_alarm_rounded, color: Color(0xFFD4AF37), size: 20),
             SizedBox(width: 8),
             Text(
-              'ساعة الحرمين الرقمية',
+              'ساعة الحرمين • AL - FAJIA',
               style: TextStyle(
                 fontFamily: 'Cairo',
                 fontWeight: FontWeight.bold,
@@ -106,107 +106,122 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0B0F15),
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(
-                    color: const Color(0xFFD4AF37),
-                    width: 3.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFD4AF37).withValues(alpha: 0.25),
-                      blurRadius: 28,
-                      spreadRadius: 2,
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.8),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // 1. القبة الفاطمية / الإطار العلوي الذهبي
-                    _buildArchHeader(prefs.city),
-
-                    // 2. شاشات الحرارة والوقت الحالي الرقمي
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        children: [
-                          // صف المقاييس العلوية (الحرارة / الإقامة)
-                          Row(
-                            children: [
-                              _buildMiniGauge(
-                                labelTop: 'TEMP',
-                                labelBottom: 'الحرارة',
-                                value: _isCelsius ? '28°C' : '82°F',
-                                onTap: () => setState(() => _isCelsius = !_isCelsius),
-                              ),
-                              const Spacer(),
-                              // شعار الفجر الذهبي
-                              Column(
-                                children: [
-                                  const Icon(
-                                    Icons.nights_stay_rounded,
-                                    color: Color(0xFFD4AF37),
-                                    size: 26,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'AL - FAJIA',
-                                    style: TextStyle(
-                                      fontFamily: 'Cairo',
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 2,
-                                      color: const Color(0xFFD4AF37).withValues(alpha: 0.9),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Spacer(),
-                              _buildMiniGauge(
-                                labelTop: 'IQAMAH',
-                                labelBottom: 'متابعة الإقامة',
-                                value: '15 MIN',
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          // شاشة الساعة الرقمية الرئيسية (Main Red LED Display)
-                          _buildMainDigitalClock(
-                            hours: hours,
-                            minutes: minutes,
-                            seconds: seconds,
-                            amPm: amPm,
-                            nextPrayer: next,
-                          ),
-                          const SizedBox(height: 12),
-
-                          // شاشة التاريخ الرقمي (LED Matrix Date)
-                          _buildDateMatrixBar(hijri),
-                          const SizedBox(height: 14),
-
-                          // 3. جدول الصلوات الست (All 6 Prayers)
-                          _buildPrayersTable(day, next.key),
-                          const SizedBox(height: 12),
-                        ],
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Physical Clock Outer Shell (Pointed Arch + Pillars + Pedestal Base)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF090D12),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(160),
+                        topRight: Radius.circular(160),
+                        bottomLeft: Radius.circular(16),
+                        bottomRight: Radius.circular(16),
                       ),
+                      border: Border.all(
+                        color: const Color(0xFFD4AF37),
+                        width: 4.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFD4AF37).withValues(alpha: 0.35),
+                          blurRadius: 30,
+                          spreadRadius: 2,
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.9),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
                     ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // 1. Pointed Islamic Dome Arch Header
+                        _buildDomeArchHeader(prefs.city),
 
-                    // 4. القاعدة الذهبية السفلية
-                    _buildBottomConsole(),
-                  ],
-                ),
+                        // 2. Middle Body with Left & Right 3D Cylindrical Golden Columns
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Left 3D Golden Pillar
+                            _build3DPillar(isLeft: true),
+
+                            // Center Dial with Displays & Prayer Rows
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                child: Column(
+                                  children: [
+                                    // Temp and Iqamah Gauges
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        _buildMiniGauge(
+                                          labelTop: 'TEMP',
+                                          labelBottom: 'الحرارة',
+                                          value: _isCelsius ? '22°C' : '72°F',
+                                          onTap: () => setState(() => _isCelsius = !_isCelsius),
+                                        ),
+                                        // Center small logo
+                                        Text(
+                                          'AL - FAJIA®',
+                                          style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: 1.5,
+                                            color: const Color(0xFFD4AF37).withValues(alpha: 0.85),
+                                          ),
+                                        ),
+                                        _buildMiniGauge(
+                                          labelTop: 'IQAMAH',
+                                          labelBottom: 'متابعة الإقامة',
+                                          value: '21°F',
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+
+                                    // Main Red LED Digital Clock
+                                    _buildMainDigitalClock(
+                                      hours: hours,
+                                      minutes: minutes,
+                                      seconds: seconds,
+                                      amPm: amPm,
+                                      nextPrayer: next,
+                                    ),
+                                    const SizedBox(height: 10),
+
+                                    // Red LED Matrix Date Display
+                                    _buildDateMatrixBar(hijri),
+                                    const SizedBox(height: 12),
+
+                                    // Prayers Table with Haram Background
+                                    _buildPrayersTable(day, next.key),
+                                    const SizedBox(height: 8),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // Right 3D Golden Pillar
+                            _build3DPillar(isLeft: false),
+                          ],
+                        ),
+
+                        // 3. Bottom Golden Pedestal Base with Physical Buttons
+                        _buildPhysicalButtonsBase(),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -215,67 +230,110 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
     );
   }
 
-  Widget _buildArchHeader(String city) {
+  /// Top pointed arch dome header with ornate gold moulding
+  Widget _buildDomeArchHeader(String city) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+      padding: const EdgeInsets.only(top: 24, bottom: 12, left: 16, right: 16),
       decoration: const BoxDecoration(
-        color: Color(0xFF141922),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF241908),
+            Color(0xFF140F04),
+          ],
         ),
         border: Border(
-          bottom: BorderSide(color: Color(0xFF263140), width: 1.5),
+          bottom: BorderSide(color: Color(0xFFD4AF37), width: 1.8),
         ),
       ),
       child: Column(
         children: [
+          // Golden Crescent and AL-FAJIA Emblem
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                height: 1,
-                width: 40,
-                color: const Color(0xFFD4AF37),
-              ),
+              Container(height: 1, width: 36, color: const Color(0xFFD4AF37)),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10),
                 child: Icon(
-                  Icons.mosque_rounded,
+                  Icons.nights_stay_rounded,
                   color: Color(0xFFD4AF37),
-                  size: 22,
+                  size: 24,
                 ),
               ),
-              Container(
-                height: 1,
-                width: 40,
-                color: const Color(0xFFD4AF37),
-              ),
+              Container(height: 1, width: 36, color: const Color(0xFFD4AF37)),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            'ساعة المواقيت والأذان الفاخرة',
+          const SizedBox(height: 4),
+          const Text(
+            'AL - FAJIA®',
             style: TextStyle(
               fontFamily: 'Cairo',
               fontWeight: FontWeight.w900,
-              fontSize: 15,
-              color: const Color(0xFFE2C068),
-              shadows: [
-                Shadow(
-                  color: const Color(0xFFD4AF37).withValues(alpha: 0.5),
-                  blurRadius: 8,
-                ),
-              ],
+              fontSize: 16,
+              letterSpacing: 2.5,
+              color: Color(0xFFE5C068),
             ),
           ),
           Text(
-            'مواقيت الصلاة الدقيقة • $city',
+            'ساعة الحرمين الشريفين • $city',
             style: const TextStyle(
               fontFamily: 'Cairo',
               fontSize: 11,
-              color: Color(0xFF94A3B8),
+              fontWeight: FontWeight.w600,
+              color: Color(0xFFC4A252),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 3D Cylindrical Architectural Pillar with capital and base
+  Widget _build3DPillar({required bool isLeft}) {
+    return Container(
+      width: 20,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: isLeft ? Alignment.centerLeft : Alignment.centerRight,
+          end: isLeft ? Alignment.centerRight : Alignment.centerLeft,
+          colors: const [
+            Color(0xFF523B0D),
+            Color(0xFF997321),
+            Color(0xFFF5DE88),
+            Color(0xFFD4AF37),
+            Color(0xFF5E420E),
+          ],
+          stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 4,
+            offset: Offset(isLeft ? 2 : -2, 0),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Capital molding (top)
+          Container(
+            height: 18,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0D57A),
+              border: Border.all(color: const Color(0xFF5A410E)),
+            ),
+          ),
+          const SizedBox(height: 440),
+          // Base pedestal molding (bottom)
+          Container(
+            height: 22,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0D57A),
+              border: Border.all(color: const Color(0xFF5A410E)),
             ),
           ),
         ],
@@ -292,23 +350,24 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             '$labelTop $labelBottom',
             style: const TextStyle(
               fontFamily: 'Cairo',
-              fontSize: 8,
+              fontSize: 8.5,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF94A3B8),
+              color: Color(0xFFD4AF37),
             ),
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 2),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: Colors.black,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: const Color(0xFF263140)),
+              border: Border.all(color: const Color(0xFF334155), width: 1.2),
             ),
             child: Text(
               value,
@@ -316,8 +375,7 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
                 fontFamily: 'monospace',
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFFFF2E2E),
-                letterSpacing: 1,
+                color: Color(0xFFFF2222),
               ),
             ),
           ),
@@ -335,53 +393,52 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
       decoration: BoxDecoration(
         color: Colors.black,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF263140), width: 1.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF2A3648), width: 1.5),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x33FF2E2E),
-            blurRadius: 16,
-            spreadRadius: -4,
+            color: Color(0x33FF2222),
+            blurRadius: 14,
+            spreadRadius: -2,
           ),
         ],
       ),
       child: Column(
         children: [
-          // Time Display
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              // AM / PM Box
+              // AM / PM Dot Box
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 decoration: BoxDecoration(
                   color: const Color(0xFF1B0B0B),
                   borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: const Color(0xFF4A1010)),
+                  border: Border.all(color: const Color(0xFF5A1414)),
                 ),
                 child: Text(
                   amPm,
                   style: const TextStyle(
                     fontFamily: 'monospace',
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFFFF2E2E),
+                    color: Color(0xFFFF2222),
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
 
               // Hours
               Text(
                 hours,
                 style: const TextStyle(
                   fontFamily: 'monospace',
-                  fontSize: 44,
+                  fontSize: 42,
                   fontWeight: FontWeight.w900,
                   color: Color(0xFFFF2222),
                   letterSpacing: 2,
@@ -394,7 +451,7 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
                   ':',
                   style: TextStyle(
                     fontFamily: 'monospace',
-                    fontSize: 40,
+                    fontSize: 38,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFFFF2222),
                   ),
@@ -405,20 +462,20 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
                 minutes,
                 style: const TextStyle(
                   fontFamily: 'monospace',
-                  fontSize: 44,
+                  fontSize: 42,
                   fontWeight: FontWeight.w900,
                   color: Color(0xFFFF2222),
                   letterSpacing: 2,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
 
               // Seconds
               Text(
                 seconds,
                 style: TextStyle(
                   fontFamily: 'monospace',
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFFFF2222).withValues(alpha: 0.8),
                 ),
@@ -429,10 +486,10 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
 
           // Next Prayer Banner
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
             decoration: BoxDecoration(
-              color: const Color(0xFF141922),
-              borderRadius: BorderRadius.circular(20),
+              color: const Color(0xFF161C26),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.4)),
             ),
             child: Row(
@@ -441,7 +498,7 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
                 const Icon(
                   Icons.notifications_active_rounded,
                   color: Color(0xFFD4AF37),
-                  size: 14,
+                  size: 13,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -467,10 +524,10 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.black,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFF263140)),
       ),
       child: Row(
@@ -478,21 +535,21 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 14),
+              const Icon(Icons.star_rounded, color: Color(0xFFFF2E2E), size: 13),
               const SizedBox(width: 6),
               Text(
                 hijriFormat,
                 style: const TextStyle(
                   fontFamily: 'Cairo',
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFFF59E0B),
+                  color: Color(0xFFFF2E2E),
                 ),
               ),
             ],
           ),
           Container(
-            height: 16,
+            height: 14,
             width: 1,
             color: const Color(0xFF334155),
           ),
@@ -500,7 +557,7 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
             gregFormat,
             style: const TextStyle(
               fontFamily: 'Cairo',
-              fontSize: 11,
+              fontSize: 10.5,
               fontWeight: FontWeight.w600,
               color: Color(0xFFCBD5E1),
             ),
@@ -532,26 +589,24 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
       children: items.map((item) {
         final isActive = item.key.toLowerCase() == activeKey.toLowerCase();
         final timeStr = item.time != null
-            ? DateFormat('hh:mm a', 'ar').format(item.time!)
+            ? DateFormat('hh:mm', 'en').format(item.time!)
             : '--:--';
 
         return Container(
-          margin: const EdgeInsets.symmetric(vertical: 3.5),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          margin: const EdgeInsets.symmetric(vertical: 2.8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: isActive ? const Color(0xFF16221A) : const Color(0xFF0F141D),
-            borderRadius: BorderRadius.circular(10),
+            color: isActive ? const Color(0xFF1B2418) : const Color(0xFF0F151E),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: isActive
-                  ? const Color(0xFFD4AF37)
-                  : const Color(0xFF1F2937),
+              color: isActive ? const Color(0xFFD4AF37) : const Color(0xFF222C3A),
               width: isActive ? 1.5 : 1,
             ),
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFD4AF37).withValues(alpha: 0.2),
-                      blurRadius: 10,
+                      color: const Color(0xFFD4AF37).withValues(alpha: 0.25),
+                      blurRadius: 8,
                     ),
                   ]
                 : null,
@@ -560,14 +615,14 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
             children: [
               // English Name
               SizedBox(
-                width: 76,
+                width: 72,
                 child: Text(
                   item.englishName,
                   style: TextStyle(
                     fontFamily: 'Cairo',
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 0.8,
+                    letterSpacing: 0.6,
                     color: isActive ? const Color(0xFFFDE047) : const Color(0xFF94A3B8),
                   ),
                 ),
@@ -575,54 +630,48 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
 
               const Spacer(),
 
-              // Sunken Black LED Display Box
+              // Black Beveled Time Display Box
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                width: 74,
+                padding: const EdgeInsets.symmetric(vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: isActive
-                        ? const Color(0xFFFF2E2E).withValues(alpha: 0.6)
-                        : const Color(0xFF263140),
+                    color: isActive ? const Color(0xFFFF2222) : const Color(0xFF2A3648),
                   ),
-                  boxShadow: isActive
-                      ? [
-                          const BoxShadow(
-                            color: Color(0x33FF2E2E),
-                            blurRadius: 8,
-                          ),
-                        ]
-                      : null,
                 ),
-                child: Text(
-                  timeStr,
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    color: isActive ? const Color(0xFFFF2222) : const Color(0xFFEF4444),
+                child: Center(
+                  child: Text(
+                    timeStr,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFFFF2222),
+                      letterSpacing: 1,
+                    ),
                   ),
                 ),
               ),
 
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
 
-              // Glowing Red LED Lamp
+              // Glowing Red LED Dot Indicator
               Container(
-                width: 12,
-                height: 12,
+                width: 10,
+                height: 10,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isActive ? const Color(0xFFFF1A1A) : const Color(0xFF2A1010),
+                  color: isActive ? const Color(0xFFFF1E1E) : const Color(0xFF2D0E0E),
                   border: Border.all(
-                    color: isActive ? const Color(0xFFFF6B6B) : const Color(0xFF3D1616),
+                    color: isActive ? const Color(0xFFFF8888) : const Color(0xFF451515),
                   ),
                   boxShadow: isActive
                       ? [
                           BoxShadow(
-                            color: const Color(0xFFFF1A1A).withValues(alpha: 0.8),
-                            blurRadius: 8,
+                            color: const Color(0xFFFF1E1E).withValues(alpha: 0.9),
+                            blurRadius: 6,
                             spreadRadius: 2,
                           ),
                         ]
@@ -630,21 +679,19 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
                 ),
               ),
 
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
 
               // Arabic Name
               SizedBox(
-                width: 58,
+                width: 54,
                 child: Text(
                   item.arabicName,
                   textAlign: TextAlign.right,
                   style: TextStyle(
                     fontFamily: 'Cairo',
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w900,
-                    color: isActive
-                        ? const Color(0xFFF59E0B)
-                        : const Color(0xFFE2C068),
+                    color: isActive ? const Color(0xFFF59E0B) : const Color(0xFFE2C068),
                   ),
                 ),
               ),
@@ -655,42 +702,85 @@ class _PrayerClockScreenState extends State<PrayerClockScreen> {
     );
   }
 
-  Widget _buildBottomConsole() {
+  /// Bottom horizontal pedestal base with physical control push-buttons
+  Widget _buildPhysicalButtonsBase() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: const BoxDecoration(
-        color: Color(0xFF141922),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFD4AF37),
+            Color(0xFF9E7B26),
+            Color(0xFF6B4E12),
+          ],
         ),
         border: Border(
-          top: BorderSide(color: Color(0xFF263140), width: 1.5),
+          top: BorderSide(color: Color(0xFFF0D57A), width: 1.5),
         ),
       ),
       child: Column(
         children: [
+          // Push buttons row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildPushButton('A'),
+              const SizedBox(width: 6),
+              _buildPushButton('UP'),
+              const SizedBox(width: 6),
+              _buildPushButton('DOWN'),
+              const SizedBox(width: 6),
+              _buildPushButton('SELECT'),
+              const SizedBox(width: 6),
+              _buildPushButton('BACK'),
+              const SizedBox(width: 6),
+              _buildPushButton('ALARM'),
+              const SizedBox(width: 6),
+              _buildPushButton('LIGHT'),
+            ],
+          ),
+          const SizedBox(height: 6),
           const Text(
             '{ إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَوْقُوتًا }',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Amiri',
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: Color(0xFFD4AF37),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'سورة النساء: الآية 103',
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontSize: 10,
-              color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
+              color: Color(0xFFFFF4D0),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPushButton(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2B1F08),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: const Color(0xFFF0D57A), width: 0.8),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black45,
+            offset: Offset(0, 1.5),
+            blurRadius: 2,
+          ),
+        ],
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontFamily: 'Cairo',
+          fontSize: 7.5,
+          fontWeight: FontWeight.w900,
+          color: Color(0xFFF5DE88),
+        ),
       ),
     );
   }

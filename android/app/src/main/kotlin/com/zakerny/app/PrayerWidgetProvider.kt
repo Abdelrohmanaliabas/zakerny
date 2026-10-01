@@ -6,7 +6,12 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.util.Log
 import android.widget.RemoteViews
 import java.text.SimpleDateFormat
@@ -45,7 +50,7 @@ class PrayerWidgetProvider : AppWidgetProvider() {
             try {
                 val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-                val city = prefs.getString("city", "القاهرة") ?: "القاهرة"
+                val city = prefs.getString("city", "مدينة السادات") ?: "مدينة السادات"
                 val activeKey = prefs.getString("active_prayer_key", "fajr") ?: "fajr"
 
                 val fajr = prefs.getString("fajr", "04:22") ?: "04:22"
@@ -67,54 +72,27 @@ class PrayerWidgetProvider : AppWidgetProvider() {
 
                 val views = RemoteViews(context.packageName, R.layout.prayer_widget_layout)
 
-                // Top Bar
-                views.setTextViewText(R.id.widget_temp, temp)
-                views.setTextViewText(R.id.widget_iqamah, iqamah)
-                views.setTextViewText(R.id.widget_city, "ساعة الحرمين • $city")
-
-                // Main Clock
-                views.setTextViewText(R.id.widget_main_time, mainTime)
-
-                // Dates
-                views.setTextViewText(R.id.widget_date_hijri, hijriDate)
-                views.setTextViewText(R.id.widget_date_greg, gregDate)
-
-                // Prayers setup
-                views.setTextViewText(R.id.widget_fajr_time, fajr)
-                views.setTextViewText(R.id.widget_shuroq_time, sunrise)
-                views.setTextViewText(R.id.widget_dhuhr_time, dhuhr)
-                views.setTextViewText(R.id.widget_asr_time, asr)
-                views.setTextViewText(R.id.widget_maghrib_time, maghrib)
-                views.setTextViewText(R.id.widget_isha_time, isha)
-
-                val prayers = listOf(
-                    PrayerItemData("fajr", R.id.widget_fajr_bg, R.id.widget_fajr_led, R.id.widget_fajr_en, R.id.widget_fajr_name, R.id.widget_fajr_time),
-                    PrayerItemData("sunrise", R.id.widget_shuroq_bg, R.id.widget_shuroq_led, R.id.widget_shuroq_en, R.id.widget_shuroq_name, R.id.widget_shuroq_time),
-                    PrayerItemData("dhuhr", R.id.widget_dhuhr_bg, R.id.widget_dhuhr_led, R.id.widget_dhuhr_en, R.id.widget_dhuhr_name, R.id.widget_dhuhr_time),
-                    PrayerItemData("asr", R.id.widget_asr_bg, R.id.widget_asr_led, R.id.widget_asr_en, R.id.widget_asr_name, R.id.widget_asr_time),
-                    PrayerItemData("maghrib", R.id.widget_maghrib_bg, R.id.widget_maghrib_led, R.id.widget_maghrib_en, R.id.widget_maghrib_name, R.id.widget_maghrib_time),
-                    PrayerItemData("isha", R.id.widget_isha_bg, R.id.widget_isha_led, R.id.widget_isha_en, R.id.widget_isha_name, R.id.widget_isha_time)
+                // Render high-fidelity 3D Al-Fajia Clock bitmap
+                val renderedBitmap = renderClockBitmap(
+                    context = context,
+                    city = city,
+                    mainTime = mainTime,
+                    gregDate = gregDate,
+                    hijriDate = hijriDate,
+                    temp = temp,
+                    iqamah = iqamah,
+                    fajr = fajr,
+                    sunrise = sunrise,
+                    dhuhr = dhuhr,
+                    asr = asr,
+                    maghrib = maghrib,
+                    isha = isha,
+                    activeKey = activeKey
                 )
 
-                val activeBg = R.drawable.prayer_active_row_bg
-                val inactiveBg = R.drawable.prayer_inactive_row_bg
-                val activeLed = R.drawable.prayer_led_active
-                val inactiveLed = R.drawable.prayer_led_inactive
+                views.setImageViewBitmap(R.id.widget_clock_image, renderedBitmap)
 
-                val colorNavy = Color.parseColor("#0F2440")
-                val colorGoldHighlight = Color.parseColor("#B45309")
-                val colorLed = Color.parseColor("#FF2222")
-
-                for (p in prayers) {
-                    val isActive = p.key.equals(activeKey, ignoreCase = true)
-                    views.setImageViewResource(p.bgId, if (isActive) activeBg else inactiveBg)
-                    views.setImageViewResource(p.ledId, if (isActive) activeLed else inactiveLed)
-                    views.setTextColor(p.enId, if (isActive) colorGoldHighlight else colorNavy)
-                    views.setTextColor(p.nameId, if (isActive) colorGoldHighlight else colorNavy)
-                    views.setTextColor(p.timeId, colorLed)
-                }
-
-                // Click pending intent to open app at prayer clock
+                // Click intent to open app at prayer clock
                 val intent = Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                     putExtra("route", "/prayer-clock")
@@ -126,11 +104,129 @@ class PrayerWidgetProvider : AppWidgetProvider() {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
                 views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+                views.setOnClickPendingIntent(R.id.widget_clock_image, pendingIntent)
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating prayer app widget: ${e.message}", e)
             }
+        }
+
+        private fun renderClockBitmap(
+            context: Context,
+            city: String,
+            mainTime: String,
+            gregDate: String,
+            hijriDate: String,
+            temp: String,
+            iqamah: String,
+            fajr: String,
+            sunrise: String,
+            dhuhr: String,
+            asr: String,
+            maghrib: String,
+            isha: String,
+            activeKey: String
+        ): Bitmap {
+            val options = BitmapFactory.Options().apply {
+                inPreferredConfig = Bitmap.Config.ARGB_8888
+                inMutable = true
+            }
+            val template = BitmapFactory.decodeResource(context.resources, R.drawable.al_fajia_widget_base, options)
+            val bitmap = if (template.isMutable) template else template.copy(Bitmap.Config.ARGB_8888, true)
+            val canvas = Canvas(bitmap)
+
+            val redColor = Color.parseColor("#FF2222")
+
+            // 1. Main Time Clock (huge red digits inside the glossy central bezel)
+            val mainTimePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = redColor
+                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                textAlign = Paint.Align.CENTER
+                textSize = 34f
+            }
+            drawCenteredText(canvas, mainTime, 188f, 174f, mainTimePaint)
+
+            // 2. Date Matrix
+            val datePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = redColor
+                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                textAlign = Paint.Align.CENTER
+                textSize = 14f
+            }
+            val displayDate = if (gregDate.length > 20) gregDate.substring(0, 20) else gregDate
+            drawCenteredText(canvas, displayDate, 183f, 224f, datePaint)
+
+            // 3. Temp & Iqamah Gauges
+            val gaugePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = redColor
+                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                textAlign = Paint.Align.CENTER
+                textSize = 14f
+            }
+            drawCenteredText(canvas, temp, 152f, 120f, gaugePaint)
+            drawCenteredText(canvas, iqamah, 223f, 120f, gaugePaint)
+
+            // 4. City Name (under the crescent logo)
+            val cityPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.parseColor("#805A18")
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                textAlign = Paint.Align.CENTER
+                textSize = 9.5f
+            }
+            val shortCity = if (city.length > 24) city.substring(0, 24) else city
+            drawCenteredText(canvas, "ساعة الحرمين • $shortCity", 180f, 96f, cityPaint)
+
+            // 5. 6 Prayer Times (inside individual black bezels)
+            val prayerTimePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = redColor
+                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                textAlign = Paint.Align.CENTER
+                textSize = 15f
+            }
+
+            val activeDotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.parseColor("#FF1A1A")
+                style = Paint.Style.FILL
+            }
+            val activeDotGlow = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.parseColor("#FFAAAA")
+                style = Paint.Style.STROKE
+                strokeWidth = 1.6f
+            }
+
+            val prayerList = listOf(
+                Pair("fajr", fajr),
+                Pair("sunrise", sunrise),
+                Pair("dhuhr", dhuhr),
+                Pair("asr", asr),
+                Pair("maghrib", maghrib),
+                Pair("isha", isha)
+            )
+            val prayerY = listOf(256f, 288f, 320f, 352f, 384f, 416f)
+
+            for (i in prayerList.indices) {
+                val (key, time) = prayerList[i]
+                val yTop = prayerY[i]
+                drawCenteredText(canvas, time, 186f, yTop + 11.5f, prayerTimePaint)
+
+                // Active red LED indicator dot
+                val isRowActive = key.equals(activeKey, ignoreCase = true)
+                if (isRowActive) {
+                    val dotCx = 241f
+                    val dotCy = yTop + 11.5f
+                    canvas.drawCircle(dotCx, dotCy, 5.5f, activeDotPaint)
+                    canvas.drawCircle(dotCx, dotCy, 6.2f, activeDotGlow)
+                }
+            }
+
+            return bitmap
+        }
+
+        private fun drawCenteredText(canvas: Canvas, text: String, cx: Float, cy: Float, paint: Paint) {
+            val fm = paint.fontMetrics
+            val baseline = cy - (fm.ascent + fm.descent) / 2f
+            canvas.drawText(text, cx, baseline, paint)
         }
 
         fun updateAllWidgets(context: Context) {
@@ -148,13 +244,4 @@ class PrayerWidgetProvider : AppWidgetProvider() {
             }
         }
     }
-
-    private data class PrayerItemData(
-        val key: String,
-        val bgId: Int,
-        val ledId: Int,
-        val enId: Int,
-        val nameId: Int,
-        val timeId: Int
-    )
 }

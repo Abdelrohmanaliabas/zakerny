@@ -78,6 +78,7 @@ flutter:
 
   assets:
     - assets/branding/app_icon.png
+    - assets/images/
     - assets/audio/
     - assets/audio/dhikr/
     - assets/adhkar/adhkar.json
