@@ -60,8 +60,8 @@ class PrayerWidgetProvider : AppWidgetProvider() {
                 val maghrib = prefs.getString("maghrib", "05:57") ?: "05:57"
                 val isha = prefs.getString("isha", "07:27") ?: "07:27"
 
-                val temp = prefs.getString("temp", "22°C") ?: "22°C"
-                val iqamah = prefs.getString("iqamah", "21°F") ?: "21°F"
+                val temp = prefs.getString("temp", "30") ?: "30"
+                val iqamah = prefs.getString("iqamah", "86") ?: "86"
                 val hijriDate = prefs.getString("hijri_date", "١٤ ربيع الأول ١٤٤٦") ?: "١٤ ربيع الأول ١٤٤٦"
 
                 val now = Date()
@@ -129,6 +129,7 @@ class PrayerWidgetProvider : AppWidgetProvider() {
             activeKey: String
         ): Bitmap {
             val options = BitmapFactory.Options().apply {
+                inScaled = false // CRITICAL: Never scale according to screen density
                 inPreferredConfig = Bitmap.Config.ARGB_8888
                 inMutable = true
             }
@@ -136,45 +137,69 @@ class PrayerWidgetProvider : AppWidgetProvider() {
             val bitmap = if (template.isMutable) template else template.copy(Bitmap.Config.ARGB_8888, true)
             val canvas = Canvas(bitmap)
 
+            val w = bitmap.width.toFloat()
+            val h = bitmap.height.toFloat()
+
+            // Dynamic scale ratio relative to reference 768 x 1288
+            val sx = w / 768f
+            val sy = h / 1288f
+
             val redColor = Color.parseColor("#FF2222")
             val amberColor = Color.parseColor("#FFA028")
             val cityColor = Color.parseColor("#7A4F18")
 
-            // 1. Main Time Clock (dead center inside the glossy central bezel: x=394, y=460)
+            // 1. Real Temperature & Iqamah/°F (inside top gauges: x=318, x=467, y=358)
+            val tempPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = redColor
+                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                textAlign = Paint.Align.CENTER
+                textSize = 38f * sy
+                isFakeBoldText = true
+            }
+            val cleanTemp = temp.replace("°C", "").replace("C", "").trim()
+            val cleanIqamah = iqamah.replace("°F", "").replace("F", "").trim()
+            drawCenteredText(canvas, cleanTemp, 318f * sx, 358f * sy, tempPaint)
+            drawCenteredText(canvas, cleanIqamah, 467f * sx, 358f * sy, tempPaint)
+
+            // 2. Main Time Clock (dead center in central glossy bezel: x=394, y=460) - BIG & BOLD
             val mainTimePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = redColor
                 typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
                 textAlign = Paint.Align.CENTER
-                textSize = 72f
+                textSize = 84f * sy
+                isFakeBoldText = true
             }
-            drawCenteredText(canvas, mainTime, 394f, 460f, mainTimePaint)
+            drawCenteredText(canvas, mainTime, 394f * sx, 460f * sy, mainTimePaint)
 
-            // 2. Date Matrix (centered at x=394, y=578)
+            // 3. Date Matrix (centered at x=394, y=578) - BOLD
             val datePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = amberColor
                 typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
                 textAlign = Paint.Align.CENTER
-                textSize = 26f
+                textSize = 28f * sy
+                isFakeBoldText = true
             }
             val displayDate = if (gregDate.length > 20) gregDate.substring(0, 20) else gregDate
-            drawCenteredText(canvas, displayDate, 394f, 578f, datePaint)
+            drawCenteredText(canvas, displayDate, 394f * sx, 578f * sy, datePaint)
 
-            // 3. City Name (under date display, above Fajr: x=392, y=633)
+            // 4. City Name (under date display, above Fajr: x=392, y=633)
             val cityPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = cityColor
                 typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                 textAlign = Paint.Align.CENTER
-                textSize = 22f
+                textSize = 24f * sy
+                isFakeBoldText = true
             }
             val shortCity = if (city.length > 20) city.substring(0, 20) else city
-            drawCenteredText(canvas, shortCity, 392f, 633f, cityPaint)
+            drawCenteredText(canvas, shortCity, 392f * sx, 633f * sy, cityPaint)
 
-            // 4. 6 Prayer Times (inside individual bezels: x=392, y = 685, 773, 861, 949, 1036, 1123)
+            // 5. 6 Prayer Times (inside individual bezels: x=392, y = 685, 773, 861, 949, 1036, 1123) - BIG & BOLD
             val prayerTimePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = redColor
                 typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
                 textAlign = Paint.Align.CENTER
-                textSize = 38f
+                textSize = 46f * sy
+                isFakeBoldText = true
             }
 
             val activeDotPaintGlow = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -202,16 +227,16 @@ class PrayerWidgetProvider : AppWidgetProvider() {
 
             for (i in prayerList.indices) {
                 val (key, time) = prayerList[i]
-                val cy = prayerY[i]
-                drawCenteredText(canvas, time, 392f, cy, prayerTimePaint)
+                val cy = prayerY[i] * sy
+                drawCenteredText(canvas, time, 392f * sx, cy, prayerTimePaint)
 
-                // Active red LED indicator dot
+                // Active red LED indicator dot next to the current prayer
                 val isRowActive = key.equals(activeKey, ignoreCase = true)
                 if (isRowActive) {
-                    val dotCx = 496f
-                    canvas.drawCircle(dotCx, cy, 10f, activeDotPaintGlow)
-                    canvas.drawCircle(dotCx, cy, 7f, activeDotPaintCore)
-                    canvas.drawCircle(dotCx - 2f, cy - 2f, 2.5f, activeDotPaintHighlight)
+                    val dotCx = 496f * sx
+                    canvas.drawCircle(dotCx, cy, 11f * sx, activeDotPaintGlow)
+                    canvas.drawCircle(dotCx, cy, 8f * sx, activeDotPaintCore)
+                    canvas.drawCircle(dotCx - 2.5f * sx, cy - 2.5f * sy, 2.5f * sx, activeDotPaintHighlight)
                 }
             }
 
