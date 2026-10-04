@@ -220,6 +220,8 @@ class ZekrniHeader extends StatelessWidget {
           if (route == '/settings' ||
               route == '/qibla' ||
               route == '/adhkar' ||
+              route == '/dua-tawashih' ||
+              route == '/qadaa-tracker' ||
               route == '/quran/bookmarks') {
             context.push(route);
           } else {
@@ -232,6 +234,18 @@ class ZekrniHeader extends StatelessWidget {
             icon: Icons.settings_rounded,
             title: 'الإعدادات والأذان',
             color: FatimidColors.goldPrimary,
+          ),
+          _buildPopupItem(
+            value: '/dua-tawashih',
+            icon: Icons.auto_awesome_rounded,
+            title: 'الأدعية والرقية والتواشيح',
+            color: FatimidColors.goldLight,
+          ),
+          _buildPopupItem(
+            value: '/qadaa-tracker',
+            icon: Icons.timelapse_rounded,
+            title: 'سجل قضاء الصلوات والصيام',
+            color: const Color(0xFF10B981),
           ),
           _buildPopupItem(
             value: '/qibla',

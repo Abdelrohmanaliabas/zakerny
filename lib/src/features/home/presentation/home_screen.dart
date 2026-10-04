@@ -199,11 +199,44 @@ class _HomeScreenState extends State<HomeScreen> {
                             onTap: () => context.go('/recitations'),
                           ),
                           _QuickAction(
+                            icon: Icons.menu_book_rounded,
+                            label: 'الأدعية',
+                            badge: 'مأثورة',
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () => context.push('/duas'),
+                          ),
+                          _QuickAction(
+                            icon: Icons.health_and_safety_rounded,
+                            label: 'الرقية',
+                            badge: 'تحصين',
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF059669), Color(0xFF047857)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () => context.push('/ruqyah'),
+                          ),
+                          _QuickAction(
+                            icon: Icons.mic_rounded,
+                            label: 'التواشيح',
+                            badge: 'ابتهالات',
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFD97706), Color(0xFFB45309)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () => context.push('/tawashih'),
+                          ),
+                          _QuickAction(
                             icon: Icons.calendar_month_rounded,
                             label: 'التقويم',
                             badge: 'هجري/ميلادي',
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
+                              colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -241,6 +274,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               end: Alignment.bottomRight,
                             ),
                             onTap: () => context.push('/adhkar'),
+                          ),
+                          _QuickAction(
+                            icon: Icons.timelapse_rounded,
+                            label: 'قضاء الفوائت',
+                            badge: 'جديد',
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF047857), Color(0xFF065F46)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () => context.push('/qadaa-tracker'),
                           ),
                         ],
                       ),
@@ -286,6 +330,170 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
+
+                      // موسوعة الأدعية والتواشيح
+                      FatimidCard(
+                        onTap: () => context.push('/dua-tawashih'),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 46,
+                              height: 46,
+                              decoration: BoxDecoration(
+                                gradient: FatimidColors.goldGradient,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: FatimidColors.goldPrimary.withValues(alpha: 0.6),
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.auto_awesome_rounded,
+                                color: Color(0xFF261800),
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'الأدعية والرقية والتواشيح',
+                                        style: TextStyle(
+                                          fontFamily: 'Cairo',
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: FatimidColors.goldPrimary.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          'جديد 🎙️',
+                                          style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark ? FatimidColors.goldLight : const Color(0xFF8B670A),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'موسوعة الأدعية المأثورة والرقية الشرعية وروائع الابتهالات والتواشيح',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 12,
+                                      color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4A6B5F),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.chevron_left_rounded,
+                              color: FatimidColors.goldPrimary.withValues(alpha: 0.8),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // سجل قضاء الصلوات والصيام (Qadaa Tracker)
+                      FatimidCard(
+                        onTap: () => context.push('/qadaa-tracker'),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 46,
+                              height: 46,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF0F766E), Color(0xFF134E4A)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: FatimidColors.goldPrimary.withValues(alpha: 0.5),
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.timelapse_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'سجل قضاء الصلوات والصيام',
+                                        style: TextStyle(
+                                          fontFamily: 'Cairo',
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: const Text(
+                                          'قضاء الفوائت ⏳',
+                                          style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF10B981),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'متابعة قضاء الفروض الفائتة وأيام الصيام مع مؤشرات إنجاز وحاسبة للمدة',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 12,
+                                      color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4A6B5F),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.chevron_left_rounded,
+                              color: FatimidColors.goldPrimary.withValues(alpha: 0.8),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
 
                       // 1. منظم ومتابع ختمات القرآن الكريم
                       FatimidCard(

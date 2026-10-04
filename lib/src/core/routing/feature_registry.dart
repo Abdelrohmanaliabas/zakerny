@@ -35,6 +35,12 @@ import '../../features/card_designer/presentation/card_designer_screen.dart';
 import '../../features/ibadah_tracker/application/ibadah_controller.dart';
 import '../../features/ibadah_tracker/data/ibadah_repository.dart';
 import '../../features/ibadah_tracker/presentation/ibadah_tracker_screen.dart';
+import '../../features/dua_tawashih/application/dua_tawashih_controller.dart';
+import '../../features/dua_tawashih/data/dua_tawashih_repository.dart';
+import '../../features/dua_tawashih/presentation/dua_tawashih_screen.dart';
+import '../../features/qadaa_tracker/application/qadaa_controller.dart';
+import '../../features/qadaa_tracker/data/qadaa_repository.dart';
+import '../../features/qadaa_tracker/presentation/qadaa_tracker_screen.dart';
 import '../notifications/notification_service.dart';
 import '../storage/app_local_store.dart';
 import 'app_feature.dart';
@@ -49,12 +55,18 @@ List<AppFeature> buildFeatureRegistry({
   final hadith = HadithController(HadithRepository(store));
   final adhkar = AdhkarController(AdhkarRepository(store));
   final qibla = QiblaController(QiblaRepository(store));
+  final recitationService = RecitationService();
   final recitations = RecitationsController(
     RecitationRepository(store),
-    RecitationService(),
+    recitationService,
+  );
+  final duaTawashih = DuaTawashihController(
+    repository: DuaTawashihRepository(store),
+    recitationService: recitationService,
   );
   final khatmah = KhatmahController(KhatmahRepository(store));
   final ibadah = IbadahController(IbadahRepository(store));
+  final qadaa = QadaaController(QadaaRepository(store));
 
   return [
     AppFeature(
@@ -113,6 +125,53 @@ List<AppFeature> buildFeatureRegistry({
         GoRoute(
           path: '/ibadah-tracker',
           builder: (context, state) => IbadahTrackerScreen(controller: ibadah),
+        ),
+        GoRoute(
+          path: '/dua-tawashih',
+          builder: (context, state) {
+            final tabParam = state.uri.queryParameters['tab'];
+            final int tab;
+            if (tabParam == 'ruqyah') {
+              tab = 1;
+            } else if (tabParam == 'tawashih') {
+              tab = 2;
+            } else {
+              tab = 0;
+            }
+            return DuaTawashihScreen(
+              controller: duaTawashih,
+              initialTab: tab,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/duas',
+          builder: (context, state) => DuaTawashihScreen(
+            controller: duaTawashih,
+            initialTab: 0,
+          ),
+        ),
+        GoRoute(
+          path: '/ruqyah',
+          builder: (context, state) => DuaTawashihScreen(
+            controller: duaTawashih,
+            initialTab: 1,
+          ),
+        ),
+        GoRoute(
+          path: '/tawashih',
+          builder: (context, state) => DuaTawashihScreen(
+            controller: duaTawashih,
+            initialTab: 2,
+          ),
+        ),
+        GoRoute(
+          path: '/qadaa-tracker',
+          builder: (context, state) => QadaaTrackerScreen(controller: qadaa),
+        ),
+        GoRoute(
+          path: '/qadaa',
+          builder: (context, state) => QadaaTrackerScreen(controller: qadaa),
         ),
       ],
     ),
