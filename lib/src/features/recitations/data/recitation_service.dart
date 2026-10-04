@@ -73,10 +73,12 @@ class RecitationService {
 
     final mediaItem = MediaItem(
       id: tagId,
-      album: 'تلاوات القرآن الكريم',
+      album: (customTitle != null || reciter?.id == 'naqshbandi' || reciter?.id == 'tobar')
+          ? 'الأدعية والابتهالات'
+          : 'تلاوات القرآن الكريم',
       title: title,
       artist: artist,
-      artUri: Uri.parse('asset:///assets/branding/app_icon.png'),
+      playable: true,
     );
 
     if (reciter != null && surah != null) {
@@ -94,6 +96,11 @@ class RecitationService {
       try {
         final audioSource = AudioSource.uri(
           Uri.parse(url),
+          headers: const {
+            'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+          },
           tag: mediaItem,
         );
         await _player.setAudioSource(audioSource);
@@ -218,7 +225,7 @@ class RecitationService {
       album: 'تلاوات القرآن الكريم',
       title: title,
       artist: artist,
-      artUri: Uri.parse('asset:///assets/branding/app_icon.png'),
+      playable: true,
     );
 
     if (reciter != null && surah != null) {

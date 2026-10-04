@@ -51,7 +51,7 @@ class AudioAssetUtils {
       title: title ?? 'أذان الصلاة',
       artist: artist ?? 'ذكرني',
       album: album ?? 'أصوات الأذان',
-      artUri: Uri.parse('asset:///assets/branding/app_icon.png'),
+      playable: true,
     );
 
     try {

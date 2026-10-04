@@ -116,31 +116,32 @@ class _DuaTawashihScreenState extends State<DuaTawashihScreen>
                 dividerColor: Colors.transparent,
                 labelColor: const Color(0xFF261800),
                 unselectedLabelColor: isDark ? const Color(0xFF90A49C) : const Color(0xFF5D756C),
+                labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                 labelStyle: const TextStyle(
                   fontFamily: 'Cairo',
-                  fontSize: 13.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w900,
                 ),
                 unselectedLabelStyle: const TextStyle(
                   fontFamily: 'Cairo',
-                  fontSize: 13,
+                  fontSize: 11.5,
                   fontWeight: FontWeight.w700,
                 ),
                 tabs: const [
                   Tab(
                     iconMargin: EdgeInsets.only(bottom: 2),
-                    icon: Icon(Icons.menu_book_rounded, size: 19),
+                    icon: Icon(Icons.menu_book_rounded, size: 18),
                     text: 'الأدعية المأثورة',
                   ),
                   Tab(
                     iconMargin: EdgeInsets.only(bottom: 2),
-                    icon: Icon(Icons.health_and_safety_rounded, size: 19),
+                    icon: Icon(Icons.health_and_safety_rounded, size: 18),
                     text: 'الرقية الشرعية',
                   ),
                   Tab(
                     iconMargin: EdgeInsets.only(bottom: 2),
-                    icon: Icon(Icons.headphones_rounded, size: 19),
-                    text: 'التواشيح والابتهالات',
+                    icon: Icon(Icons.headphones_rounded, size: 18),
+                    text: 'التواشيح والابتهال',
                   ),
                 ],
               ),
@@ -912,20 +913,22 @@ class _MunshidBioBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
                       munshid.name,
                       style: TextStyle(
                         fontFamily: 'Cairo',
-                        fontSize: 14.5,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w900,
                         color: isDark ? Colors.white : const Color(0xFF0F3225),
                       ),
                     ),
-                    const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
                         color: FatimidColors.goldPrimary.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
@@ -934,7 +937,7 @@ class _MunshidBioBanner extends StatelessWidget {
                         munshid.epithet,
                         style: const TextStyle(
                           fontFamily: 'Cairo',
-                          fontSize: 10.5,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: FatimidColors.goldPrimary,
                         ),
@@ -980,6 +983,8 @@ class _TawashihCard extends StatelessWidget {
     final isFav = controller.isTawashihFavorite(item.id);
 
     return FatimidCard(
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+      borderRadius: 16,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1014,11 +1019,11 @@ class _TawashihCard extends StatelessWidget {
               // Play / Pause Circle
               InkWell(
                 onTap: () => controller.pauseOrResume(item),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  width: 48,
-                  height: 48,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     gradient: isPlaying ? FatimidColors.goldGradient : null,
                     color: isPlaying
@@ -1029,14 +1034,14 @@ class _TawashihCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: FatimidColors.goldPrimary.withValues(alpha: isPlaying ? 0.9 : 0.4),
-                      width: 1.5,
+                      width: 1.3,
                     ),
                     boxShadow: isPlaying
                         ? [
                             BoxShadow(
                               color: FatimidColors.goldPrimary.withValues(alpha: 0.4),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
                           ]
                         : null,
@@ -1045,12 +1050,12 @@ class _TawashihCard extends StatelessWidget {
                     child: Icon(
                       isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                       color: isPlaying ? const Color(0xFF261800) : FatimidColors.goldPrimary,
-                      size: 26,
+                      size: 22,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 10),
 
               // Title and Munshid Info
               Expanded(
@@ -1061,7 +1066,7 @@ class _TawashihCard extends StatelessWidget {
                       item.title,
                       style: TextStyle(
                         fontFamily: 'Cairo',
-                        fontSize: 14.5,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w900,
                         color: isPlaying
                             ? FatimidColors.goldPrimary
@@ -1108,7 +1113,7 @@ class _TawashihCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Badges: Theme + Maqam
           Wrap(
@@ -1174,17 +1179,17 @@ class _TawashihCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Lyrics Preview Snippet
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: isDark
                   ? const Color(0xFF0C1914).withValues(alpha: 0.6)
                   : const Color(0xFFF9F7F1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: FatimidColors.goldPrimary.withValues(alpha: 0.2),
                 width: 1,
@@ -1195,8 +1200,8 @@ class _TawashihCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Amiri',
-                fontSize: 16.5,
-                height: 1.8,
+                fontSize: 14.5,
+                height: 1.6,
                 color: isDark ? const Color(0xFFE2EBE7) : const Color(0xFF234438),
                 fontWeight: FontWeight.bold,
               ),

@@ -30,7 +30,21 @@ void overlayMain() {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Parallel lightweight initialization of local storage & Arabic date formatting (~15-25ms)
+  // 1. Initialize background audio service for recitations, ruqyah, and tawashih
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+    try {
+      await JustAudioBackground.init(
+        androidNotificationChannelId: 'com.zakerny.app.channel.audio',
+        androidNotificationChannelName: 'تلاوات القرآن الكريم والأدعية',
+        androidNotificationOngoing: true,
+        androidNotificationIcon: 'mipmap/ic_launcher',
+        androidShowNotificationBadge: true,
+        androidStopForegroundOnPause: true,
+      );
+    } catch (_) {}
+  }
+
+  // 2. Parallel lightweight initialization of local storage & Arabic date formatting (~15-25ms)
   final store = SharedPrefsAppLocalStore();
   await Future.wait([
     store.init(),
@@ -39,10 +53,10 @@ Future<void> main() async {
 
   final notifications = NotificationService();
 
-  // 2. Launch UI immediately so the user never sees a stalled white screen!
+  // 3. Launch UI immediately
   runApp(ZekrniApp(store: store, notifications: notifications));
 
-  // 3. Initialize background services asynchronously without blocking the UI
+  // 4. Initialize background services asynchronously without blocking the UI
   _initBackgroundServices(store, notifications);
 }
 
@@ -56,18 +70,6 @@ void _initBackgroundServices(
       tz_data.initializeTimeZones();
       await _configureLocalTimezone();
     } catch (_) {}
-
-    // B. Background audio service for recitations
-    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-      try {
-        await JustAudioBackground.init(
-          androidNotificationChannelId: 'com.zakerny.app.channel.audio',
-          androidNotificationChannelName: 'تلاوات القرآن الكريم',
-          androidNotificationOngoing: false,
-          androidShowNotificationBadge: true,
-        );
-      } catch (_) {}
-    }
 
     // C. Voice Dhikr Service
     try {

@@ -150,9 +150,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisCount: 4,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 0.95,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        childAspectRatio: 1.05,
                         children: [
                           _QuickAction(
                             icon: Icons.explore_rounded,
@@ -331,17 +331,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // موسوعة الأدعية والتواشيح
+                      // موسوعة الأدعية والرقية والتواشيح
                       FatimidCard(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                         onTap: () => context.push('/dua-tawashih'),
                         child: Row(
                           children: [
                             Container(
-                              width: 46,
-                              height: 46,
+                              width: 38,
+                              height: 38,
                               decoration: BoxDecoration(
                                 gradient: FatimidColors.goldGradient,
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: FatimidColors.goldPrimary.withValues(alpha: 0.6),
                                   width: 1,
@@ -350,36 +351,41 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: const Icon(
                                 Icons.auto_awesome_rounded,
                                 color: Color(0xFF261800),
-                                size: 24,
+                                size: 20,
                               ),
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
-                                      const Text(
-                                        'الأدعية والرقية والتواشيح',
-                                        style: TextStyle(
-                                          fontFamily: 'Cairo',
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 14,
+                                      Expanded(
+                                        child: Text(
+                                          'الأدعية والرقية والتواشيح',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13.5,
+                                            color: isDark ? Colors.white : const Color(0xFF103024),
+                                          ),
                                         ),
                                       ),
-                                      const Spacer(),
+                                      const SizedBox(width: 6),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                         decoration: BoxDecoration(
                                           color: FatimidColors.goldPrimary.withValues(alpha: 0.2),
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Text(
                                           'جديد 🎙️',
                                           style: TextStyle(
                                             fontFamily: 'Cairo',
-                                            fontSize: 10,
+                                            fontSize: 9.5,
                                             fontWeight: FontWeight.bold,
                                             color: isDark ? FatimidColors.goldLight : const Color(0xFF8B670A),
                                           ),
@@ -387,45 +393,47 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 3),
                                   Text(
-                                    'موسوعة الأدعية المأثورة والرقية الشرعية وروائع الابتهالات والتواشيح',
+                                    'موسوعة الأدعية المأثورة والرقية والابتهالات',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontFamily: 'Cairo',
-                                      fontSize: 12,
+                                      fontSize: 11.5,
                                       color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4A6B5F),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 6),
                             Icon(
                               Icons.chevron_left_rounded,
+                              size: 20,
                               color: FatimidColors.goldPrimary.withValues(alpha: 0.8),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
 
                       // سجل قضاء الصلوات والصيام (Qadaa Tracker)
                       FatimidCard(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                         onTap: () => context.push('/qadaa-tracker'),
                         child: Row(
                           children: [
                             Container(
-                              width: 46,
-                              height: 46,
+                              width: 38,
+                              height: 38,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   colors: [Color(0xFF0F766E), Color(0xFF134E4A)],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: FatimidColors.goldPrimary.withValues(alpha: 0.5),
                                   width: 1,
@@ -434,36 +442,41 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: const Icon(
                                 Icons.timelapse_rounded,
                                 color: Colors.white,
-                                size: 24,
+                                size: 20,
                               ),
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
-                                      const Text(
-                                        'سجل قضاء الصلوات والصيام',
-                                        style: TextStyle(
-                                          fontFamily: 'Cairo',
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 14,
+                                      Expanded(
+                                        child: Text(
+                                          'سجل قضاء الصلوات والصيام',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13.5,
+                                            color: isDark ? Colors.white : const Color(0xFF103024),
+                                          ),
                                         ),
                                       ),
-                                      const Spacer(),
+                                      const SizedBox(width: 6),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                         decoration: BoxDecoration(
                                           color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: const Text(
                                           'قضاء الفوائت ⏳',
                                           style: TextStyle(
                                             fontFamily: 'Cairo',
-                                            fontSize: 10,
+                                            fontSize: 9.5,
                                             fontWeight: FontWeight.bold,
                                             color: Color(0xFF10B981),
                                           ),
@@ -471,45 +484,47 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 3),
                                   Text(
-                                    'متابعة قضاء الفروض الفائتة وأيام الصيام مع مؤشرات إنجاز وحاسبة للمدة',
+                                    'متابعة قضاء الفروض الفائتة وأيام الصيام مع مؤشرات إنجاز',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontFamily: 'Cairo',
-                                      fontSize: 12,
+                                      fontSize: 11.5,
                                       color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4A6B5F),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 6),
                             Icon(
                               Icons.chevron_left_rounded,
+                              size: 20,
                               color: FatimidColors.goldPrimary.withValues(alpha: 0.8),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
 
                       // 1. منظم ومتابع ختمات القرآن الكريم
                       FatimidCard(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                         onTap: () => context.push('/khatmah'),
                         child: Row(
                           children: [
                             Container(
-                              width: 46,
-                              height: 46,
+                              width: 38,
+                              height: 38,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   colors: [Color(0xFF059669), Color(0xFF047857)],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: FatimidColors.goldPrimary.withValues(alpha: 0.4),
                                   width: 1,
@@ -518,36 +533,41 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: const Icon(
                                 Icons.auto_stories_rounded,
                                 color: Colors.white,
-                                size: 24,
+                                size: 20,
                               ),
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
-                                      const Text(
-                                        'منظم ومتابع ختمات القرآن',
-                                        style: TextStyle(
-                                          fontFamily: 'Cairo',
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 14,
+                                      Expanded(
+                                        child: Text(
+                                          'منظم ومتابع ختمات القرآن',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13.5,
+                                            color: isDark ? Colors.white : const Color(0xFF103024),
+                                          ),
                                         ),
                                       ),
-                                      const Spacer(),
+                                      const SizedBox(width: 6),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                         decoration: BoxDecoration(
                                           color: FatimidColors.emeraldPrimary.withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Text(
                                           'خطة الختمة',
                                           style: TextStyle(
                                             fontFamily: 'Cairo',
-                                            fontSize: 10,
+                                            fontSize: 9.5,
                                             fontWeight: FontWeight.bold,
                                             color: isDark ? const Color(0xFF6EE7B7) : FatimidColors.emeraldPrimary,
                                           ),
@@ -555,45 +575,47 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 3),
                                   Text(
                                     'تحديد هدف الختمة وحساب الورد بعد كل صلاة وتتبع الإنجاز',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontFamily: 'Cairo',
-                                      fontSize: 12,
+                                      fontSize: 11.5,
                                       color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4A6B5F),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 6),
                             Icon(
                               Icons.chevron_left_rounded,
+                              size: 20,
                               color: FatimidColors.goldPrimary.withValues(alpha: 0.8),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
 
                       // 2. سجل المحاسبة والعبادات اليومية
                       FatimidCard(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                         onTap: () => context.push('/ibadah-tracker'),
                         child: Row(
                           children: [
                             Container(
-                              width: 46,
-                              height: 46,
+                              width: 38,
+                              height: 38,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: FatimidColors.goldPrimary.withValues(alpha: 0.4),
                                   width: 1,
@@ -602,36 +624,41 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: const Icon(
                                 Icons.checklist_rtl_rounded,
                                 color: Colors.white,
-                                size: 24,
+                                size: 20,
                               ),
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
-                                      const Text(
-                                        'سجل المحاسبة والعبادات اليومية',
-                                        style: TextStyle(
-                                          fontFamily: 'Cairo',
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 14,
+                                      Expanded(
+                                        child: Text(
+                                          'سجل المحاسبة والعبادات اليومية',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13.5,
+                                            color: isDark ? Colors.white : const Color(0xFF103024),
+                                          ),
                                         ),
                                       ),
-                                      const Spacer(),
+                                      const SizedBox(width: 6),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                         decoration: BoxDecoration(
                                           color: const Color(0xFF0D9488).withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: const Text(
                                           'محاسبة النفس',
                                           style: TextStyle(
                                             fontFamily: 'Cairo',
-                                            fontSize: 10,
+                                            fontSize: 9.5,
                                             fontWeight: FontWeight.bold,
                                             color: Color(0xFF0D9488),
                                           ),
@@ -639,45 +666,47 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 3),
                                   Text(
-                                    'متابعة الصلوات في وقتها والسنن والأذكار مع إحصائيات أسبوعية',
+                                    'متابعة الصلوات في وقتها والسنن والأذكار',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontFamily: 'Cairo',
-                                      fontSize: 12,
+                                      fontSize: 11.5,
                                       color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4A6B5F),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 6),
                             Icon(
                               Icons.chevron_left_rounded,
+                              size: 20,
                               color: FatimidColors.goldPrimary.withValues(alpha: 0.8),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
 
                       // 3. صانع بطاقات الآيات والأحاديث
                       FatimidCard(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                         onTap: () => context.push('/card-designer'),
                         child: Row(
                           children: [
                             Container(
-                              width: 46,
-                              height: 46,
+                              width: 38,
+                              height: 38,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   colors: [Color(0xFFD97706), Color(0xFFB45309)],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: FatimidColors.goldPrimary.withValues(alpha: 0.4),
                                   width: 1,
@@ -686,36 +715,41 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: const Icon(
                                 Icons.palette_rounded,
                                 color: Colors.white,
-                                size: 24,
+                                size: 20,
                               ),
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
-                                      const Text(
-                                        'صانع بطاقات الآيات والأحاديث',
-                                        style: TextStyle(
-                                          fontFamily: 'Cairo',
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 14,
+                                      Expanded(
+                                        child: Text(
+                                          'صانع بطاقات الآيات والأحاديث',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13.5,
+                                            color: isDark ? Colors.white : const Color(0xFF103024),
+                                          ),
                                         ),
                                       ),
-                                      const Spacer(),
+                                      const SizedBox(width: 6),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFD97706).withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: const Text(
                                           'مشاركة وتصميم',
                                           style: TextStyle(
                                             fontFamily: 'Cairo',
-                                            fontSize: 10,
+                                            fontSize: 9.5,
                                             fontWeight: FontWeight.bold,
                                             color: Color(0xFFD97706),
                                           ),
@@ -723,23 +757,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 3),
                                   Text(
-                                    'تصميم بطاقات فاخرة بخلفيات فاطمية مذهبة ومشاركتها فوراً',
+                                    'تصميم بطاقات فاخرة بخلفيات فاطمية مذهبة ومشاركتها',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontFamily: 'Cairo',
-                                      fontSize: 12,
+                                      fontSize: 11.5,
                                       color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4A6B5F),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 6),
                             Icon(
                               Icons.chevron_left_rounded,
+                              size: 20,
                               color: FatimidColors.goldPrimary.withValues(alpha: 0.8),
                             ),
                           ],
@@ -1311,20 +1346,21 @@ class _QuickAction extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         decoration: BoxDecoration(
           color: isDark ? FatimidColors.obsidianCard : Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.3 : 0.22),
-            width: 1.1,
+            color: FatimidColors.goldPrimary.withValues(alpha: isDark ? 0.28 : 0.2),
+            width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -1332,27 +1368,29 @@ class _QuickAction extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 gradient: gradient,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.18),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1.5),
                   ),
                 ],
               ),
-              child: Icon(icon, color: Colors.white, size: 22),
+              child: Icon(icon, color: Colors.white, size: 18),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 5),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontFamily: 'Cairo',
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w800,
                 color: isDark ? Colors.white : const Color(0xFF102820),
               ),
