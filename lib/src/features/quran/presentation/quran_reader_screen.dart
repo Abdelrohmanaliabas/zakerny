@@ -82,12 +82,29 @@ class _QuranReaderScreenState extends State<QuranReaderScreen>
     200.0, // 3.0x أقصى سرعة
   ];
 
+  int? get _targetInitialAyahNumber {
+    if (widget.initialAyahNumber != null && widget.initialAyahNumber! > 0) {
+      return widget.initialAyahNumber;
+    }
+    final lastRead = widget.controller.lastRead();
+    if (lastRead != null && lastRead.surahId == widget.surahId) {
+      return lastRead.ayahNumber;
+    }
+    final bookmarks = widget.controller.bookmarks();
+    final match =
+        bookmarks.where((b) => b.surahId == widget.surahId).firstOrNull;
+    if (match != null) {
+      return match.ayahNumber;
+    }
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
     _fontSize = widget.controller.getFontSize();
     _isMushafMode = widget.controller.getMushafMode();
-    _selectedAyahNumber = widget.initialAyahNumber;
+    _selectedAyahNumber = _targetInitialAyahNumber;
     _selectedSurahId = widget.surahId;
     _scrollSpeed = widget.controller.getAutoScrollSpeed();
     _scrollTicker = createTicker(_onScrollTick);
@@ -100,6 +117,17 @@ class _QuranReaderScreenState extends State<QuranReaderScreen>
     });
     widget.recitationsController?.activeRecitationNotifier
         .addListener(_onAudioNotifierChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant QuranReaderScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialAyahNumber != widget.initialAyahNumber &&
+        widget.initialAyahNumber != null) {
+      _selectedAyahNumber = widget.initialAyahNumber;
+      _didScrollToInitialAyah = false;
+      _scheduleInitialAyahScroll();
+    }
   }
 
   void _onAudioNotifierChanged() {
@@ -749,30 +777,41 @@ class _QuranReaderScreenState extends State<QuranReaderScreen>
     }
   }
 
-  void _scheduleInitialAyahScroll() {
-    if (_didScrollToInitialAyah || widget.initialAyahNumber == null) return;
-    _didScrollToInitialAyah = true;
+  void _scheduleInitialAyahScroll([int retryCount = 0]) {
+    final targetAyah = _targetInitialAyahNumber;
+    if (targetAyah == null || targetAyah <= 1) return;
+    if (_didScrollToInitialAyah) return;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    void attemptScroll() {
+      if (!mounted || _didScrollToInitialAyah) return;
       GlobalKey? key;
       if (_isMushafMode) {
         final surah = _displayedSurahs.where((s) => s.id == widget.surahId).firstOrNull;
-        final ayah = surah?.ayahs.where((a) => a.number == widget.initialAyahNumber).firstOrNull;
+        final ayah = surah?.ayahs.where((a) => a.number == targetAyah).firstOrNull;
         final page = ayah?.page ?? 1;
         key = _pageKeys['${widget.surahId}-$page'];
       } else {
-        key = _cardKeys['${widget.surahId}-${widget.initialAyahNumber}'];
+        key = _cardKeys['${widget.surahId}-$targetAyah'];
       }
       final context = key?.currentContext;
-      if (context != null) {
+      if (context != null && context.mounted) {
+        _didScrollToInitialAyah = true;
         Scrollable.ensureVisible(
           context,
           duration: const Duration(milliseconds: 500),
           curve: Curves.easeInOutCubic,
-          alignment: 0.15,
+          alignment: 0.12,
         );
+      } else if (retryCount < 12) {
+        Future.delayed(const Duration(milliseconds: 60), () {
+          if (mounted && !_didScrollToInitialAyah) {
+            attemptScroll();
+          }
+        });
       }
-    });
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => attemptScroll());
   }
 
   void _onAyahTapped(Surah surah, Ayah ayah) {

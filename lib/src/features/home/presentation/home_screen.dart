@@ -810,7 +810,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       FatimidCard(
                         onTap: () => lastRead == null
                             ? context.go('/quran')
-                            : context.push('/quran/surah/${lastRead.surahId}'),
+                            : context.push(
+                                '/quran/surah/${lastRead.surahId}?ayah=${lastRead.ayahNumber}',
+                              ),
                         child: Row(
                           children: [
                             Container(

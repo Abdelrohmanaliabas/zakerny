@@ -225,7 +225,9 @@ class _QuranScreenState extends State<QuranScreen> {
               hoverElevation: 0,
               highlightElevation: 0,
               foregroundColor: const Color(0xFF332000),
-              onPressed: () => context.push('/quran/surah/${last.surahId}'),
+              onPressed: () => context.push(
+                '/quran/surah/${last.surahId}?ayah=${last.ayahNumber}',
+              ),
               icon: const Icon(Icons.play_arrow_rounded, size: 24),
               label: Text(
                 'متابعة: ${last.surahName}',

@@ -28,8 +28,9 @@ class QuranBookmarkScreen extends StatelessWidget {
                     leading: const Icon(Icons.bookmark),
                     title: Text(bookmark.surahName),
                     subtitle: Text('آية ${bookmark.ayahNumber}'),
-                    onTap: () =>
-                        context.push('/quran/surah/${bookmark.surahId}'),
+                    onTap: () => context.push(
+                      '/quran/surah/${bookmark.surahId}?ayah=${bookmark.ayahNumber}',
+                    ),
                   ),
                 );
               },

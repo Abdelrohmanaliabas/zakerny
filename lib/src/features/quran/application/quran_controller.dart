@@ -16,14 +16,14 @@ class QuranController {
   List<QuranBookmark> bookmarks() => repository.bookmarks();
   QuranBookmark? lastRead() => repository.lastRead();
 
-  Future<void> bookmark(Surah surah, Ayah ayah) {
-    return repository.addBookmark(
-      QuranBookmark(
-        surahId: surah.id,
-        surahName: surah.name,
-        ayahNumber: ayah.number,
-      ),
+  Future<void> bookmark(Surah surah, Ayah ayah) async {
+    final b = QuranBookmark(
+      surahId: surah.id,
+      surahName: surah.name,
+      ayahNumber: ayah.number,
     );
+    await repository.addBookmark(b);
+    await repository.saveLastRead(b);
   }
 
   Future<void> saveLastRead(Surah surah, Ayah ayah) {

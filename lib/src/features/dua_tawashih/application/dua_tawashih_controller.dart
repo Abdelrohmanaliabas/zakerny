@@ -182,37 +182,47 @@ class DuaTawashihController extends ChangeNotifier {
     _currentTawashihId = item.id;
     notifyListeners();
 
-    final reciter = Reciter(
-      id: item.munshidId,
-      name: item.munshidName,
-      avatarAsset: 'assets/branding/app_icon.png',
-      surahs: const [],
-    );
+    try {
+      final reciter = Reciter(
+        id: item.munshidId,
+        name: item.munshidName,
+        avatarAsset: 'assets/branding/app_icon.png',
+        surahs: const [],
+      );
 
-    final surah = RecitationSurah(
-      id: item.id.hashCode.abs(),
-      name: item.title,
-    );
+      final surah = RecitationSurah(
+        id: item.id.hashCode.abs(),
+        name: item.title,
+      );
 
-    await _recitationService.playUrls(
-      item.allAudioUrls,
-      reciter: reciter,
-      surah: surah,
-      customTitle: item.title,
-    );
-    notifyListeners();
+      await _recitationService.playUrls(
+        item.allAudioUrls,
+        reciter: reciter,
+        surah: surah,
+        customTitle: item.title,
+      );
+      notifyListeners();
+    } catch (_) {
+      _currentTawashihId = null;
+      notifyListeners();
+    }
   }
 
   Future<void> pauseOrResume(TawashihItem item) async {
-    if (_currentTawashihId == item.id) {
-      if (_recitationService.isPlaying) {
-        await _recitationService.pause();
+    try {
+      if (_currentTawashihId == item.id) {
+        if (_recitationService.isPlaying) {
+          await _recitationService.pause();
+        } else {
+          await _recitationService.resume();
+        }
+        notifyListeners();
       } else {
-        await _recitationService.resume();
+        await playTawashih(item);
       }
+    } catch (_) {
+      _currentTawashihId = null;
       notifyListeners();
-    } else {
-      await playTawashih(item);
     }
   }
 
@@ -306,37 +316,47 @@ class DuaTawashihController extends ChangeNotifier {
     _currentTawashihId = null;
     notifyListeners();
 
-    final reciter = Reciter(
-      id: item.id,
-      name: item.reciterName,
-      avatarAsset: 'assets/branding/app_icon.png',
-      surahs: const [],
-    );
+    try {
+      final reciter = Reciter(
+        id: item.id,
+        name: item.reciterName,
+        avatarAsset: 'assets/branding/app_icon.png',
+        surahs: const [],
+      );
 
-    final surah = RecitationSurah(
-      id: item.id.hashCode.abs(),
-      name: item.title,
-    );
+      final surah = RecitationSurah(
+        id: item.id.hashCode.abs(),
+        name: item.title,
+      );
 
-    await _recitationService.playUrls(
-      [item.audioUrl],
-      reciter: reciter,
-      surah: surah,
-      customTitle: '${item.title} - ${item.reciterName}',
-    );
-    notifyListeners();
+      await _recitationService.playUrls(
+        [item.audioUrl],
+        reciter: reciter,
+        surah: surah,
+        customTitle: '${item.title} - ${item.reciterName}',
+      );
+      notifyListeners();
+    } catch (_) {
+      _currentRuqyahAudioId = null;
+      notifyListeners();
+    }
   }
 
   Future<void> pauseOrResumeRuqyah(RuqyahAudioItem item) async {
-    if (_currentRuqyahAudioId == item.id) {
-      if (_recitationService.isPlaying) {
-        await _recitationService.pause();
+    try {
+      if (_currentRuqyahAudioId == item.id) {
+        if (_recitationService.isPlaying) {
+          await _recitationService.pause();
+        } else {
+          await _recitationService.resume();
+        }
+        notifyListeners();
       } else {
-        await _recitationService.resume();
+        await playRuqyahAudio(item);
       }
+    } catch (_) {
+      _currentRuqyahAudioId = null;
       notifyListeners();
-    } else {
-      await playRuqyahAudio(item);
     }
   }
 }
