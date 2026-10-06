@@ -519,12 +519,28 @@ class NotificationService extends ChangeNotifier {
     required String prayerName,
     required String city,
     AdhanVoice? voice,
+    bool showOverlay = true,
   }) async {
     if (!isSupported) return;
     await requestPermissions();
 
     final activeVoice = voice ?? supportedAdhanVoices.first;
     final nowTime = DateFormat('hh:mm a', 'ar').format(DateTime.now());
+
+    if (showOverlay) {
+      try {
+        final hasPermission = await AdhanOverlayManager.isPermissionGranted();
+        if (hasPermission) {
+          await AdhanOverlayManager.showAdhanOverlay(
+            prayerName: prayerName,
+            time: nowTime,
+            city: city,
+            notificationId: 999,
+          );
+        }
+      } catch (_) {}
+    }
+
     final bigTextStyle = BigTextStyleInformation(
       'الله أكبر، الله أكبر ۝ حان الآن موعد أذان صلاة $prayerName حسب توقيت $city.\n'
       '«اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّداً الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَاماً مَحْمُوداً الَّذِي وَعَدْتَهُ»',

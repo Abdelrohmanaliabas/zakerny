@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -8,6 +9,7 @@ import '../../../core/storage/app_local_store.dart';
 import '../../../core/utils/audio_asset_utils.dart';
 import '../../prayer_times/data/prayer_repository.dart';
 import '../../prayer_times/domain/prayer_preferences.dart';
+import '../../prayer_times/overlay/adhan_overlay_widget.dart';
 import '../domain/dhikr_reminder_item.dart';
 
 /// خدمة التذكير الصوتي التلقائي بالأذكار والتسابيح
@@ -34,6 +36,7 @@ class VoiceDhikrService {
       isPlaying.value = active;
       if (!active && state.processingState == ProcessingState.completed) {
         currentlyPlayingId.value = null;
+        _player.stop();
       }
     });
 
@@ -87,6 +90,20 @@ class VoiceDhikrService {
     _lastIndex = (_lastIndex + 1) % activeItems.length;
     final item = activeItems[_lastIndex];
     await playDhikr(item);
+
+    // إظهار ويدجت التذكير الإسلامي العائم فوق التطبيقات إذا كان الإذن متاحاً
+    try {
+      if (!kIsWeb && Platform.isAndroid) {
+        final granted = await AdhanOverlayManager.isPermissionGranted();
+        if (granted) {
+          await AdhanOverlayManager.showDhikrOverlay(
+            title: item.title,
+            text: item.text,
+            virtue: item.virtue,
+          );
+        }
+      }
+    } catch (_) {}
   }
 
   /// تشغيل صوت ذكر محدد (سواء للاختبار أو التنبيه الدوري)

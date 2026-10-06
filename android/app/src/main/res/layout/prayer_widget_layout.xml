@@ -12,7 +12,6 @@
         android:layout_height="match_parent"
         android:adjustViewBounds="true"
         android:scaleType="fitCenter"
-        android:src="@drawable/al_fajia_widget_base"
-        android:contentDescription="Al-Fajia Azan Clock" />
+        android:contentDescription="مواقيت الصلاة والأذكار - تطبيق ذكرني" />
 
 </FrameLayout>

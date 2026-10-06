@@ -392,25 +392,56 @@ class _AdhanOverlayWidgetState extends State<AdhanOverlayWidget>
             const SizedBox(height: 12),
 
             // Actions
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF0D9488),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white70,
+                      side: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                    ),
+                    onPressed: () => AdhanOverlayManager.closeOverlay(),
+                    icon: const Icon(Icons.check_circle_outline, size: 15),
+                    label: const Text(
+                      'تم الذكر',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-              ),
-              onPressed: () => AdhanOverlayManager.closeOverlay(),
-              icon: const Icon(Icons.check_circle_outline, size: 16),
-              label: const Text(
-                'تم الذكر • إغلاق',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF0D9488),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                    ),
+                    onPressed: () => AdhanOverlayManager.closeOverlay(),
+                    icon: const Icon(Icons.auto_awesome, size: 15),
+                    label: const Text(
+                      'فتح الأذكار',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),

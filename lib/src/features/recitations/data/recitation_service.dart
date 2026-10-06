@@ -45,6 +45,7 @@ class RecitationService {
     _player.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
         _activeRecitationNotifier.value = null;
+        _player.stop();
       }
     });
   }
@@ -79,6 +80,7 @@ class RecitationService {
       title: title,
       artist: artist,
       playable: true,
+      artUri: Uri.parse('asset:///assets/branding/app_icon.png'),
     );
 
     if (reciter != null && surah != null) {
@@ -226,6 +228,7 @@ class RecitationService {
       title: title,
       artist: artist,
       playable: true,
+      artUri: Uri.parse('asset:///assets/branding/app_icon.png'),
     );
 
     if (reciter != null && surah != null) {

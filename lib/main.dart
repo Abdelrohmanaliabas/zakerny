@@ -36,10 +36,11 @@ Future<void> main() async {
       await JustAudioBackground.init(
         androidNotificationChannelId: 'com.zakerny.app.channel.audio',
         androidNotificationChannelName: 'تلاوات القرآن الكريم والأدعية',
-        androidNotificationOngoing: true,
-        androidNotificationIcon: 'mipmap/ic_launcher',
+        androidNotificationOngoing: false,
+        androidNotificationIcon: 'drawable/ic_stat_zekrni',
         androidShowNotificationBadge: true,
         androidStopForegroundOnPause: true,
+        notificationColor: const Color(0xFF0D9488),
       );
     } catch (_) {}
   }

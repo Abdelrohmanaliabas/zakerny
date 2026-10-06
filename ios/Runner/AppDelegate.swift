@@ -58,11 +58,21 @@ import WidgetKit
     }
 
     private func handleDeepLink(url: URL) {
-        if url.scheme == "zakerny" && (url.host == "prayer-clock" || url.path.contains("prayer-clock")) {
-            pendingRoute = "/prayer-clock"
+        if url.scheme == "zakerny" {
+            let route: String
+            if url.host == "prayers" || url.path.contains("prayers") {
+                route = "/prayers"
+            } else if url.host == "adhkar" || url.path.contains("adhkar") {
+                route = "/adhkar"
+            } else if url.host == "prayer-clock" || url.path.contains("prayer-clock") {
+                route = "/prayer-clock"
+            } else {
+                route = "/prayers"
+            }
+            pendingRoute = route
             if let controller = window?.rootViewController as? FlutterViewController {
                 let channel = FlutterMethodChannel(name: widgetChannelName, binaryMessenger: controller.binaryMessenger)
-                channel.invokeMethod("onDeepLink", "/prayer-clock")
+                channel.invokeMethod("onDeepLink", route)
             }
         }
     }

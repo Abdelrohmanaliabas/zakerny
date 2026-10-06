@@ -37,7 +37,7 @@ class AudioAssetUtils {
     return targetFile.path;
   }
 
-  /// إعداد وتشغيل ملف صوتي من الأصول بصورة آمنة ومتوافقة مع just_audio_background عبر إضافة MediaItem tag
+  /// إعداد وتشغيل ملف صوتي من الأصول. يتم إرفاق MediaItem فقط في حال تشغيل تلاوات بالخلفية
   static Future<void> playAssetAudio(
     AudioPlayer player,
     String assetPath, {
@@ -45,14 +45,17 @@ class AudioAssetUtils {
     String? title,
     String? artist,
     String? album,
+    bool attachMediaItem = false,
   }) async {
-    final mediaItem = MediaItem(
-      id: id ?? assetPath,
-      title: title ?? 'أذان الصلاة',
-      artist: artist ?? 'ذكرني',
-      album: album ?? 'أصوات الأذان',
-      playable: true,
-    );
+    final mediaItem = attachMediaItem
+        ? MediaItem(
+            id: id ?? assetPath,
+            title: title ?? 'أذان الصلاة',
+            artist: artist ?? 'ذكرني',
+            album: album ?? 'أصوات الأذان',
+            playable: true,
+          )
+        : null;
 
     try {
       AudioSource source;

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 
+import '../../dhikr_reminders/domain/dhikr_reminder_item.dart';
 import '../domain/prayer_day.dart';
 import '../domain/prayer_preferences.dart';
 
@@ -51,11 +52,28 @@ class PrayerWidgetService {
       final tempC = _calculateAccurateTemperature(currentNow);
       final tempF = (tempC * 9 / 5 + 32).round();
 
+      final diff = nextPrayer.time.difference(currentNow);
+      final remainingMinutes = diff.inMinutes;
+      String timeRemaining;
+      if (remainingMinutes <= 0) {
+        timeRemaining = 'حان الآن وقت الصلاة';
+      } else if (remainingMinutes < 60) {
+        timeRemaining = 'باقي $remainingMinutes دقيقة';
+      } else {
+        final hours = remainingMinutes ~/ 60;
+        final mins = remainingMinutes % 60;
+        timeRemaining = mins > 0 ? 'باقي $hours س و $mins د' : 'باقي $hours س';
+      }
+
+      final dhikrIndex = currentNow.day % defaultDhikrReminders.length;
+      final dailyDhikr = defaultDhikrReminders[dhikrIndex];
+
       final data = <String, String>{
         'city': preferences.city,
         'next_prayer_name': nextPrayer.name,
         'next_prayer_time': timeFormatter.format(nextPrayer.time),
         'active_prayer_key': nextPrayer.key,
+        'time_remaining': timeRemaining,
         'current_time': digitalTimeFormatter.format(currentNow),
         'hijri_date': hijriStr,
         'greg_date': gregStr,
@@ -67,6 +85,9 @@ class PrayerWidgetService {
         'asr': asr != null ? digitalTimeFormatter.format(asr.time) : '03:16',
         'maghrib': maghrib != null ? digitalTimeFormatter.format(maghrib.time) : '05:57',
         'isha': isha != null ? digitalTimeFormatter.format(isha.time) : '07:27',
+        'daily_dhikr_title': dailyDhikr.title,
+        'daily_dhikr_text': dailyDhikr.text,
+        'daily_dhikr_virtue': dailyDhikr.virtue,
       };
 
       await _channel.invokeMethod('updateWidget', data);

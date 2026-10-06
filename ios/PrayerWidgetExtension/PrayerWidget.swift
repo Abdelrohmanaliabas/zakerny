@@ -15,18 +15,16 @@ struct PrayerTimelineProvider: TimelineProvider {
 
     func getSnapshot(in context: Context, completion: @escaping (PrayerEntry) -> Void) {
         let data = PrayerData.loadFromSharedDefaults()
-        let img = PrayerWidgetRenderer.loadRenderedImageFromSharedStorage() ?? PrayerWidgetRenderer.renderClockImage(data: data)
-        let entry = PrayerEntry(date: Date(), data: data, renderedImage: img)
+        let entry = PrayerEntry(date: Date(), data: data, renderedImage: nil)
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<PrayerEntry>) -> Void) {
         let data = PrayerData.loadFromSharedDefaults()
-        let img = PrayerWidgetRenderer.loadRenderedImageFromSharedStorage() ?? PrayerWidgetRenderer.renderClockImage(data: data)
         let currentDate = Date()
-        let entry = PrayerEntry(date: currentDate, data: data, renderedImage: img)
+        let entry = PrayerEntry(date: currentDate, data: data, renderedImage: nil)
 
-        // Refresh every 15 minutes to keep battery consumption low while remaining accurate
+        // Refresh every 15 minutes to keep times and countdown accurate
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: currentDate) ?? currentDate.addingTimeInterval(900)
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
         completion(timeline)
@@ -54,127 +52,45 @@ struct PrayerWidgetEntryView: View {
                 }
             }
         }
-        .widgetBackground(Color.black)
-        .widgetURL(URL(string: "zakerny://prayer-clock"))
+        .widgetBackground(Color(red: 0.02, green: 0.12, blue: 0.09))
+        .widgetURL(URL(string: "zakerny://prayers"))
     }
 }
 
-// MARK: - 1. Large 3D Al-Fajia Mosque Clock View (Identical to Android)
-struct PrayerWidgetLargeView: View {
-    let entry: PrayerEntry
-
-    var body: some View {
-        ZStack {
-            Color.black
-
-            if let img = entry.renderedImage {
-                Image(uiImage: img)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if let rendered = PrayerWidgetRenderer.renderClockImage(data: entry.data) {
-                Image(uiImage: rendered)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                // Fallback SwiftUI render using base image
-                ZStack {
-                    Image("al_fajia_widget_base")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                    VStack(spacing: 8) {
-                        Spacer().frame(height: 70)
-                        Text(entry.data.currentTime)
-                            .font(.system(size: 32, weight: .black, design: .monospaced))
-                            .foregroundColor(Color(red: 1.0, green: 0.15, blue: 0.15))
-                        Text(entry.data.gregDate)
-                            .font(.system(size: 13, weight: .bold, design: .monospaced))
-                            .foregroundColor(Color(red: 1.0, green: 0.65, blue: 0.15))
-                        Text(entry.data.city)
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(Color(red: 0.6, green: 0.4, blue: 0.1))
-                        Spacer()
-                    }
-                }
-            }
-        }
-    }
+// MARK: - Islamic Color Theme
+private enum IslamicTheme {
+    static let darkGreen1 = Color(red: 0.02, green: 0.12, blue: 0.09)
+    static let darkGreen2 = Color(red: 0.05, green: 0.24, blue: 0.18)
+    static let darkGreen3 = Color(red: 0.01, green: 0.08, blue: 0.06)
+    static let cardBg = Color(red: 0.04, green: 0.16, blue: 0.12)
+    static let cardActiveBg = Color(red: 0.08, green: 0.35, blue: 0.27)
+    
+    static let gold = Color(red: 0.85, green: 0.70, blue: 0.25)
+    static let goldLight = Color(red: 0.99, green: 0.90, blue: 0.54)
+    static let emeraldLight = Color(red: 0.20, green: 0.83, blue: 0.60)
+    static let textSecondary = Color(red: 0.60, green: 0.90, blue: 0.75)
 }
 
-// MARK: - 2. Medium Luxury Islamic Banner View
+// MARK: - 1. Medium Luxury Islamic Banner View (Primary 4x2 Widget)
 struct PrayerWidgetMediumView: View {
     let entry: PrayerEntry
 
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(red: 0.04, green: 0.06, blue: 0.08), Color(red: 0.08, green: 0.11, blue: 0.15)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+                colors: [IslamicTheme.darkGreen1, IslamicTheme.darkGreen2, IslamicTheme.darkGreen3],
+                startPoint: .topTrailing,
+                endPoint: .bottomLeading
             )
 
+            // Islamic Gold Frame Border
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(IslamicTheme.gold.opacity(0.35), lineWidth: 1.2)
+                .padding(2)
+
             HStack(spacing: 12) {
-                // Left Column: City, Live Time, Date, Next Prayer Chip
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "location.fill")
-                            .font(.system(size: 10))
-                            .foregroundColor(Color(red: 0.85, green: 0.70, blue: 0.25))
-                        Text(entry.data.city)
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(Color(red: 0.90, green: 0.80, blue: 0.50))
-                        Spacer()
-                        Text("\(entry.data.temp)°C")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .foregroundColor(Color(red: 1.0, green: 0.3, blue: 0.3))
-                    }
-
-                    Text(entry.data.currentTime)
-                        .font(.system(size: 32, weight: .black, design: .monospaced))
-                        .foregroundColor(Color(red: 1.0, green: 0.15, blue: 0.15))
-                        .shadow(color: Color.red.opacity(0.4), radius: 6, x: 0, y: 0)
-
-                    Text(entry.data.gregDate)
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(Color(red: 1.0, green: 0.65, blue: 0.15))
-
-                    Spacer()
-
-                    // Next Prayer Badge
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(Color(red: 1.0, green: 0.2, blue: 0.2))
-                            .frame(width: 7, height: 7)
-                        Text("القادمة: \(entry.data.nextPrayerName)")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(.white)
-                        Text(entry.data.nextPrayerTime)
-                            .font(.system(size: 11, weight: .black, design: .monospaced))
-                            .foregroundColor(Color(red: 0.95, green: 0.80, blue: 0.35))
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color(red: 0.15, green: 0.18, blue: 0.22))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color(red: 0.85, green: 0.70, blue: 0.25).opacity(0.4), lineWidth: 1)
-                            )
-                    )
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                // Divider
-                Rectangle()
-                    .fill(Color(red: 0.85, green: 0.70, blue: 0.25).opacity(0.25))
-                    .frame(width: 1)
-
-                // Right Column: Prayers Grid
-                VStack(spacing: 3) {
+                // Prayers Schedule (Left side in LTR, Right side conceptually in RTL)
+                VStack(spacing: 4) {
                     prayerRow(name: "الفجر", key: "fajr", time: entry.data.fajr)
                     prayerRow(name: "الشروق", key: "sunrise", time: entry.data.sunrise)
                     prayerRow(name: "الظهر", key: "dhuhr", time: entry.data.dhuhr)
@@ -183,6 +99,63 @@ struct PrayerWidgetMediumView: View {
                     prayerRow(name: "العشاء", key: "isha", time: entry.data.isha)
                 }
                 .frame(maxWidth: .infinity)
+
+                // Divider Line
+                Rectangle()
+                    .fill(IslamicTheme.gold.opacity(0.3))
+                    .frame(width: 1)
+                    .padding(.vertical, 4)
+
+                // Featured Next Prayer Column
+                VStack(alignment: .trailing, spacing: 5) {
+                    // Header: Mosque + City
+                    HStack(spacing: 4) {
+                        Text(entry.data.city)
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(IslamicTheme.goldLight)
+                        Image(systemName: "moon.stars.fill")
+                            .font(.system(size: 11))
+                            .foregroundColor(IslamicTheme.gold)
+                    }
+
+                    // Hijri Date
+                    Text(entry.data.hijriDate)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(IslamicTheme.textSecondary)
+
+                    Spacer()
+
+                    // Hero Next Prayer Badge
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("الصلاة القادمة")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(IslamicTheme.emeraldLight)
+
+                        Text(entry.data.nextPrayerName)
+                            .font(.system(size: 20, weight: .black))
+                            .foregroundColor(.white)
+
+                        Text(entry.data.nextPrayerTime)
+                            .font(.system(size: 18, weight: .black, design: .monospaced))
+                            .foregroundColor(IslamicTheme.goldLight)
+                    }
+
+                    Spacer()
+
+                    // Countdown pill
+                    if !entry.data.timeRemaining.isEmpty {
+                        Text(entry.data.timeRemaining)
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(IslamicTheme.darkGreen1)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(
+                                Capsule()
+                                    .fill(IslamicTheme.goldLight)
+                            )
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .padding(12)
         }
@@ -191,92 +164,241 @@ struct PrayerWidgetMediumView: View {
     private func prayerRow(name: String, key: String, time: String) -> some View {
         let isActive = key.caseInsensitiveCompare(entry.data.activePrayerKey) == .orderedSame
         return HStack {
-            if isActive {
-                Circle()
-                    .fill(Color.red)
-                    .frame(width: 5, height: 5)
-            } else {
-                Spacer().frame(width: 5)
-            }
+            Text(time)
+                .font(.system(size: 10.5, weight: isActive ? .black : .bold, design: .monospaced))
+                .foregroundColor(isActive ? .white : Color.white.opacity(0.85))
+
+            Spacer()
+
             Text(name)
                 .font(.system(size: 11, weight: isActive ? .black : .medium))
-                .foregroundColor(isActive ? Color(red: 0.95, green: 0.85, blue: 0.40) : Color.white.opacity(0.85))
-            Spacer()
-            Text(time)
-                .font(.system(size: 11, weight: isActive ? .black : .bold, design: .monospaced))
-                .foregroundColor(isActive ? Color(red: 1.0, green: 0.25, blue: 0.25) : Color(red: 0.95, green: 0.55, blue: 0.25))
+                .foregroundColor(isActive ? IslamicTheme.goldLight : IslamicTheme.textSecondary)
+
+            if isActive {
+                Circle()
+                    .fill(IslamicTheme.goldLight)
+                    .frame(width: 5, height: 5)
+            }
         }
         .padding(.horizontal, 6)
-        .padding(.vertical, 2)
+        .padding(.vertical, 2.5)
         .background(
-            RoundedRectangle(cornerRadius: 4)
-                .fill(isActive ? Color.red.opacity(0.18) : Color.clear)
+            RoundedRectangle(cornerRadius: 6)
+                .fill(isActive ? IslamicTheme.cardActiveBg : IslamicTheme.cardBg.opacity(0.4))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(isActive ? IslamicTheme.gold.opacity(0.7) : Color.clear, lineWidth: 1)
+                )
         )
     }
 }
 
-// MARK: - 3. Small Compact Luxury Islamic Clock View
+// MARK: - 2. Large Luxury Islamic Sanctuary View (4x4 Widget)
+struct PrayerWidgetLargeView: View {
+    let entry: PrayerEntry
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [IslamicTheme.darkGreen1, IslamicTheme.darkGreen2, IslamicTheme.darkGreen3],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(IslamicTheme.gold.opacity(0.4), lineWidth: 1.5)
+                .padding(2)
+
+            VStack(spacing: 8) {
+                // Top Header Row
+                HStack {
+                    Text(entry.data.currentTime)
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .foregroundColor(IslamicTheme.goldLight)
+
+                    Spacer()
+
+                    VStack(alignment: .trailing, spacing: 1) {
+                        HStack(spacing: 4) {
+                            Text("ذكرني • \(entry.data.city)")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(IslamicTheme.goldLight)
+                            Image(systemName: "moon.stars.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(IslamicTheme.gold)
+                        }
+                        Text(entry.data.hijriDate)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(IslamicTheme.textSecondary)
+                    }
+                }
+
+                // Next Prayer Hero Card
+                HStack {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(entry.data.nextPrayerTime)
+                            .font(.system(size: 26, weight: .black, design: .monospaced))
+                            .foregroundColor(IslamicTheme.goldLight)
+                        if !entry.data.timeRemaining.isEmpty {
+                            Text(entry.data.timeRemaining)
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(IslamicTheme.darkGreen1)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 2)
+                                .background(Capsule().fill(IslamicTheme.goldLight))
+                        }
+                    }
+
+                    Spacer()
+
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("الصلاة القادمة بإذن الله")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(IslamicTheme.emeraldLight)
+                        Text(entry.data.nextPrayerName)
+                            .font(.system(size: 24, weight: .black))
+                            .foregroundColor(.white)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(IslamicTheme.cardActiveBg)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(IslamicTheme.gold.opacity(0.6), lineWidth: 1)
+                        )
+                )
+
+                // 6 Prayer Times in 3x2 Grid
+                VStack(spacing: 5) {
+                    HStack(spacing: 6) {
+                        prayerGridCard(name: "الفجر", key: "fajr", time: entry.data.fajr)
+                        prayerGridCard(name: "الشروق", key: "sunrise", time: entry.data.sunrise)
+                        prayerGridCard(name: "الظهر", key: "dhuhr", time: entry.data.dhuhr)
+                    }
+                    HStack(spacing: 6) {
+                        prayerGridCard(name: "العصر", key: "asr", time: entry.data.asr)
+                        prayerGridCard(name: "المغرب", key: "maghrib", time: entry.data.maghrib)
+                        prayerGridCard(name: "العشاء", key: "isha", time: entry.data.isha)
+                    }
+                }
+
+                Spacer(minLength: 2)
+
+                // Daily Dhikr Card at Bottom
+                HStack(spacing: 8) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 13))
+                        .foregroundColor(IslamicTheme.gold)
+
+                    Text(entry.data.dailyDhikrText)
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(IslamicTheme.goldLight)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.trailing)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(IslamicTheme.cardBg)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(IslamicTheme.gold.opacity(0.25), lineWidth: 1)
+                        )
+                )
+            }
+            .padding(14)
+        }
+    }
+
+    private func prayerGridCard(name: String, key: String, time: String) -> some View {
+        let isActive = key.caseInsensitiveCompare(entry.data.activePrayerKey) == .orderedSame
+        return VStack(spacing: 2) {
+            Text(name)
+                .font(.system(size: 11, weight: isActive ? .black : .bold))
+                .foregroundColor(isActive ? IslamicTheme.goldLight : IslamicTheme.textSecondary)
+
+            Text(time)
+                .font(.system(size: 12, weight: isActive ? .black : .bold, design: .monospaced))
+                .foregroundColor(isActive ? .white : Color.white.opacity(0.85))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isActive ? IslamicTheme.cardActiveBg : IslamicTheme.cardBg)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isActive ? IslamicTheme.gold : IslamicTheme.gold.opacity(0.15), lineWidth: isActive ? 1.2 : 0.8)
+                )
+        )
+    }
+}
+
+// MARK: - 3. Small Compact Luxury Islamic Clock View (2x2 Widget)
 struct PrayerWidgetSmallView: View {
     let entry: PrayerEntry
 
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(red: 0.05, green: 0.07, blue: 0.10), Color(red: 0.10, green: 0.13, blue: 0.18)],
+                colors: [IslamicTheme.darkGreen1, IslamicTheme.darkGreen2],
                 startPoint: .top,
                 endPoint: .bottom
             )
 
-            VStack(spacing: 4) {
-                // Header: City and Temp
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(IslamicTheme.gold.opacity(0.35), lineWidth: 1.2)
+                .padding(2)
+
+            VStack(spacing: 3) {
+                // Header: City and Icon
                 HStack {
                     Text(entry.data.city)
                         .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(Color(red: 0.85, green: 0.70, blue: 0.30))
+                        .foregroundColor(IslamicTheme.goldLight)
                     Spacer()
-                    Text("\(entry.data.temp)°C")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(Color(red: 1.0, green: 0.3, blue: 0.3))
+                    Image(systemName: "moon.stars.fill")
+                        .font(.system(size: 11))
+                        .foregroundColor(IslamicTheme.gold)
                 }
-
-                // Digital Time
-                Text(entry.data.currentTime)
-                    .font(.system(size: 26, weight: .black, design: .monospaced))
-                    .foregroundColor(Color(red: 1.0, green: 0.15, blue: 0.15))
-                    .shadow(color: Color.red.opacity(0.4), radius: 4)
-
-                Text(entry.data.gregDate)
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundColor(Color(red: 1.0, green: 0.65, blue: 0.15))
 
                 Spacer()
 
-                // Next Prayer Box
-                VStack(spacing: 2) {
-                    Text("الصلاة القادمة")
+                // Next Prayer Title
+                Text("الصلاة القادمة")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(IslamicTheme.emeraldLight)
+
+                Text(entry.data.nextPrayerName)
+                    .font(.system(size: 22, weight: .black))
+                    .foregroundColor(.white)
+
+                Text(entry.data.nextPrayerTime)
+                    .font(.system(size: 19, weight: .black, design: .monospaced))
+                    .foregroundColor(IslamicTheme.goldLight)
+
+                Spacer()
+
+                // Countdown / Hijri Date
+                if !entry.data.timeRemaining.isEmpty {
+                    Text(entry.data.timeRemaining)
+                        .font(.system(size: 9.5, weight: .bold))
+                        .foregroundColor(IslamicTheme.darkGreen1)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2.5)
+                        .background(Capsule().fill(IslamicTheme.goldLight))
+                } else {
+                    Text(entry.data.hijriDate)
                         .font(.system(size: 9, weight: .medium))
-                        .foregroundColor(Color.white.opacity(0.7))
-                    HStack(spacing: 4) {
-                        Text(entry.data.nextPrayerName)
-                            .font(.system(size: 13, weight: .black))
-                            .foregroundColor(Color(red: 0.95, green: 0.85, blue: 0.40))
-                        Text(entry.data.nextPrayerTime)
-                            .font(.system(size: 13, weight: .black, design: .monospaced))
-                            .foregroundColor(Color(red: 1.0, green: 0.25, blue: 0.25))
-                    }
+                        .foregroundColor(IslamicTheme.textSecondary)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(red: 0.15, green: 0.18, blue: 0.24))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color(red: 0.85, green: 0.70, blue: 0.30).opacity(0.35), lineWidth: 1)
-                        )
-                )
             }
-            .padding(10)
+            .padding(11)
         }
     }
 }
@@ -300,12 +422,14 @@ struct PrayerWidgetAccessoryView: View {
                 HStack {
                     Text(entry.data.nextPrayerTime)
                         .font(.system(size: 14, weight: .black, design: .monospaced))
-                    Text("• \(entry.data.city)")
-                        .font(.system(size: 11))
+                    if !entry.data.timeRemaining.isEmpty {
+                        Text("• \(entry.data.timeRemaining)")
+                            .font(.system(size: 10))
+                    }
                 }
             }
         case .accessoryInline:
-            Text("\(entry.data.nextPrayerName) \(entry.data.nextPrayerTime)")
+            Text("🕌 \(entry.data.nextPrayerName) \(entry.data.nextPrayerTime)")
         default:
             Text(entry.data.nextPrayerTime)
         }

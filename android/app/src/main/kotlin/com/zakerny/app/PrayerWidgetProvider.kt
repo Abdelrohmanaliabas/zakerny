@@ -7,10 +7,12 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Shader
 import android.graphics.Typeface
 import android.util.Log
 import android.widget.RemoteViews
@@ -50,8 +52,11 @@ class PrayerWidgetProvider : AppWidgetProvider() {
             try {
                 val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-                val city = prefs.getString("city", "مدينة السادات") ?: "مدينة السادات"
+                val city = prefs.getString("city", "القاهرة") ?: "القاهرة"
                 val activeKey = prefs.getString("active_prayer_key", "fajr") ?: "fajr"
+                val nextPrayerName = prefs.getString("next_prayer_name", "الفجر") ?: "الفجر"
+                val nextPrayerTime = prefs.getString("next_prayer_time", "05:00 ص") ?: "05:00 ص"
+                val timeRemaining = prefs.getString("time_remaining", "حان وقتها") ?: "حان وقتها"
 
                 val fajr = prefs.getString("fajr", "04:22") ?: "04:22"
                 val sunrise = prefs.getString("sunrise", "05:39") ?: "05:39"
@@ -60,42 +65,40 @@ class PrayerWidgetProvider : AppWidgetProvider() {
                 val maghrib = prefs.getString("maghrib", "05:57") ?: "05:57"
                 val isha = prefs.getString("isha", "07:27") ?: "07:27"
 
-                val temp = prefs.getString("temp", "30") ?: "30"
-                val iqamah = prefs.getString("iqamah", "86") ?: "86"
-                val hijriDate = prefs.getString("hijri_date", "١٤ ربيع الأول ١٤٤٦") ?: "١٤ ربيع الأول ١٤٤٦"
+                val hijriDate = prefs.getString("hijri_date", "١٤ ربيع الأول ١٤٤٦ هـ") ?: "١٤ ربيع الأول ١٤٤٦ هـ"
+                val dailyDhikr = prefs.getString("daily_dhikr_text", "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ ، سُبْحَانَ اللَّهِ الْعَظِيمِ")
+                    ?: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ ، سُبْحَانَ اللَّهِ الْعَظِيمِ"
 
                 val now = Date()
-                val gregFormatter = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH)
-                val timeFormatter = SimpleDateFormat("hh:mm", Locale.ENGLISH)
-                val gregDate = prefs.getString("greg_date", gregFormatter.format(now).uppercase()) ?: gregFormatter.format(now).uppercase()
+                val timeFormatter = SimpleDateFormat("hh:mm a", Locale("ar"))
                 val mainTime = prefs.getString("current_time", timeFormatter.format(now)) ?: timeFormatter.format(now)
 
                 val views = RemoteViews(context.packageName, R.layout.prayer_widget_layout)
 
-                // Render high-fidelity 3D Al-Fajia Clock bitmap
-                val renderedBitmap = renderClockBitmap(
-                    context = context,
+                // Render high-definition luxury Islamic widget bitmap
+                val renderedBitmap = renderIslamicPrayerBitmap(
                     city = city,
-                    mainTime = mainTime,
-                    gregDate = gregDate,
-                    hijriDate = hijriDate,
-                    temp = temp,
-                    iqamah = iqamah,
+                    nextPrayerName = nextPrayerName,
+                    nextPrayerTime = nextPrayerTime,
+                    timeRemaining = timeRemaining,
+                    activeKey = activeKey,
                     fajr = fajr,
                     sunrise = sunrise,
                     dhuhr = dhuhr,
                     asr = asr,
                     maghrib = maghrib,
                     isha = isha,
-                    activeKey = activeKey
+                    hijriDate = hijriDate,
+                    mainTime = mainTime,
+                    dailyDhikr = dailyDhikr
                 )
 
                 views.setImageViewBitmap(R.id.widget_clock_image, renderedBitmap)
 
-                // Click intent to open app at prayer clock
+                // Click intent to open app at prayer times
                 val intent = Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    putExtra("route", "/prayer-clock")
+                    putExtra("route", "/prayers")
                 }
                 val pendingIntent = PendingIntent.getActivity(
                     context,
@@ -112,142 +115,308 @@ class PrayerWidgetProvider : AppWidgetProvider() {
             }
         }
 
-        private fun renderClockBitmap(
-            context: Context,
+        private fun renderIslamicPrayerBitmap(
             city: String,
-            mainTime: String,
-            gregDate: String,
-            hijriDate: String,
-            temp: String,
-            iqamah: String,
+            nextPrayerName: String,
+            nextPrayerTime: String,
+            timeRemaining: String,
+            activeKey: String,
             fajr: String,
             sunrise: String,
             dhuhr: String,
             asr: String,
             maghrib: String,
             isha: String,
-            activeKey: String
+            hijriDate: String,
+            mainTime: String,
+            dailyDhikr: String
         ): Bitmap {
-            val options = BitmapFactory.Options().apply {
-                inScaled = false // CRITICAL: Never scale according to screen density
-                inPreferredConfig = Bitmap.Config.ARGB_8888
-                inMutable = true
-            }
-            val template = BitmapFactory.decodeResource(context.resources, R.drawable.al_fajia_widget_base, options)
-            val bitmap = if (template.isMutable) template else template.copy(Bitmap.Config.ARGB_8888, true)
+            val width = 920
+            val height = 480
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
 
-            val w = bitmap.width.toFloat()
-            val h = bitmap.height.toFloat()
+            val goldColor = Color.parseColor("#D4AF37")
+            val goldLightColor = Color.parseColor("#FDE68A")
+            val emeraldLightColor = Color.parseColor("#34D399")
+            val whiteColor = Color.WHITE
 
-            // Dynamic scale ratio relative to reference 768 x 1288
-            val sx = w / 768f
-            val sy = h / 1288f
-
-            val redColor = Color.parseColor("#FF2222")
-            val amberColor = Color.parseColor("#FFA028")
-            val cityColor = Color.parseColor("#7A4F18")
-
-            // 1. Real Temperature & Iqamah/°F (inside top gauges: x=318, x=467, y=358)
-            val tempPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = redColor
-                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-                textAlign = Paint.Align.CENTER
-                textSize = 38f * sy
-                isFakeBoldText = true
+            // 1. Background Gradient (Luxury Fatimid Emerald & Obsidian)
+            val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                shader = LinearGradient(
+                    width.toFloat(), 0f, 0f, height.toFloat(),
+                    intArrayOf(
+                        Color.parseColor("#06231C"),
+                        Color.parseColor("#0B382D"),
+                        Color.parseColor("#041914")
+                    ),
+                    null,
+                    Shader.TileMode.CLAMP
+                )
             }
-            val cleanTemp = temp.replace("°C", "").replace("C", "").trim()
-            val cleanIqamah = iqamah.replace("°F", "").replace("F", "").trim()
-            drawCenteredText(canvas, cleanTemp, 318f * sx, 358f * sy, tempPaint)
-            drawCenteredText(canvas, cleanIqamah, 467f * sx, 358f * sy, tempPaint)
+            val bgRect = RectF(0f, 0f, width.toFloat(), height.toFloat())
+            canvas.drawRoundRect(bgRect, 32f, 32f, bgPaint)
 
-            // 2. Main Time Clock (dead center in central glossy bezel: x=394, y=460) - BIG & BOLD
-            val mainTimePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = redColor
-                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-                textAlign = Paint.Align.CENTER
-                textSize = 84f * sy
-                isFakeBoldText = true
+            // Outer Golden Border
+            val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = goldColor
+                style = Paint.Style.STROKE
+                strokeWidth = 3f
+                alpha = 200
             }
-            drawCenteredText(canvas, mainTime, 394f * sx, 460f * sy, mainTimePaint)
+            val borderRect = RectF(2f, 2f, width - 2f, height - 2f)
+            canvas.drawRoundRect(borderRect, 32f, 32f, borderPaint)
 
-            // 3. Date Matrix (centered at x=394, y=578) - BOLD
-            val datePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = amberColor
-                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-                textAlign = Paint.Align.CENTER
-                textSize = 28f * sy
-                isFakeBoldText = true
+            // Inner Fine Golden Inset Border
+            val innerBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = goldColor
+                style = Paint.Style.STROKE
+                strokeWidth = 1f
+                alpha = 60
             }
-            val displayDate = if (gregDate.length > 20) gregDate.substring(0, 20) else gregDate
-            drawCenteredText(canvas, displayDate, 394f * sx, 578f * sy, datePaint)
+            val innerBorderRect = RectF(7f, 7f, width - 7f, height - 7f)
+            canvas.drawRoundRect(innerBorderRect, 27f, 27f, innerBorderPaint)
 
-            // 4. City Name (under date display, above Fajr: x=392, y=633)
-            val cityPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = cityColor
+            // 2. Header Row (Y: 20 to 65)
+            // City & App Name (Right in RTL, x=885 down to x)
+            val headerTitlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = goldLightColor
                 typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                textAlign = Paint.Align.CENTER
-                textSize = 24f * sy
-                isFakeBoldText = true
+                textSize = 24f
+                textAlign = Paint.Align.RIGHT
             }
-            val shortCity = if (city.length > 20) city.substring(0, 20) else city
-            drawCenteredText(canvas, shortCity, 392f * sx, 633f * sy, cityPaint)
+            canvas.drawText("🕌 ذكرني • $city", 885f, 48f, headerTitlePaint)
 
-            // 5. 6 Prayer Times (inside individual bezels: x=392, y = 685, 773, 861, 949, 1036, 1123) - BIG & BOLD
-            val prayerTimePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = redColor
+            // Hijri Date (Center, x=460)
+            val hijriPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.parseColor("#9AE6B4")
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                textSize = 19f
+                textAlign = Paint.Align.CENTER
+            }
+            canvas.drawText(hijriDate, 460f, 48f, hijriPaint)
+
+            // Time / Gregorian (Left, x=35)
+            val timePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = goldLightColor
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                textSize = 21f
+                textAlign = Paint.Align.LEFT
+            }
+            canvas.drawText(mainTime, 35f, 48f, timePaint)
+
+            // Divider Line under Header
+            val dividerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = goldColor
+                strokeWidth = 1f
+                alpha = 70
+            }
+            canvas.drawLine(25f, 68f, (width - 25).toFloat(), 68f, dividerPaint)
+
+            // 3. Featured Next Prayer Hero Card (Y: 82 to 200)
+            val heroRect = RectF(25f, 82f, (width - 25).toFloat(), 200f)
+            val heroBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                shader = LinearGradient(
+                    heroRect.right, heroRect.top, heroRect.left, heroRect.bottom,
+                    intArrayOf(
+                        Color.parseColor("#124C3E"),
+                        Color.parseColor("#092F26"),
+                        Color.parseColor("#062019")
+                    ),
+                    null,
+                    Shader.TileMode.CLAMP
+                )
+            }
+            canvas.drawRoundRect(heroRect, 22f, 22f, heroBgPaint)
+
+            val heroBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = goldColor
+                style = Paint.Style.STROKE
+                strokeWidth = 1.8f
+                alpha = 180
+            }
+            canvas.drawRoundRect(heroRect, 22f, 22f, heroBorderPaint)
+
+            // Next Prayer Label & Name (Right side)
+            val nextLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = emeraldLightColor
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                textSize = 18f
+                textAlign = Paint.Align.RIGHT
+            }
+            canvas.drawText("الصلاة القادمة بإذن الله", heroRect.right - 26f, 120f, nextLabelPaint)
+
+            val nextNamePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = whiteColor
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                textSize = 36f
+                textAlign = Paint.Align.RIGHT
+            }
+            canvas.drawText(nextPrayerName, heroRect.right - 26f, 168f, nextNamePaint)
+
+            // Next Prayer Time & Countdown Pill (Left side)
+            val nextTimePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.parseColor("#FBBF24")
                 typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-                textAlign = Paint.Align.CENTER
-                textSize = 46f * sy
-                isFakeBoldText = true
+                textSize = 38f
+                textAlign = Paint.Align.LEFT
+            }
+            canvas.drawText(nextPrayerTime, heroRect.left + 26f, 134f, nextTimePaint)
+
+            // Time Remaining Badge Pill
+            if (timeRemaining.isNotEmpty()) {
+                val pillTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = Color.parseColor("#042019")
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    textSize = 17f
+                    textAlign = Paint.Align.CENTER
+                }
+                val pillWidth = pillTextPaint.measureText(timeRemaining) + 28f
+                val pillRect = RectF(heroRect.left + 26f, 150f, heroRect.left + 26f + pillWidth, 185f)
+                val pillBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = goldLightColor
+                }
+                canvas.drawRoundRect(pillRect, 16f, 16f, pillBgPaint)
+                canvas.drawText(timeRemaining, pillRect.centerX(), 174f, pillTextPaint)
             }
 
-            val activeDotPaintGlow = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.parseColor("#99FF4444")
-                style = Paint.Style.FILL
-            }
-            val activeDotPaintCore = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.parseColor("#FFFF2222")
-                style = Paint.Style.FILL
-            }
-            val activeDotPaintHighlight = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.parseColor("#FFFFE0E0")
-                style = Paint.Style.FILL
-            }
+            // 4. Six Prayer Times Cards Grid (Y: 215 to 375)
+            val prayerKeys = listOf("fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha")
+            val prayerNames = listOf("الفجر", "الشروق", "الظهر", "العصر", "المغرب", "العشاء")
+            val prayerTimes = listOf(fajr, sunrise, dhuhr, asr, maghrib, isha)
 
-            val prayerList = listOf(
-                Pair("fajr", fajr),
-                Pair("sunrise", sunrise),
-                Pair("dhuhr", dhuhr),
-                Pair("asr", asr),
-                Pair("maghrib", maghrib),
-                Pair("isha", isha)
-            )
-            val prayerY = listOf(685f, 773f, 861f, 949f, 1036f, 1123f)
+            val marginH = 25f
+            val spacing = 10f
+            val cardCount = 6
+            val totalSpacing = spacing * (cardCount - 1)
+            val cardWidth = (width - (marginH * 2) - totalSpacing) / cardCount
+            val cardHeight = 160f
+            val cardY = 215f
 
-            for (i in prayerList.indices) {
-                val (key, time) = prayerList[i]
-                val cy = prayerY[i] * sy
-                drawCenteredText(canvas, time, 392f * sx, cy, prayerTimePaint)
+            for (i in 0 until cardCount) {
+                // RTL order: Fajr on right (index 0 at highest X)
+                val colIndex = (cardCount - 1) - i
+                val cardX = marginH + colIndex * (cardWidth + spacing)
+                val cardRect = RectF(cardX, cardY, cardX + cardWidth, cardY + cardHeight)
 
-                // Active red LED indicator dot next to the current prayer
-                val isRowActive = key.equals(activeKey, ignoreCase = true)
-                if (isRowActive) {
-                    val dotCx = 496f * sx
-                    canvas.drawCircle(dotCx, cy, 11f * sx, activeDotPaintGlow)
-                    canvas.drawCircle(dotCx, cy, 8f * sx, activeDotPaintCore)
-                    canvas.drawCircle(dotCx - 2.5f * sx, cy - 2.5f * sy, 2.5f * sx, activeDotPaintHighlight)
+                val key = prayerKeys[i]
+                val name = prayerNames[i]
+                val time = prayerTimes[i]
+                val isActive = key.equals(activeKey, ignoreCase = true)
+
+                if (isActive) {
+                    // Active prayer card with glowing emerald/gold design
+                    val activeBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        shader = LinearGradient(
+                            cardRect.left, cardRect.top, cardRect.right, cardRect.bottom,
+                            intArrayOf(
+                                Color.parseColor("#156753"),
+                                Color.parseColor("#0D4436")
+                            ),
+                            null,
+                            Shader.TileMode.CLAMP
+                        )
+                    }
+                    canvas.drawRoundRect(cardRect, 18f, 18f, activeBgPaint)
+
+                    val activeBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = Color.parseColor("#FDE68A")
+                        style = Paint.Style.STROKE
+                        strokeWidth = 2.5f
+                    }
+                    canvas.drawRoundRect(cardRect, 18f, 18f, activeBorderPaint)
+
+                    // Active Glowing Dot
+                    val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = Color.parseColor("#FDE68A")
+                    }
+                    canvas.drawCircle(cardRect.centerX(), cardRect.top + 18f, 4f, dotPaint)
+
+                    val activeNamePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = goldLightColor
+                        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                        textSize = 21f
+                        textAlign = Paint.Align.CENTER
+                    }
+                    canvas.drawText(name, cardRect.centerX(), cardRect.top + 58f, activeNamePaint)
+
+                    val activeTimePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = whiteColor
+                        typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                        textSize = 23f
+                        textAlign = Paint.Align.CENTER
+                    }
+                    canvas.drawText(time, cardRect.centerX(), cardRect.top + 104f, activeTimePaint)
+
+                    val activeBadgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = Color.parseColor("#FDE68A")
+                        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                        textSize = 14f
+                        textAlign = Paint.Align.CENTER
+                    }
+                    canvas.drawText("الآن / التالية", cardRect.centerX(), cardRect.top + 138f, activeBadgePaint)
+                } else {
+                    // Inactive regular prayer card
+                    val inactiveBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = Color.parseColor("#082820")
+                    }
+                    canvas.drawRoundRect(cardRect, 18f, 18f, inactiveBgPaint)
+
+                    val inactiveBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = goldColor
+                        style = Paint.Style.STROKE
+                        strokeWidth = 1f
+                        alpha = 40
+                    }
+                    canvas.drawRoundRect(cardRect, 18f, 18f, inactiveBorderPaint)
+
+                    val inactiveNamePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = Color.parseColor("#A7F3D0")
+                        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                        textSize = 19f
+                        textAlign = Paint.Align.CENTER
+                    }
+                    canvas.drawText(name, cardRect.centerX(), cardRect.top + 56f, inactiveNamePaint)
+
+                    val inactiveTimePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = whiteColor
+                        typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                        textSize = 22f
+                        textAlign = Paint.Align.CENTER
+                    }
+                    canvas.drawText(time, cardRect.centerX(), cardRect.top + 106f, inactiveTimePaint)
                 }
             }
 
-            // Downscale to 384x644 for optimal Android RemoteViews memory and crystal clarity
-            return Bitmap.createScaledBitmap(bitmap, 384, 644, true)
-        }
+            // 5. Bottom Daily Dhikr Ribbon (Y: 390 to 455)
+            val dhikrRect = RectF(25f, 390f, (width - 25).toFloat(), 455f)
+            val dhikrBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.parseColor("#051E18")
+            }
+            canvas.drawRoundRect(dhikrRect, 14f, 14f, dhikrBgPaint)
 
-        private fun drawCenteredText(canvas: Canvas, text: String, cx: Float, cy: Float, paint: Paint) {
-            val fm = paint.fontMetrics
-            val baseline = cy - (fm.ascent + fm.descent) / 2f
-            canvas.drawText(text, cx, baseline, paint)
+            val dhikrBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = goldColor
+                style = Paint.Style.STROKE
+                strokeWidth = 1f
+                alpha = 60
+            }
+            canvas.drawRoundRect(dhikrRect, 14f, 14f, dhikrBorderPaint)
+
+            val dhikrTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = goldLightColor
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                textSize = 18f
+                textAlign = Paint.Align.CENTER
+            }
+            val displayDhikr = if (dailyDhikr.length > 55) {
+                dailyDhikr.substring(0, 52) + "..."
+            } else {
+                dailyDhikr
+            }
+            canvas.drawText("✨ $displayDhikr", dhikrRect.centerX(), 430f, dhikrTextPaint)
+
+            return bitmap
         }
 
         fun updateAllWidgets(context: Context) {
