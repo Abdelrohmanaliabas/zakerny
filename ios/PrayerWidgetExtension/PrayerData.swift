@@ -22,7 +22,7 @@ public struct PrayerData {
     public init() {}
     
     public static func loadFromSharedDefaults() -> PrayerData {
-        let appGroupId = "group.com.zakerny.app"
+        let appGroupId = "group.com.abas.zone"
         let groupDefaults = UserDefaults(suiteName: appGroupId)
         let stdDefaults = UserDefaults.standard
         

@@ -78,7 +78,7 @@ import WidgetKit
     }
 
     private func handleWidgetUpdate(data: [String: String]) {
-        let appGroupId = "group.com.zakerny.app"
+        let appGroupId = "group.com.abas.zone"
         let groupDefaults = UserDefaults(suiteName: appGroupId)
         let standardDefaults = UserDefaults.standard
 

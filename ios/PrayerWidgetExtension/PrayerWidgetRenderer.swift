@@ -11,7 +11,7 @@ public class PrayerWidgetRenderer {
             }
         }
         if baseImage == nil {
-            if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.zakerny.app") {
+            if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.abas.zone") {
                 let imgURL = groupURL.appendingPathComponent("al_fajia_widget_base.png")
                 baseImage = UIImage(contentsOfFile: imgURL.path)
             }
@@ -121,7 +121,7 @@ public class PrayerWidgetRenderer {
     }
     
     public static func saveRenderedImageToAppGroup(image: UIImage) {
-        if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.zakerny.app") {
+        if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.abas.zone") {
             let fileURL = groupURL.appendingPathComponent("al_fajia_rendered_clock.png")
             if let pngData = image.pngData() {
                 try? pngData.write(to: fileURL, options: .atomic)
@@ -136,7 +136,7 @@ public class PrayerWidgetRenderer {
     }
     
     public static func loadRenderedImageFromSharedStorage() -> UIImage? {
-        if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.zakerny.app") {
+        if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.abas.zone") {
             let fileURL = groupURL.appendingPathComponent("al_fajia_rendered_clock.png")
             if let img = UIImage(contentsOfFile: fileURL.path) {
                 return img
