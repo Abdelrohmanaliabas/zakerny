@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [switch]$BuildUsbBundle,
+    [switch]$BuildInstaller,
     [string]$OutputDir = "release"
 )
 
@@ -66,6 +67,34 @@ if ($BuildUsbBundle) {
     if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
     Compress-Archive -Path "$targetDir\*" -DestinationPath $zipPath -Force
     Write-Host "ZIP bundle created at: $zipPath" -ForegroundColor Green
+}
+
+if ($BuildInstaller -or (Test-Path "installer\zakerny_setup.iss")) {
+    $isccPaths = @(
+        "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
+        "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+        "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+    )
+    $isccExe = $isccPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+    if ($isccExe) {
+        Write-Host ""
+        Write-Host "Compiling Inno Setup Windows Installer..." -ForegroundColor Cyan
+        & "$isccExe" "installer\zakerny_setup.iss"
+        if ($LASTEXITCODE -eq 0) {
+            $builtInstaller = Get-ChildItem -Path $OutputDir -Filter "Zakerny_Windows_Setup*.exe" | Select-Object -First 1
+            if ($builtInstaller) {
+                # Copy to build\windows for instant access
+                Copy-Item $builtInstaller.FullName -Destination "build\windows\" -Force
+                Write-Host "Setup installer ready at: $($builtInstaller.FullName)" -ForegroundColor Green
+                Write-Host "Also copied to: build\windows\$($builtInstaller.Name)" -ForegroundColor Green
+            }
+        } else {
+            Write-Warning "Inno Setup compilation returned non-zero code: $LASTEXITCODE"
+        }
+    } else {
+        Write-Host "Inno Setup compiler (ISCC.exe) not found. Skipping installer generation." -ForegroundColor Gray
+    }
 }
 
 Write-Host ""
