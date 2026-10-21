@@ -16,6 +16,7 @@ class RecitationService {
   }
 
   static final AudioPlayer _sharedPlayer = AudioPlayer();
+  static AudioPlayer get sharedPlayer => _sharedPlayer;
   static bool _listenerInitialized = false;
 
   final Dio _dio;
@@ -23,6 +24,8 @@ class RecitationService {
 
   static final ValueNotifier<ActiveRecitation?> _activeRecitationNotifier =
       ValueNotifier<ActiveRecitation?>(null);
+
+  static void resetActive() => _activeRecitationNotifier.value = null;
 
   ValueListenable<ActiveRecitation?> get activeRecitationNotifier =>
       _activeRecitationNotifier;

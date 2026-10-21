@@ -221,15 +221,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             onTap: () => context.push('/ruqyah'),
                           ),
                           _QuickAction(
-                            icon: Icons.mic_rounded,
-                            label: 'التواشيح',
-                            badge: 'ابتهالات',
+                            icon: Icons.record_voice_over_rounded,
+                            label: 'الدروس',
+                            badge: 'خطب وسلاسل',
                             gradient: const LinearGradient(
-                              colors: [Color(0xFFD97706), Color(0xFFB45309)],
+                              colors: [Color(0xFF7C3AED), Color(0xFF6D28D9)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            onTap: () => context.push('/tawashih'),
+                            onTap: () => context.push('/lectures'),
                           ),
                           _QuickAction(
                             icon: Icons.calendar_month_rounded,
@@ -330,6 +330,104 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
+
+                      // موسوعة الخطب والدروس لكبار الشيوخ
+                      FatimidCard(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                        onTap: () => context.push('/lectures'),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF7C3AED), Color(0xFF6D28D9)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: FatimidColors.goldPrimary.withValues(alpha: 0.6),
+                                  width: 1.2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.record_voice_over_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          'الخطب والدروس والسلاسل',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13.5,
+                                            color: isDark ? Colors.white : const Color(0xFF103024),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF7C3AED).withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          'جديد 🎙️',
+                                          style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark ? const Color(0xFFC4B5FD) : const Color(0xFF7C3AED),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    'خطب ودروس الشيخ مصطفى سمير وكبار الشيوخ مع التحميل أوفلاين',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 11.5,
+                                      color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF4A6B5F),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(
+                              Icons.chevron_left_rounded,
+                              size: 20,
+                              color: FatimidColors.goldPrimary.withValues(alpha: 0.8),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
 
                       // موسوعة الأدعية والرقية والتواشيح
                       FatimidCard(

@@ -41,6 +41,10 @@ import '../../features/dua_tawashih/presentation/dua_tawashih_screen.dart';
 import '../../features/qadaa_tracker/application/qadaa_controller.dart';
 import '../../features/qadaa_tracker/data/qadaa_repository.dart';
 import '../../features/qadaa_tracker/presentation/qadaa_tracker_screen.dart';
+import '../../features/lectures/application/lecture_service.dart';
+import '../../features/lectures/application/lectures_controller.dart';
+import '../../features/lectures/data/lecture_repository.dart';
+import '../../features/lectures/presentation/lectures_screen.dart';
 import '../notifications/notification_service.dart';
 import '../storage/app_local_store.dart';
 import 'app_feature.dart';
@@ -67,6 +71,11 @@ List<AppFeature> buildFeatureRegistry({
   final khatmah = KhatmahController(KhatmahRepository(store));
   final ibadah = IbadahController(IbadahRepository(store));
   final qadaa = QadaaController(QadaaRepository(store));
+  final lectureService = LectureService();
+  final lectures = LecturesController(
+    repository: LectureRepository(store),
+    service: lectureService,
+  );
 
   return [
     AppFeature(
@@ -172,6 +181,18 @@ List<AppFeature> buildFeatureRegistry({
         GoRoute(
           path: '/qadaa',
           builder: (context, state) => QadaaTrackerScreen(controller: qadaa),
+        ),
+        GoRoute(
+          path: '/lectures',
+          builder: (context, state) => LecturesScreen(controller: lectures),
+        ),
+        GoRoute(
+          path: '/khutbahs',
+          builder: (context, state) => LecturesScreen(controller: lectures),
+        ),
+        GoRoute(
+          path: '/lessons',
+          builder: (context, state) => LecturesScreen(controller: lectures),
         ),
       ],
     ),
