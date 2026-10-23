@@ -297,8 +297,8 @@ class _LecturesScreenState extends State<LecturesScreen> {
 
     if (seriesList.isEmpty) {
       return _buildEmptyState(
-        'لا توجد سلاسل مطابقة لهذا الشيخ حالياً',
-        Icons.auto_stories_outlined,
+        text: 'لا توجد سلاسل مطابقة لهذا الشيخ حالياً',
+        icon: Icons.auto_stories_outlined,
       );
     }
 
@@ -451,13 +451,45 @@ class _LecturesScreenState extends State<LecturesScreen> {
       if (widget.controller.selectedCategory == LectureCategory.downloaded ||
           widget.controller.onlyDownloaded) {
         return _buildEmptyState(
-          'لا توجد دروس محملة في الذاكرة المحلية حالياً.\nيمكنك الضغط على أيقونة التنزيل بجانب أي درس للاستماع إليه بدون إنترنت!',
-          Icons.cloud_download_outlined,
+          text:
+              'لا توجد دروس محملة في الذاكرة المحلية حالياً.\nيمكنك الضغط على أيقونة التنزيل بجانب أي درس للاستماع إليه بدون إنترنت!',
+          icon: Icons.cloud_download_outlined,
         );
       }
+
+      if (widget.controller.selectedSheikhId != null) {
+        final sheikh = widget.controller
+            .getSheikhById(widget.controller.selectedSheikhId!);
+        final sheikhName = sheikh?.name ?? 'الشيخ المحدد';
+        return _buildEmptyState(
+          text:
+              'لا توجد نتائج تطابق التصنيف الحالي لـ ($sheikhName).\nيمكنك استعراض كل دروس وسلاسل الشيخ مباشرة.',
+          icon: Icons.person_search_rounded,
+          customAction: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: FatimidColors.goldPrimary,
+              foregroundColor: const Color(0xFF261800),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            icon: const Icon(Icons.auto_stories_rounded, size: 18),
+            onPressed: () =>
+                widget.controller.selectCategory(LectureCategory.all),
+            label: Text(
+              'عرض كل دروس وسلاسل $sheikhName',
+              style: const TextStyle(
+                fontFamily: 'Cairo',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
+      }
+
       return _buildEmptyState(
-        'لم يتم العثور على نتائج تطابق بحثك',
-        Icons.search_off_rounded,
+        text: 'لم يتم العثور على نتائج تطابق بحثك',
+        icon: Icons.search_off_rounded,
       );
     }
 
@@ -473,7 +505,11 @@ class _LecturesScreenState extends State<LecturesScreen> {
     );
   }
 
-  Widget _buildEmptyState(String text, IconData icon) {
+  Widget _buildEmptyState({
+    required String text,
+    required IconData icon,
+    Widget? customAction,
+  }) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -501,20 +537,38 @@ class _LecturesScreenState extends State<LecturesScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: FatimidColors.goldPrimary,
-                foregroundColor: const Color(0xFF261800),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            if (customAction != null) ...[
+              customAction,
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: widget.controller.resetFilters,
+                child: const Text(
+                  'عرض كافة الدروس لكل الشيوخ',
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontWeight: FontWeight.w700,
+                    color: FatimidColors.goldPrimary,
+                  ),
                 ),
               ),
-              onPressed: widget.controller.resetFilters,
-              child: const Text(
-                'عرض كافة الدروس',
-                style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold),
+            ] else
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: FatimidColors.goldPrimary,
+                  foregroundColor: const Color(0xFF261800),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: widget.controller.resetFilters,
+                child: const Text(
+                  'عرض كافة الدروس',
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            ),
           ],
         ),
       ),

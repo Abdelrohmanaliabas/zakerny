@@ -1204,6 +1204,83 @@ class _HomeScreenState extends State<HomeScreen> {
                           });
                         },
                       ),
+                      const SizedBox(height: 20),
+
+                      // بطاقة الاستوديو المطور (COMMIT_)
+                      FatimidCard(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        onTap: () => context.push('/company'),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                gradient: FatimidColors.goldGradient,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.code_rounded,
+                                  color: Color(0xFF261800),
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'استوديو التطوير • COMMIT_',
+                                        style: TextStyle(
+                                          fontFamily: 'Cairo',
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 13.5,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: FatimidColors.goldPrimary.withValues(alpha: 0.18),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: const Text(
+                                          'المطور',
+                                          style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.bold,
+                                            color: FatimidColors.goldPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'معرض المشاريع، منصات التواصل، وفريق البرمجة والدعم',
+                                    style: TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 11,
+                                      color: isDark ? const Color(0xFFA5C4B8) : const Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 14,
+                              color: FatimidColors.goldPrimary,
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),

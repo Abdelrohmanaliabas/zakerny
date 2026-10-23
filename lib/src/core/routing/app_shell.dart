@@ -44,6 +44,7 @@ class AppShell extends StatelessWidget {
                           navItems: navItems,
                           selectedIndex: index,
                           isExpanded: isExpandedSidebar,
+                          currentLocation: location,
                           onTap: (targetIndex) =>
                               context.go(navItems[targetIndex].route),
                         ),
@@ -245,12 +246,14 @@ class _DesktopSidebar extends StatelessWidget {
     required this.navItems,
     required this.selectedIndex,
     required this.isExpanded,
+    this.currentLocation = '',
     required this.onTap,
   });
 
   final List<AppNavItem> navItems;
   final int selectedIndex;
   final bool isExpanded;
+  final String currentLocation;
   final ValueChanged<int> onTap;
 
   @override
@@ -487,76 +490,120 @@ class _DesktopSidebar extends StatelessWidget {
           ),
 
           // Developer & Company Link (COMMIT_)
-          if (isExpanded)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => context.go('/company'),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? FatimidColors.goldPrimary.withValues(alpha: 0.1)
-                          : FatimidColors.goldPrimary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: FatimidColors.goldPrimary.withValues(alpha: 0.3),
-                        width: 1,
+          () {
+            final isCompanyActive =
+                currentLocation == '/company' || currentLocation == '/contact-us';
+            if (isExpanded) {
+              return Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => context.go('/company'),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.business_rounded,
-                          size: 16,
-                          color: FatimidColors.goldPrimary,
+                      decoration: BoxDecoration(
+                        color: isCompanyActive
+                            ? (isDark
+                                ? FatimidColors.goldPrimary.withValues(
+                                    alpha: 0.22,
+                                  )
+                                : FatimidColors.goldPrimary.withValues(
+                                    alpha: 0.16,
+                                  ))
+                            : (isDark
+                                ? FatimidColors.goldPrimary.withValues(
+                                    alpha: 0.1,
+                                  )
+                                : FatimidColors.goldPrimary.withValues(
+                                    alpha: 0.08,
+                                  )),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isCompanyActive
+                              ? FatimidColors.goldPrimary
+                              : FatimidColors.goldPrimary.withValues(
+                                  alpha: 0.3,
+                                ),
+                          width: isCompanyActive ? 1.4 : 1,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'المطور: COMMIT_',
-                            style: TextStyle(
-                              fontFamily: 'Cairo',
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: isDark
-                                  ? Colors.white70
-                                  : const Color(0xFF103024),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isCompanyActive
+                                ? Icons.verified_rounded
+                                : Icons.business_rounded,
+                            size: 16,
+                            color: FatimidColors.goldPrimary,
                           ),
-                        ),
-                        const Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 11,
-                          color: FatimidColors.goldPrimary,
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'المطور: COMMIT_',
+                              style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                                color: isCompanyActive
+                                    ? (isDark
+                                        ? Colors.white
+                                        : const Color(0xFF0F3A2E))
+                                    : (isDark
+                                        ? Colors.white70
+                                        : const Color(0xFF103024)),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 11,
+                            color: FatimidColors.goldPrimary,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            )
-          else
-            Padding(
+              );
+            }
+
+            return Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
-              child: IconButton(
-                tooltip: 'الشركة المطورة (COMMIT_)',
-                icon: const Icon(
-                  Icons.business_rounded,
-                  size: 20,
-                  color: FatimidColors.goldPrimary,
+              child: Container(
+                decoration: isCompanyActive
+                    ? BoxDecoration(
+                        color: FatimidColors.goldPrimary.withValues(
+                          alpha: 0.18,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: FatimidColors.goldPrimary,
+                          width: 1.2,
+                        ),
+                      )
+                    : null,
+                child: IconButton(
+                  tooltip: 'الاستوديو المطور (COMMIT_)',
+                  icon: Icon(
+                    isCompanyActive
+                        ? Icons.verified_rounded
+                        : Icons.business_rounded,
+                    size: 20,
+                    color: FatimidColors.goldPrimary,
+                  ),
+                  onPressed: () => context.go('/company'),
                 ),
-                onPressed: () => context.go('/company'),
               ),
-            ),
+            );
+          }(),
 
           // Bottom dhikr note in Fatimid calligraphy
           if (isExpanded)

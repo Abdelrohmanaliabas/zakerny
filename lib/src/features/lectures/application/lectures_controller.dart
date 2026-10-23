@@ -138,6 +138,22 @@ class LecturesController extends ChangeNotifier {
       _selectedSheikhId = null;
     } else {
       _selectedSheikhId = sheikhId;
+      // If the currently selected category has no lectures for this sheikh,
+      // gracefully switch category to all so the user immediately sees the sheikh's lessons!
+      if (sheikhId != null &&
+          _selectedCategory != LectureCategory.all &&
+          _selectedCategory != LectureCategory.downloaded) {
+        final matchesCategory = allLectures.any(
+          (l) =>
+              l.sheikhId == sheikhId &&
+              (_selectedCategory == LectureCategory.series
+                  ? l.seriesId != null
+                  : l.category == _selectedCategory),
+        );
+        if (!matchesCategory) {
+          _selectedCategory = LectureCategory.all;
+        }
+      }
     }
     notifyListeners();
   }
