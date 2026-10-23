@@ -543,6 +543,19 @@ class _DesktopSidebar extends StatelessWidget {
                   ),
                 ),
               ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: IconButton(
+                tooltip: 'الشركة المطورة (COMMIT_)',
+                icon: const Icon(
+                  Icons.business_rounded,
+                  size: 20,
+                  color: FatimidColors.goldPrimary,
+                ),
+                onPressed: () => context.go('/company'),
+              ),
             ),
 
           // Bottom dhikr note in Fatimid calligraphy

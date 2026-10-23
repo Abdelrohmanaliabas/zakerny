@@ -1,7 +1,7 @@
 class CompanyInfoModel {
   const CompanyInfoModel({
     required this.companyName,
-    this.companyNameEn = 'Maestro Zone',
+    this.companyNameEn = 'COMMIT_',
     required this.taglineAr,
     required this.taglineEn,
     required this.aboutAr,
@@ -36,25 +36,27 @@ class CompanyInfoModel {
     return CompanyInfoModel(
       companyName: (json['company_name'] as String?)?.trim().isNotEmpty == true
           ? (json['company_name'] as String).trim()
-          : 'مايسترو زون',
+          : 'COMMIT_',
       companyNameEn:
           (json['company_name_en'] as String?)?.trim().isNotEmpty == true
           ? (json['company_name_en'] as String).trim()
-          : 'Maestro Zone',
+          : 'COMMIT_',
       taglineAr: (json['tagline_ar'] as String?)?.trim().isNotEmpty == true
           ? (json['tagline_ar'] as String).trim()
-          : 'نلتزم. نبني. نطلق.',
+          : 'نلتزم. نبني. نُطلق.',
       taglineEn: (json['tagline_en'] as String?)?.trim().isNotEmpty == true
           ? (json['tagline_en'] as String).trim()
           : 'We commit. We build. We ship.',
       aboutAr: (json['about_ar'] as String?)?.trim().isNotEmpty == true
           ? (json['about_ar'] as String).trim()
-          : 'كوميت استوديو هندسة برمجيات متخصص في بناء تطبيقات موبايل ومنصات ويب وأنظمة أعمال موثوقة وقابلة للتوسع.',
+          : 'استوديو هندسي متخصص في تطوير البرمجيات الدقيقة وعالية الأداء. نتشارك مع رواد الأعمال والشركات لبناء وإطلاق تطبيقات ومنصات حيوية لا تقبل المساومة على الجودة.',
       aboutEn: (json['about_en'] as String?)?.trim().isNotEmpty == true
           ? (json['about_en'] as String).trim()
-          : 'COMMIT_ is a software engineering studio building reliable mobile apps, web platforms, and scalable business systems.',
+          : 'We are a specialized software studio focused on craft, performance, and reliability. We partner with founders and enterprises to engineer mission-critical applications.',
       portfolioUrl:
-          (json['portfolio_url'] as String?)?.trim() ?? 'https://zonesc.cloud/',
+          (json['portfolio_url'] as String?)?.trim().isNotEmpty == true
+          ? (json['portfolio_url'] as String).trim()
+          : 'https://commit.zonesc.cloud/',
       socialLinks: SocialLinksModel.fromJson(
         (json['social_links'] as Map?)?.cast<String, dynamic>() ?? {},
       ),
@@ -83,83 +85,76 @@ class CompanyInfoModel {
 
   static CompanyInfoModel fallback() {
     return const CompanyInfoModel(
-      companyName: 'مايسترو زون',
-      companyNameEn: 'Maestro Zone',
-      taglineAr: 'حلول برمجية متكاملة للأنظمة والتطبيقات السحابية',
-      taglineEn: 'Comprehensive Digital Solutions & Cloud Platforms',
+      companyName: 'COMMIT_',
+      companyNameEn: 'COMMIT_',
+      taglineAr: 'نلتزم. نبني. نُطلق.',
+      taglineEn: 'We commit. We build. We ship.',
       aboutAr:
-          'كوميت استوديو هندسة برمجيات متخصص في بناء تطبيقات موبايل ومنصات ويب وأنظمة أعمال موثوقة وقابلة للتوسع، من التخطيط المعماري حتى الإطلاق المستقر.',
+          'استوديو هندسي متخصص في تطوير البرمجيات الدقيقة وعالية الأداء. نتشارك مع رواد الأعمال والشركات لبناء وإطلاق تطبيقات ومنصات حيوية لا تقبل المساومة على الجودة.',
       aboutEn:
-          'COMMIT_ is a software engineering studio building reliable mobile apps, web platforms, and scalable business systems, from architecture to stable production releases.',
-      portfolioUrl: 'https://zonesc.cloud/',
+          'We are a specialized software studio focused on craft, performance, and reliability. We partner with founders and enterprises to engineer mission-critical applications.',
+      portfolioUrl: 'https://commit.zonesc.cloud/',
       socialLinks: SocialLinksModel(
         facebook: 'https://www.facebook.com/profile.php?id=61594574024377',
         instagram: 'https://www.instagram.com/commit_tech/',
         tiktok: '',
         linkedin: 'https://www.linkedin.com/in/abdelrahmanabas23',
-        website: 'https://zonesc.cloud/',
+        github: 'https://github.com/Abdelrohmanaliabas',
+        website: 'https://commit.zonesc.cloud/',
       ),
       support: SupportContactModel(
-        email: 'support@zonesc.cloud',
-        phone: '',
-        whatsapp: '',
+        email: 'abdelrahmanali2310@gmail.com',
+        phone: '+201067794270',
+        whatsapp: '+201067794270',
       ),
       developers: [
         DeveloperModel(
-          name: 'فريق تطوير وبرمجة مايسترو زون',
-          nameEn: 'Maestro Zone Engineering Team',
-          role: 'مهندسو تطوير البرمجيات والتطبيقات',
-          roleEn: 'Lead Software & Mobile Engineers',
-          phone: '',
-          whatsapp: '',
-          email: 'dev@zonesc.cloud',
+          name: 'م. عبدالرحمن علي',
+          nameEn: 'Eng. Abdelrahman Ali',
+          role: 'مؤسس وقائد هندسة البرمجيات',
+          roleEn: 'Lead Software Engineer & Studio Founder',
+          phone: '+201067794270',
+          whatsapp: '+201067794270',
+          email: 'abdelrahmanali2310@gmail.com',
           linkedinUrl: 'https://www.linkedin.com/in/abdelrahmanabas23',
-          githubUrl: '',
-          portfolioUrl: 'https://zonesc.cloud/',
+          githubUrl: 'https://github.com/Abdelrohmanaliabas',
+          portfolioUrl: 'https://commit.zonesc.cloud/',
           bio:
-              'نبني تطبيقات موبايل ومنصات ويب وأنظمة أعمال بأولوية واضحة للجودة، الأداء، والاعتمادية.',
+              'مهندس برمجيات متخصص في بناء معمارية الأنظمة الموزعة وتطبيقات الهاتف عالية الاعتمادية ومنصات الويب السحابية المعقدة.',
           bioEn:
-              'Building mobile apps, web platforms, and business systems with a strong focus on quality, performance, and reliability.',
+              'Lead Software Engineer specialized in distributed systems architecture, reliable mobile applications, and enterprise cloud solutions.',
         ),
       ],
       projects: [
         ProjectShowcaseModel(
-          titleAr: 'تطبيق ذكرني (Zakerny App)',
-          titleEn: 'Zakerny App',
+          titleAr: 'تطبيق ذكرني (Zekrni)',
+          titleEn: 'Zekrni Islamic Companion',
           descriptionAr:
-              'رفيق المسلم الشامل للأذكار، القرآن الكريم، والتنبيهات الإسلامية الذكية.',
+              'تطبيق إسلامي Offline-first للأذكار والتسابيح والتنبيهات المجدولة والمحتوى الصوتي عالي الدقة.',
           descriptionEn:
-              'Comprehensive Islamic app for Quran, Adhkar, and intelligent prayer notifications.',
-          category: 'Mobile & Desktop App',
-          projectUrl: 'https://zonesc.cloud/',
+              'An offline-first Islamic companion app designed for Athkar, smart Tasbeeh counter, background alerts, and high-fidelity offline audio.',
+          category: 'Offline-first Mobile App',
+          projectUrl: 'https://commit.zonesc.cloud/en',
         ),
         ProjectShowcaseModel(
           titleAr: 'منصة وتطبيق Zone',
-          titleEn: 'Zone App & Platform',
-          descriptionAr: 'تطبيق ومنصة متطورة للخدمات والطلب مع شبكة ربط ذكية.',
-          descriptionEn: 'All-in-one mobile app and cloud logistics platform.',
-          category: 'Mobile App',
-          projectUrl: 'https://zonesc.cloud/',
+          titleEn: 'Zone Platform & Logistics',
+          descriptionAr:
+              'منصة متعددة الأطراف لإدارة المتاجر والمنتجات والطلبات والتوصيل والإشعارات الفورية.',
+          descriptionEn:
+              'A multi-vendor ecosystem orchestrating merchants, product catalogs, order pipelines, driver delivery, and real-time alerts.',
+          category: 'Multi-Vendor & Logistics Platform',
+          projectUrl: 'https://commit.zonesc.cloud/en',
         ),
         ProjectShowcaseModel(
-          titleAr: 'أنظمة التجارة ونقاط البيع',
-          titleEn: 'Commerce & POS Systems',
+          titleAr: 'منصة وتطبيق Fitness Way',
+          titleEn: 'Fitness Way Gym & Coaching',
           descriptionAr:
-              'لوحة تحكم إدارية وتشغيلية متقدمة لإدارة الفروع، المخازن، ونقاط البيع.',
+              'منصة متكاملة لإدارة الصالات الرياضية والاشتراكات والمدربين والخطط التدريبية.',
           descriptionEn:
-              'Complete management suite for catalog, orders, inventory, and POS.',
-          category: 'Web & Desktop SaaS',
-          projectUrl: 'https://zonesc.cloud/',
-        ),
-        ProjectShowcaseModel(
-          titleAr: 'المنصات السحابية والخدمات الرقمية',
-          titleEn: 'Cloud Platforms & Digital Services',
-          descriptionAr:
-              'بنية تحتية سحابية متقدمة لربط الخدمات والتطبيقات الرقمية وتوفير أعلى موثوقية.',
-          descriptionEn:
-              'Unified cloud backend, realtime event processing, and digital APIs.',
-          category: 'Cloud Infrastructure',
-          projectUrl: 'https://zonesc.cloud/',
+              'A full fitness-tech ecosystem connecting gym operations, coaches, and athletes through subscriptions and workout tracking.',
+          category: 'Fitness & Gym Management',
+          projectUrl: 'https://commit.zonesc.cloud/en',
         ),
       ],
     );
@@ -170,9 +165,10 @@ class SocialLinksModel {
   const SocialLinksModel({
     required this.facebook,
     required this.instagram,
-    required this.tiktok,
+    this.tiktok = '',
     required this.linkedin,
     required this.website,
+    this.github = '',
   });
 
   final String facebook;
@@ -180,12 +176,14 @@ class SocialLinksModel {
   final String tiktok;
   final String linkedin;
   final String website;
+  final String github;
 
   bool get hasFacebook => facebook.trim().isNotEmpty;
   bool get hasInstagram => instagram.trim().isNotEmpty;
   bool get hasTiktok => tiktok.trim().isNotEmpty;
   bool get hasLinkedin => linkedin.trim().isNotEmpty;
   bool get hasWebsite => website.trim().isNotEmpty;
+  bool get hasGithub => github.trim().isNotEmpty;
 
   factory SocialLinksModel.fromJson(Map<String, dynamic> json) {
     return SocialLinksModel(
@@ -194,6 +192,7 @@ class SocialLinksModel {
       tiktok: (json['tiktok'] as String?)?.trim() ?? '',
       linkedin: (json['linkedin'] as String?)?.trim() ?? '',
       website: (json['website'] as String?)?.trim() ?? '',
+      github: (json['github'] as String?)?.trim() ?? '',
     );
   }
 }

@@ -75,6 +75,12 @@ class _CompanyScreenState extends State<CompanyScreen> {
     }
   }
 
+  Future<void> _launchWhatsapp(BuildContext context, String rawPhone) async {
+    final clean = rawPhone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (clean.isEmpty) return;
+    await _launchUrlString(context, 'https://wa.me/$clean');
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -440,6 +446,14 @@ class _CompanyScreenState extends State<CompanyScreen> {
         url: _info.socialLinks.linkedin,
         color: const Color(0xFF0A66C2),
       ),
+      if (_info.socialLinks.hasGithub)
+        _SocialChannel(
+          name: 'مستودع جيت هَب',
+          subtitle: 'الكود المصدري ومستودعات الاستوديو',
+          icon: Icons.code_rounded,
+          url: _info.socialLinks.github,
+          color: const Color(0xFF24292F),
+        ),
       _SocialChannel(
         name: 'الموقع الإلكتروني',
         subtitle: 'بوابة المنظومة الشاملة',
@@ -711,6 +725,22 @@ class _CompanyScreenState extends State<CompanyScreen> {
               minimumSize: const Size(double.infinity, 44),
             ),
           ),
+          if (_info.support.hasWhatsapp) ...[
+            const SizedBox(height: 10),
+            FilledButton.icon(
+              onPressed: () => _launchWhatsapp(context, _info.support.whatsapp),
+              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+              label: Text(
+                'محادثة عبر واتساب (${_info.support.whatsapp})',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF25D366),
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 44),
+              ),
+            ),
+          ],
         ],
       ),
     );
