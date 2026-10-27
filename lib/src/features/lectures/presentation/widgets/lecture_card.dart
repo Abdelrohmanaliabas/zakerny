@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/fatimid_decorations.dart';
 import '../../domain/lecture_models.dart';
 import '../../application/lectures_controller.dart';
+import 'lecture_video_player_dialog.dart';
 
 class LectureCard extends StatelessWidget {
   const LectureCard({
@@ -217,15 +218,73 @@ class LectureCard extends StatelessWidget {
                           ),
                         ),
                       ],
+                      if (lecture.hasVideo) ...[
+                        const SizedBox(height: 4),
+                        GestureDetector(
+                          onTap: () => LectureVideoPlayerDialog.show(
+                            context,
+                            lecture: lecture,
+                            controller: controller,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFD97706)
+                                  .withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: const Color(0xFFF59E0B)
+                                    .withValues(alpha: 0.45),
+                                width: 0.9,
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.videocam_rounded,
+                                    size: 11, color: Color(0xFFF59E0B)),
+                                SizedBox(width: 3),
+                                Text(
+                                  'مشاهدة الفيديو 🎥',
+                                  style: TextStyle(
+                                    fontFamily: 'Cairo',
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFF59E0B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
 
-                // Action buttons: Download, Favorite, Share
+                // Action buttons: Video, Download, Favorite
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Video Play Action
+                    if (lecture.hasVideo)
+                      IconButton(
+                        tooltip: 'مشاهدة الفيديو',
+                        icon: const Icon(
+                          Icons.play_circle_filled_rounded,
+                          color: Color(0xFFF59E0B),
+                          size: 24,
+                        ),
+                        onPressed: () => LectureVideoPlayerDialog.show(
+                          context,
+                          lecture: lecture,
+                          controller: controller,
+                        ),
+                      ),
                     // Download action
                     if (progress != null)
                       SizedBox(

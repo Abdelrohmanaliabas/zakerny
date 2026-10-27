@@ -151,5 +151,29 @@ void main() {
       controller.resetFilters();
       expect(controller.filteredLectures.length, LecturesData.allLectures.length);
     });
+
+    test('LecturesData includes Sheikh Mohamed Metwally El-Shaarawy with series and video lectures', () {
+      final sheikhs = LecturesData.allSheikhs;
+      final shaarawi = sheikhs.firstWhere((s) => s.id == 'shaarawi');
+      expect(shaarawi.name, contains('الشعراوي'));
+      expect(shaarawi.title, contains('إمام الدعاة'));
+
+      final series = LecturesData.allSeries.where((s) => s.sheikhId == 'shaarawi').toList();
+      expect(series.length, greaterThanOrEqualTo(3));
+      expect(series.any((s) => s.id == 'shaarawi_khotab'), isTrue);
+
+      final lectures = LecturesData.allLectures.where((l) => l.sheikhId == 'shaarawi').toList();
+      expect(lectures.length, greaterThanOrEqualTo(10));
+
+      final videoLectures = lectures.where((l) => l.hasVideo).toList();
+      expect(videoLectures, isNotEmpty);
+      expect(videoLectures.first.videoUrl, startsWith('http'));
+
+      final json = videoLectures.first.toJson();
+      expect(json['videoUrl'], isNotNull);
+      final restored = LectureItem.fromJson(json);
+      expect(restored.hasVideo, isTrue);
+      expect(restored.videoUrl, equals(videoLectures.first.videoUrl));
+    });
   });
 }

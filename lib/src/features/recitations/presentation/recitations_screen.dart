@@ -6,6 +6,7 @@ import 'package:just_audio/just_audio.dart';
 import '../../../core/widgets/fatimid_decorations.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/zekrni_header.dart';
+import '../../quran/presentation/screens/quran_tv_channel_screen.dart';
 import '../application/recitations_controller.dart';
 import '../domain/recitation_models.dart';
 import 'widgets/reciter_avatar.dart';
@@ -213,6 +214,29 @@ class _RecitationsScreenState extends State<RecitationsScreen> {
                                     spacing: 4,
                                     crossAxisAlignment: WrapCrossAlignment.center,
                                     children: [
+                                      IconButton(
+                                        tooltip: 'مشاهدة في قناة القرآن 📺',
+                                        icon: const Icon(Icons.tv_rounded),
+                                        color: FatimidColors.goldPrimary,
+                                        onPressed: () {
+                                          if (!isCurrent) {
+                                            _run(
+                                              key,
+                                              () => widget.controller.play(
+                                                reciter,
+                                                surah,
+                                              ),
+                                            );
+                                          }
+                                          QuranTvChannelScreen.show(
+                                            context,
+                                            surahId: surah.id,
+                                            reciter: reciter,
+                                            recitationService:
+                                                widget.controller.service,
+                                          );
+                                        },
+                                      ),
                                       if (isCurrent) ...[
                                         IconButton(
                                           tooltip: isPlaying ? 'إيقاف مؤقت' : 'استئناف',

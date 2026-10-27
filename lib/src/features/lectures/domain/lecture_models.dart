@@ -121,6 +121,7 @@ class LectureItem {
     this.seriesId,
     this.seriesTitle,
     required this.audioUrl,
+    this.videoUrl,
     this.backupUrls = const [],
     this.durationText = '',
     this.durationSeconds,
@@ -136,6 +137,7 @@ class LectureItem {
   final String? seriesId;
   final String? seriesTitle;
   final String audioUrl;
+  final String? videoUrl;
   final List<String> backupUrls;
   final String durationText;
   final int? durationSeconds;
@@ -144,6 +146,8 @@ class LectureItem {
   final int orderIndex;
 
   List<String> get allUrls => [audioUrl, ...backupUrls];
+
+  bool get hasVideo => videoUrl != null && videoUrl!.trim().isNotEmpty;
 
   factory LectureItem.fromJson(Map<String, dynamic> json) {
     final rawBackup = json['backupUrls'];
@@ -155,6 +159,7 @@ class LectureItem {
       seriesId: json['seriesId'] as String?,
       seriesTitle: json['seriesTitle'] as String?,
       audioUrl: json['audioUrl'] as String,
+      videoUrl: json['videoUrl'] as String?,
       backupUrls: rawBackup is List ? rawBackup.cast<String>() : const [],
       durationText: json['durationText'] as String? ?? '',
       durationSeconds: json['durationSeconds'] as int?,
@@ -175,6 +180,7 @@ class LectureItem {
         if (seriesId != null) 'seriesId': seriesId,
         if (seriesTitle != null) 'seriesTitle': seriesTitle,
         'audioUrl': audioUrl,
+        if (videoUrl != null) 'videoUrl': videoUrl,
         'backupUrls': backupUrls,
         'durationText': durationText,
         if (durationSeconds != null) 'durationSeconds': durationSeconds,

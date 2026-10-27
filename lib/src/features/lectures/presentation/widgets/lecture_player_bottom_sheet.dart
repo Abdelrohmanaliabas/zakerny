@@ -3,6 +3,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/widgets/fatimid_decorations.dart';
 import '../../application/lectures_controller.dart';
+import 'lecture_video_player_dialog.dart';
 
 class LecturePlayerBottomSheet extends StatelessWidget {
   const LecturePlayerBottomSheet({
@@ -173,6 +174,53 @@ class LecturePlayerBottomSheet extends StatelessWidget {
                 color: FatimidColors.goldPrimary,
               ),
             ),
+            if (lecture.hasVideo) ...[
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                  LectureVideoPlayerDialog.show(
+                    context,
+                    lecture: lecture,
+                    controller: controller,
+                  );
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFD97706), Color(0xFFB45309)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFD97706).withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.videocam_rounded,
+                          size: 16, color: Colors.white),
+                      SizedBox(width: 6),
+                      Text(
+                        'مشاهدة الفيديو المرئي 🎬',
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
 
             // Playback Progress Slider

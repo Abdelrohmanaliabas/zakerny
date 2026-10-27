@@ -79,13 +79,19 @@ flutter:
 
   assets:
     - assets/branding/app_icon.png
+    - assets/branding/
     - assets/images/
+    - assets/images/nature/
     - assets/audio/
     - assets/audio/dhikr/
     - assets/adhkar/adhkar.json
+    - assets/adhkar/
     - assets/quran/quran.json
+    - assets/quran/
     - assets/hadith/hadith.json
+    - assets/hadith/
     - assets/recitations/reciters.json
+    - assets/recitations/
     - assets/recitations/avatars/
 
   fonts:

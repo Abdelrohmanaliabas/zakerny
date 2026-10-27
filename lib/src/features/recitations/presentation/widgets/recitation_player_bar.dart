@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../../core/widgets/fatimid_decorations.dart';
+import '../../../quran/presentation/screens/quran_tv_channel_screen.dart';
 import '../../data/recitation_service.dart';
 import '../../domain/recitation_models.dart';
 import 'reciter_avatar.dart';
 
-class RecitationPlayerBar extends StatelessWidget {
+class RecitationPlayerBar extends StatefulWidget {
   const RecitationPlayerBar({
     super.key,
     RecitationService? service,
@@ -15,6 +16,15 @@ class RecitationPlayerBar extends StatelessWidget {
   final RecitationService? _service;
 
   RecitationService get service => _service ?? RecitationService();
+
+  @override
+  State<RecitationPlayerBar> createState() => _RecitationPlayerBarState();
+}
+
+class _RecitationPlayerBarState extends State<RecitationPlayerBar> {
+  double? _dragValue;
+
+  RecitationService get service => widget.service;
 
   @override
   Widget build(BuildContext context) {
@@ -101,27 +111,67 @@ class RecitationPlayerBar extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              active.displayTitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => QuranTvChannelScreen.show(
+                            context,
+                            surahId: active.surah.id,
+                            ayahNumber: active.ayahNumber,
+                            reciter: active.reciter,
+                            recitationService: service,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                active.displayTitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${active.reciter.name} • ${active.isDownloaded ? 'محملة' : 'بث مباشر'}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '${active.reciter.name} • ${active.isDownloaded ? 'محملة' : 'بث مباشر'}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style:
+                                          theme.textTheme.bodySmall?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: FatimidColors.goldPrimary
+                                          .withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: FatimidColors.goldPrimary
+                                            .withValues(alpha: 0.35),
+                                        width: 0.8,
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'وضع القناة 📺',
+                                      style: TextStyle(
+                                        fontFamily: 'Cairo',
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        color: FatimidColors.goldPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       if (isBuffering)
@@ -133,6 +183,19 @@ class RecitationPlayerBar extends StatelessWidget {
                           ),
                         )
                       else ...[
+                        IconButton(
+                          tooltip: 'شاشة قناة القرآن والمناظر الطبيعية 📺',
+                          icon: const Icon(Icons.tv_rounded),
+                          color: FatimidColors.goldPrimary,
+                          iconSize: 24,
+                          onPressed: () => QuranTvChannelScreen.show(
+                            context,
+                            surahId: active.surah.id,
+                            ayahNumber: active.ayahNumber,
+                            reciter: active.reciter,
+                            recitationService: service,
+                          ),
+                        ),
                         IconButton(
                           tooltip: 'رجوع 10 ثوانٍ',
                           icon: const Icon(Icons.replay_10),
@@ -204,13 +267,21 @@ class RecitationPlayerBar extends StatelessWidget {
                                   ),
                                 ),
                                 child: Slider(
-                                  value: currentVal,
+                                  value: _dragValue ?? currentVal,
                                   max: maxVal,
                                   onChanged: totalMs > 0
                                       ? (value) {
-                                          service.seek(
-                                            Duration(milliseconds: value.round()),
-                                          );
+                                          setState(() => _dragValue = value);
+                                        }
+                                      : null,
+                                  onChangeEnd: totalMs > 0
+                                      ? (value) {
+                                          try {
+                                            service.seek(
+                                              Duration(milliseconds: value.round()),
+                                            );
+                                          } catch (_) {}
+                                          setState(() => _dragValue = null);
                                         }
                                       : null,
                                 ),

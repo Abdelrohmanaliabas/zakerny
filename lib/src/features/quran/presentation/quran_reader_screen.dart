@@ -14,6 +14,7 @@ import '../../recitations/domain/recitation_models.dart';
 import '../../recitations/presentation/widgets/reciter_avatar.dart';
 import '../application/quran_controller.dart';
 import '../domain/quran_models.dart';
+import 'screens/quran_tv_channel_screen.dart';
 import 'widgets/ayah_tafsir_sheet.dart';
 import 'widgets/quran_auto_scroll_dock.dart';
 
@@ -1464,6 +1465,21 @@ class _QuranReaderScreenState extends State<QuranReaderScreen>
                             : null,
                       ),
                       onPressed: () => _toggleSurahPlay(_currentVisibleSurah),
+                    ),
+                    IconButton(
+                      tooltip: 'شاشة قناة القرآن والمناظر الطبيعية 📺',
+                      icon: const Icon(
+                        Icons.tv_rounded,
+                        color: FatimidColors.goldPrimary,
+                      ),
+                      onPressed: () {
+                        QuranTvChannelScreen.show(
+                          context,
+                          surahId: _currentVisibleSurah.id,
+                          reciter: _selectedReciter,
+                          recitationService: widget.recitationsController?.service,
+                        );
+                      },
                     ),
                     IconButton(
                       tooltip: 'الانتقال إلى سورة',

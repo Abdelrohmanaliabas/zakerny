@@ -101,20 +101,33 @@ class RecitationService {
       try {
         final audioSource = AudioSource.uri(
           Uri.parse(url),
-          headers: const {
-            'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': '*/*',
-          },
+          headers: (kIsWeb || !Platform.isWindows)
+              ? const {
+                  'User-Agent':
+                      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Accept': '*/*',
+                }
+              : null,
           tag: mediaItem,
         );
         await _player.setAudioSource(audioSource);
         await _player.play();
         return;
       } catch (error) {
+        if (error.toString().contains('Loading interrupted') ||
+            error.toString().contains('abort')) {
+          return;
+        }
         lastError = error;
       }
     }
+
+    if (lastError != null &&
+        (lastError.toString().contains('Loading interrupted') ||
+            lastError.toString().contains('abort'))) {
+      return;
+    }
+
     _activeRecitationNotifier.value = null;
     throw lastError ?? Exception('لا يمكن تشغيل التلاوة حالياً، يرجى التأكد من اتصال الإنترنت');
   }

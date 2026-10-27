@@ -103,11 +103,13 @@ class LectureService {
       try {
         final source = AudioSource.uri(
           Uri.parse(url),
-          headers: const {
-            'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': '*/*',
-          },
+          headers: (kIsWeb || !Platform.isWindows)
+              ? const {
+                  'User-Agent':
+                      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Accept': '*/*',
+                }
+              : null,
           tag: mediaItem,
         );
         await _player.setAudioSource(source);
@@ -118,8 +120,18 @@ class LectureService {
         await _player.play();
         return;
       } catch (err) {
+        if (err.toString().contains('Loading interrupted') ||
+            err.toString().contains('abort')) {
+          return;
+        }
         lastError = err;
       }
+    }
+
+    if (lastError != null &&
+        (lastError.toString().contains('Loading interrupted') ||
+            lastError.toString().contains('abort'))) {
+      return;
     }
 
     _activeLectureNotifier.value = null;

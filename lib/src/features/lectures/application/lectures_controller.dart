@@ -205,14 +205,18 @@ class LecturesController extends ChangeNotifier {
     final savedSeconds = repository.getProgress(lecture.id);
     final initialPos = savedSeconds > 0 ? Duration(seconds: savedSeconds) : null;
 
-    await service.playLecture(
-      lecture,
-      isDownloaded: download != null,
-      localPath: download?.localPath,
-      initialPosition: initialPos,
-    );
-    await repository.saveLastPlayed(lecture.id);
-    notifyListeners();
+    try {
+      await service.playLecture(
+        lecture,
+        isDownloaded: download != null,
+        localPath: download?.localPath,
+        initialPosition: initialPos,
+      );
+      await repository.saveLastPlayed(lecture.id);
+      notifyListeners();
+    } catch (_) {
+      notifyListeners();
+    }
   }
 
   Future<void> togglePlayPause() async {
